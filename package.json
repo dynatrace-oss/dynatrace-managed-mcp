@@ -54,7 +54,7 @@
     "@modelcontextprotocol/sdk": "^1.21.2",
     "axios": "^1.13.1",
     "commander": "^14.0.2",
-    "open": "^8.4.2",
+    "open": "^11.0.0",
     "undici": "^7.16.0",
     "winston": "^3.18.3",
     "zod-to-json-schema": "^3.24.6"
