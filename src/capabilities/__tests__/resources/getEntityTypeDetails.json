@@ -1,0 +1,62 @@
+{
+  "dimensionKey": "dt.entity.apm_security_gateway",
+  "displayName": "ActiveGate",
+  "entityLimitExceeded": false,
+  "fromRelationships": [
+    {
+      "id": "isLocatedIn",
+      "toTypes": ["SYNTHETIC_LOCATION"]
+    }
+  ],
+  "managementZones": "List",
+  "properties": [
+    {
+      "displayName": "awsNameTag",
+      "id": "awsNameTag",
+      "type": "String"
+    },
+    {
+      "displayName": "boshName",
+      "id": "boshName",
+      "type": "String"
+    },
+    {
+      "displayName": "conditionalName",
+      "id": "conditionalName",
+      "type": "String"
+    },
+    {
+      "displayName": "customizedName",
+      "id": "customizedName",
+      "type": "String"
+    },
+    {
+      "displayName": "detectedName",
+      "id": "detectedName",
+      "type": "String"
+    },
+    {
+      "displayName": "dt.security_context",
+      "id": "dt.security_context",
+      "type": "List"
+    },
+    {
+      "displayName": "gcpZone",
+      "id": "gcpZone",
+      "type": "String"
+    },
+    {
+      "displayName": "isContainerDeployment",
+      "id": "isContainerDeployment",
+      "type": "Boolean"
+    },
+    {
+      "displayName": "oneAgentCustomHostName",
+      "id": "oneAgentCustomHostName",
+      "type": "String"
+    }
+  ],
+  "tags": "List",
+  "toRelationships": [],
+  "type": "APM_SECURITY_GATEWAY"
+}

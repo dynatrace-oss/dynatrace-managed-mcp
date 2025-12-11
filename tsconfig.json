@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "strict": true,
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*", "package.json"],
+  "exclude": ["node_modules", "**/*.test.*", "**/__tests__/**"]
+}

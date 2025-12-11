@@ -1,0 +1,36 @@
+{
+  "nextSliceKey": null,
+  "results": [
+    {
+      "additionalColumns": {
+        "azure.location": ["eastus"],
+        "azure.resource.group": ["bookstore_group"],
+        "azure.resource.id": [
+          "/subscriptions/7e2d5dfa-86a1-46e8-b51d-609b547112ae/resourceGroups/bookstore_group/providers/Microsoft.Compute/virtualMachines/dt-span-generator"
+        ],
+        "azure.subscription": ["7e2d5dfa-86a1-46e8-b51d-609b547112ae"],
+        "azure.vmid": ["03563c9c-e8ab-4e5c-ad8e-aa8947bdca3f"],
+        "costcenter": ["FIN-123"],
+        "department.name": ["stocks"],
+        "department.parent": ["finance"],
+        "dt.entity.azure_region": ["AZURE_REGION-A51D9F7F90897B6B"],
+        "dt.entity.azure_vm": ["AZURE_VM-E3626C60288AF648"],
+        "dt.entity.host": ["HOST-49C2B45B68CD1EB4"],
+        "dt.source_entity": ["HOST-49C2B45B68CD1EB4"],
+        "host.name": ["dt-span-generator"],
+        "log.source": ["/opt/workitems/logs/workitems.log"],
+        "loglevel": ["DEBUG"],
+        "my.management.zone": ["stocks"],
+        "my.security.circle": ["fin.stocks.rnd"],
+        "owner": ["payments"],
+        "process.technology": ["Java"],
+        "purpose": ["data_generation"]
+      },
+      "content": "2025-11-24T21:14:08.109Z DEBUG 408583 --- [http-nio-8084-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{timestamp=Mon Nov 24 21:14:08 UTC 2025, status=500, error=Internal Server Error, path=/api/v1/worki (truncated)...]",
+      "eventType": "LOG",
+      "status": "INFO",
+      "timestamp": 1764018848109
+    }
+  ],
+  "sliceSize": 1
+}

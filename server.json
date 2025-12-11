@@ -1,0 +1,54 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.dynatrace-oss/Dynatrace-Managed-MCP",
+  "description": "Model Context Protocol (MCP) server for Dynatrace Managed (on-premise). Access logs, events, metrics from Dynatrace via MCP.",
+  "repository": {
+    "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp",
+    "source": "github"
+  },
+  "version": "0.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@dynatrace-oss/dynatrace-managed-mcp-server",
+      "version": "0.0.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "DT_MANAGED_ENVIRONMENT",
+          "description": "The URL of your Dynatrace Managed environment (e.g. 'https://managed.company.com:9999/e/12345678-901b-cdef-1234-567890abcdef')",
+          "isRequired": true,
+          "format": "string"
+        },
+        {
+          "name": "DT_MANAGED_API_TOKEN",
+          "description": "API Token with required scopes (e.g. 'dt0s16.SAMPLE.abcd1234')",
+          "isRequired": true,
+          "format": "string"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "description": "Logging level (e.g. debug, info, warning, error)",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "HTTP_PROXY",
+          "description": "HTTP Proxy to use",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DT_MCP_DISABLE_TELEMETRY",
+          "description": "Disable telemetry",
+          "isRequired": false,
+          "format": "boolean"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "affectedEntities": [],
+  "displayId": "SP-123",
+  "firstSeenTimestamp": 1640995200000,
+  "lastUpdatedTimestamp": 1640995200000,
+  "riskAssessment": {
+    "exposure": "INTERNAL",
+    "riskLevel": "HIGH",
+    "riskScore": 8.5
+  },
+  "securityProblemId": "SP-123",
+  "status": "OPEN",
+  "title": "Critical vulnerability",
+  "vulnerabilityType": "CODE_LEVEL"
+}

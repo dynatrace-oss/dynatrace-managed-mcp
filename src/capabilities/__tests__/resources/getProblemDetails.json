@@ -1,0 +1,174 @@
+{
+  "data": {
+    "affectedEntities": [
+      {
+        "entityId": {
+          "id": "CLOUD_APPLICATION-4697ADC7B6A1F6B5",
+          "type": "CLOUD_APPLICATION"
+        },
+        "name": "client"
+      }
+    ],
+    "displayId": "P-2511153",
+    "endTime": -1,
+    "entityTags": [],
+    "evidenceDetails": {
+      "details": [
+        {
+          "data": {
+            "correlationId": "f2df43273d7b17b2",
+            "endTime": -1,
+            "entityId": {
+              "entityId": {
+                "id": "CLOUD_APPLICATION-4697ADC7B6A1F6B5",
+                "type": "CLOUD_APPLICATION"
+              },
+              "name": "client"
+            },
+            "entityTags": [],
+            "eventId": "845025139905093722_1763133360000",
+            "eventType": "ERROR_EVENT",
+            "frequentEvent": false,
+            "managementZones": [],
+            "properties": [
+              {
+                "key": "dt.entity.cloud_application_namespace",
+                "value": "CLOUD_APPLICATION_NAMESPACE-3C025CEB1C086B46"
+              },
+              {
+                "key": "dt.entity.kubernetes_cluster",
+                "value": "KUBERNETES_CLUSTER-F482FC053B39BF55"
+              },
+              {
+                "key": "dt.event.allow_davis_merge",
+                "value": "false"
+              },
+              {
+                "key": "dt.event.allow_frequent_issue_detection",
+                "value": "false"
+              },
+              {
+                "key": "dt.event.description",
+                "value": "Events with reason 'BackOff' have been detected for pods of this workload. Check for pods with status 'ImagePullBackOff' or 'CrashLoopBackOff'."
+              },
+              {
+                "key": "dt.event.group_label",
+                "value": "Error"
+              },
+              {
+                "key": "dt.event.impact_level",
+                "value": "Application"
+              },
+              {
+                "key": "dt.event.is_rootcause_relevant",
+                "value": "true"
+              },
+              {
+                "key": "dt.event.metric_selector",
+                "value": "builtin:kubernetes.events\n:filter(and(and(eq(k8s.event.reason,BackOff)),in(\"dt.entity.cloud_application\",entitySelector(\"type(cloud_application),entityId(~\"CLOUD_APPLICATION-4697ADC7B6A1F6B5~\")\"))))\n:splitBy(\"k8s.namespace.name\",\"k8s.workload.kind\",\"k8s.workload.name\")\n:sum\n:default(0.0)"
+              },
+              {
+                "key": "dt.event.metric_threshold",
+                "value": "1.0"
+              },
+              {
+                "key": "dt.event.source",
+                "value": "Kubernetes anomaly detection"
+              },
+              {
+                "key": "dt.event.timeout",
+                "value": "11"
+              },
+              {
+                "key": "dt.event.title",
+                "value": "Backoff event"
+              },
+              {
+                "key": "dt.settings.object_id",
+                "value": "vu9U3hXa3q0AAAABAC1idWlsdGluOmFub21hbHktZGV0ZWN0aW9uLmt1YmVybmV0ZXMud29ya2xvYWQAEktVQkVSTkVURVNfQ0xVU1RFUgAQRjQ4MkZDMDUzQjM5QkY1NQAkNTQ0NzFkYjQtODgyYi0zMDkzLTkxZTQtNzlkZTUyMGNiYTlkvu9U3hXa3q0"
+              },
+              {
+                "key": "k8s.cluster.name",
+                "value": "bookstore"
+              },
+              {
+                "key": "k8s.cluster.uid",
+                "value": "ef9a06a3-92e6-4a05-bc90-c0abb2c3c809"
+              },
+              {
+                "key": "k8s.namespace.name",
+                "value": "stocks"
+              },
+              {
+                "key": "k8s.workload.kind",
+                "value": "deployment"
+              },
+              {
+                "key": "k8s.workload.name",
+                "value": "client"
+              }
+            ],
+            "startTime": 1763133360000,
+            "status": "OPEN",
+            "suppressAlert": false,
+            "suppressProblem": false,
+            "title": "Backoff event",
+            "underMaintenance": false
+          },
+          "displayName": "Backoff event",
+          "endTime": -1,
+          "entity": {
+            "entityId": {
+              "id": "CLOUD_APPLICATION-4697ADC7B6A1F6B5",
+              "type": "CLOUD_APPLICATION"
+            },
+            "name": "client"
+          },
+          "eventId": "845025139905093722_1763133360000",
+          "eventType": "ERROR_EVENT",
+          "evidenceType": "EVENT",
+          "groupingEntity": null,
+          "rootCauseRelevant": false,
+          "startTime": 1763133360000
+        }
+      ],
+      "totalCount": 1
+    },
+    "impactAnalysis": {
+      "impacts": []
+    },
+    "impactLevel": "APPLICATION",
+    "impactedEntities": [
+      {
+        "entityId": {
+          "id": "CLOUD_APPLICATION-4697ADC7B6A1F6B5",
+          "type": "CLOUD_APPLICATION"
+        },
+        "name": "client"
+      }
+    ],
+    "k8s.cluster.name": ["bookstore"],
+    "k8s.cluster.uid": ["ef9a06a3-92e6-4a05-bc90-c0abb2c3c809"],
+    "k8s.namespace.name": ["stocks"],
+    "managementZones": [],
+    "problemFilters": [
+      {
+        "id": "c21f969b-5f03-333d-83e0-4f8f136e7682",
+        "name": "Default"
+      }
+    ],
+    "problemId": "845025139905093722_1763133360000V2",
+    "recentComments": {
+      "comments": [],
+      "totalCount": 0
+    },
+    "rootCauseEntity": null,
+    "severityLevel": "ERROR",
+    "startTime": 1763133360000,
+    "status": "OPEN",
+    "title": "Backoff event"
+  },
+  "level": "debug",
+  "message": "getProblemDetails response",
+  "timestamp": "2025-11-14T15:27:10.947Z"
+}

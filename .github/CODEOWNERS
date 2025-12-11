@@ -1,0 +1,10 @@
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# This file designates code owners for this repository.
+# Each line is a file pattern followed by one or more owners.
+
+# core maintainers
+* @christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
+
+# allow updates for markdown files and server.json
+*.md @krisdyna @dt-benedict
+server.json @krisdyna @dt-benedict

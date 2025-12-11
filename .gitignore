@@ -1,0 +1,30 @@
+.env
+dist/*
+node_modules/
+coverage/
+/.vscode/*
+!/.vscode/mcp.json
+.DS_Store
+
+tsconfig.tsbuildinfo
+
+# Token cache directory - contains sensitive OAuth tokens
+.dt-mcp/
+
+# mcp registry
+.mcpregistry_github_token
+.mcpregistry_registry_token
+
+*.bak
+/.idea/*
+/*.log
+
+/.gemini/
+/.chatgpt/
+/.amazonq/
+
+# CloudSoft Only
+/gn1.bak/*
+/devbox.*
+/.devbox/
+/bun.lock

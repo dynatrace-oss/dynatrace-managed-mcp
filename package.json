@@ -1,0 +1,76 @@
+{
+  "name": "@dynatrace-oss/dynatrace-managed-mcp-server",
+  "version": "0.0.1",
+  "mcpName": "io.github.dynatrace-oss/dynatrace-managed-mcp",
+  "description": "Model Context Protocol (MCP) server for Dynatrace Managed (self-hosted)",
+  "keywords": [
+    "Dynatrace",
+    "managed",
+    "mcp",
+    "model-context-protocol",
+    "server"
+  ],
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "bin": {
+    "mcp-server-dynatrace": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dynatrace-oss/dynatrace-managed-mcp.git"
+  },
+  "directories": {
+    "dist": "dist"
+  },
+  "scripts": {
+    "build": "tsc --build && chmod u+x dist/index.js",
+    "prepare": "husky",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration --runInBand --forceExit",
+    "coverage": "jest --coverage",
+    "serve": "node ./dist/index.js --http --port 8080",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
+  },
+  "author": "Dynatrace",
+  "license": "MIT",
+  "dependencies": {
+    "@dynatrace/openkit-js": "^4.2.0",
+    "@modelcontextprotocol/sdk": "^1.21.2",
+    "axios": "^1.13.1",
+    "commander": "^14.0.2",
+    "open": "^8.4.2",
+    "undici": "^7.16.0",
+    "winston": "^3.18.3",
+    "zod-to-json-schema": "^3.24.6"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/http-proxy": "^1.17.17",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.19.0",
+    "dotenv": "^17.2.3",
+    "http-proxy": "^1.18.1",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

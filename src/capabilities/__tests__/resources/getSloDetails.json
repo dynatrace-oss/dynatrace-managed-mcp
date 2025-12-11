@@ -1,0 +1,31 @@
+{
+  "burnRateMetricKey": "func:slo.errorBudgetBurnRate.dt_orders_monolith_error_rate",
+  "denominatorValue": 0,
+  "enabled": true,
+  "error": "At least one operand in the given metric expression provides no data.",
+  "errorBudget": -1,
+  "errorBudgetBurnRate": {
+    "burnRateVisualizationEnabled": false
+  },
+  "errorBudgetMetricKey": "func:slo.errorBudget.dt_orders_monolith_error_rate",
+  "evaluatedPercentage": -1,
+  "evaluationType": "AGGREGATE",
+  "filter": "mzName(\"dt-orders-monolith\"),type(\"SERVICE\")",
+  "id": "0775c411-c3a1-3286-8fd2-8a469ae0a1b9",
+  "metricDenominator": "",
+  "metricExpression": "(100)*(builtin:service.errors.server.successCount:splitBy())/(builtin:service.requestCount.server:splitBy())",
+  "metricKey": "func:slo.dt_orders_monolith_error_rate",
+  "metricName": "dt_orders_monolith_error_rate",
+  "metricNumerator": "",
+  "metricRate": "",
+  "name": "DT-Orders Monolith Error Rate",
+  "normalizedErrorBudgetMetricKey": "func:slo.normalizedErrorBudget.dt_orders_monolith_error_rate",
+  "numeratorValue": 0,
+  "relatedOpenProblems": -1,
+  "relatedTotalProblems": -1,
+  "status": "FAILURE",
+  "target": 95,
+  "timeframe": "-1d",
+  "useRateMetric": true,
+  "warning": 97
+}

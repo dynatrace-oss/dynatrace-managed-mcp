@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "my-dynatrace-managed-mcp": {
+      "command": "node",
+      "cwd": "${workspaceFolder}",
+      "args": ["--watch", "${workspaceFolder}/dist/index.js"],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}

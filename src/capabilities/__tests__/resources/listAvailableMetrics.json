@@ -1,0 +1,12 @@
+{
+  "metrics": [
+    {
+      "description": "The estimated percentage of unique users affected by a crash. For this high cardinality metric, the HyperLogLog algorithm is used to approximate the number of users.",
+      "displayName": "User rate - estimated users affected by crashes (by OS) [mobile, custom]",
+      "metricId": "builtin:apps.other.crashAffectedUsersRate.os",
+      "unit": "Percent"
+    }
+  ],
+  "nextPageKey": "__-rq96t3q0HBAABAgMBADBidWlsdGluOmFwcHMub3RoZXIucmVxdWVzdEVycm9yUmF0ZS5vc0FuZFZlcnNpb24AAAAAAAAABQABAAEqAAAAAAAAAAPQkAAAAAQEAAABmm-hj-8EAAABmre6l-8BAQEAAAAAAAAAAwAAAQAAAAABAAAAAAAAAAMAAAEAAAEAB1BlcmNlbnQAAAAAAAAAAAD__6ur3q3erQ",
+  "totalCount": 188
+}

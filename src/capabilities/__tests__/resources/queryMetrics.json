@@ -1,0 +1,22 @@
+{
+  "nextPageKey": null,
+  "resolution": "1h",
+  "result": [
+    {
+      "data": [
+        {
+          "dimensionMap": {
+            "dt.entity.host": "HOST-1D1EA84AB7DF62B4"
+          },
+          "dimensions": ["HOST-1D1EA84AB7DF62B4"],
+          "timestamps": [1763935200000, 1763938800000, 1763942400000],
+          "values": [4.1, null, 5.2]
+        }
+      ],
+      "dataPointCountRatio": 0.0000216,
+      "dimensionCountRatio": 0.00018,
+      "metricId": "builtin:host.cpu.usage"
+    }
+  ],
+  "totalCount": 18
+}

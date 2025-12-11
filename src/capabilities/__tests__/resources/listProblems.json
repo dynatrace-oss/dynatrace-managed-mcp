@@ -1,0 +1,54 @@
+{
+  "nextPageKey": "AQANMTc2NDAxMTg1NTM4NgEADTE3NjQwMTkwNTUzODYBADJMb25nKDApLUxvbmcoMTlhNDkzMTAyNjApLUxvbmcoMjU3YjMxYjFlNDEyMDI3ZSktNQAAAQAAAAUAAAAA",
+  "pageSize": 1,
+  "problems": [
+    {
+      "affectedEntities": [
+        {
+          "entityId": {
+            "id": "KUBERNETES_CLUSTER-CBA3902E721DFC3D",
+            "type": "KUBERNETES_CLUSTER"
+          },
+          "name": "weekplanner"
+        }
+      ],
+      "displayId": "P-2511198",
+      "endTime": -1,
+      "entityTags": [
+        {
+          "context": "KUBERNETES",
+          "key": "kubernetes-monitoring-issues",
+          "stringRepresentation": "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available",
+          "value": "monitoring-not-available"
+        }
+      ],
+      "impactLevel": "INFRASTRUCTURE",
+      "impactedEntities": [
+        {
+          "entityId": {
+            "id": "KUBERNETES_CLUSTER-CBA3902E721DFC3D",
+            "type": "KUBERNETES_CLUSTER"
+          },
+          "name": "weekplanner"
+        }
+      ],
+      "k8s.cluster.name": ["weekplanner"],
+      "k8s.cluster.uid": ["3cfabce5-30bf-4d39-995c-8170c2d1d16c"],
+      "managementZones": [],
+      "problemFilters": [
+        {
+          "id": "c21f969b-5f03-333d-83e0-4f8f136e7682",
+          "name": "Default"
+        }
+      ],
+      "problemId": "-2899693953000578799_1763288686574V2",
+      "rootCauseEntity": null,
+      "severityLevel": "AVAILABILITY",
+      "startTime": 1763288686574,
+      "status": "OPEN",
+      "title": "Monitoring not available"
+    }
+  ],
+  "totalCount": 12,
+  "warnings": []
+}

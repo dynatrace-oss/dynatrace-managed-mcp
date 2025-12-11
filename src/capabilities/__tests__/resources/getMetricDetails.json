@@ -1,0 +1,46 @@
+{
+  "aggregationTypes": ["auto", "avg", "max", "min"],
+  "billable": false,
+  "created": 0,
+  "dduBillable": false,
+  "defaultAggregation": {
+    "type": "avg"
+  },
+  "description": "Percentage of CPU time when CPU was utilized. A value close to 100% means most host processing resources are in use, and host CPUs can't handle additional work",
+  "dimensionDefinitions": [
+    {
+      "displayName": "Host",
+      "index": 0,
+      "key": "dt.entity.host",
+      "name": "Host",
+      "type": "ENTITY"
+    }
+  ],
+  "displayName": "CPU usage %",
+  "entityType": ["HOST"],
+  "exported": true,
+  "lastWritten": 1764019025375,
+  "metricId": "builtin:host.cpu.usage",
+  "metricValueType": {
+    "type": "unknown"
+  },
+  "resolutionInfSupported": true,
+  "scalar": false,
+  "tags": [],
+  "transformations": [
+    "filter",
+    "fold",
+    "limit",
+    "merge",
+    "names",
+    "parents",
+    "timeshift",
+    "sort",
+    "last",
+    "splitBy",
+    "lastReal",
+    "partition",
+    "setUnit"
+  ],
+  "unit": "Percent"
+}

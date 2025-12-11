@@ -1,0 +1,12 @@
+{
+  "entities": [
+    {
+      "displayName": "aks-ihudakpool-39785951-vmss00000O.cyat4o4idvyufoehozw0qdeb1f.frax.internal.cloudapp.net",
+      "entityId": "HOST-0F66906C3BC01429",
+      "type": "HOST"
+    }
+  ],
+  "nextPageKey": "AQAKdHlwZShIT1NUKQEADTE3NjM3NTk4NTUwMTYBAA0xNzY0MDE5MDU1MDE2AQAYTGxVZFltdTVTMk1mWDhQNU9PUG5lYzA9AQAAAAUAAA==",
+  "pageSize": 1,
+  "totalCount": 18
+}

@@ -1,0 +1,75 @@
+{
+  "correlationId": "KUBERNETES_CLUSTER--3773013533648880579_MONITORING_AVAILABLE",
+  "endTime": -1,
+  "entityId": {
+    "entityId": {
+      "id": "KUBERNETES_CLUSTER-CBA3902E721DFC3D",
+      "type": "KUBERNETES_CLUSTER"
+    },
+    "name": "weekplanner"
+  },
+  "entityTags": [
+    {
+      "context": "KUBERNETES",
+      "key": "kubernetes-monitoring-issues",
+      "stringRepresentation": "[Kubernetes]kubernetes-monitoring-issues:monitoring-not-available",
+      "value": "monitoring-not-available"
+    }
+  ],
+  "eventId": "-2899693953000578799_1763288686574",
+  "eventType": "AVAILABILITY_EVENT",
+  "frequentEvent": false,
+  "managementZones": [],
+  "properties": [
+    {
+      "key": "dt.event.allow_davis_merge",
+      "value": "false"
+    },
+    {
+      "key": "dt.event.allow_frequent_issue_detection",
+      "value": "false"
+    },
+    {
+      "key": "dt.event.description",
+      "value": "Dynatrace API monitoring is not available.\nReason: This API endpoint is currently not reachable.\n"
+    },
+    {
+      "key": "dt.event.group_label",
+      "value": "Availability"
+    },
+    {
+      "key": "dt.event.impact_level",
+      "value": "Infrastructure"
+    },
+    {
+      "key": "dt.event.is_rootcause_relevant",
+      "value": "true"
+    },
+    {
+      "key": "dt.event.timeout",
+      "value": "10"
+    },
+    {
+      "key": "dt.event.title",
+      "value": "Monitoring not available"
+    },
+    {
+      "key": "dt.settings.object_id",
+      "value": "vu9U3hXa3q0AAAABACxidWlsdGluOmFub21hbHktZGV0ZWN0aW9uLmt1YmVybmV0ZXMuY2x1c3RlcgASS1VCRVJORVRFU19DTFVTVEVSABBDQkEzOTAyRTcyMURGQzNEACQyNDRiYTkzMC04YjVlLTMxY2ItYjU4MS0zYjUzZDgzMTZkZWO-71TeFdrerQ"
+    },
+    {
+      "key": "k8s.cluster.name",
+      "value": "weekplanner"
+    },
+    {
+      "key": "k8s.cluster.uid",
+      "value": "3cfabce5-30bf-4d39-995c-8170c2d1d16c"
+    }
+  ],
+  "startTime": 1763288686574,
+  "status": "OPEN",
+  "suppressAlert": false,
+  "suppressProblem": false,
+  "title": "Monitoring not available",
+  "underMaintenance": false
+}

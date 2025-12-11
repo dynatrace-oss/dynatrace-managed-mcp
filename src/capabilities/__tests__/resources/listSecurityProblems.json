@@ -1,0 +1,23 @@
+{
+  "nextPageKey": "vu8XQiDj3q0SIU59KgHvowAAAZodO-UzAAABmre6rTMAAADIAAI0VT4tJAUu9QEAAQEADTE3NjM2MzMxMDc4NTM0VT4tJAUu9QIAAQEAFDEwMzQxMDg0NTU0MTk3MzQ2ODQwAL7vF0Ig496t",
+  "pageSize": 1,
+  "securityProblems": [
+    {
+      "cveIds": ["CVE-2025-1767"],
+      "displayId": "S-3",
+      "externalVulnerabilityId": "SNYK-GOLANG-GITHUBCOMKUBERNETESKUBERNETESPKGVOLUMEGITREPO-9404324",
+      "firstSeenTimestamp": 1762445335345,
+      "lastOpenedTimestamp": 1762445372668,
+      "lastUpdatedTimestamp": 1763689585268,
+      "muted": false,
+      "packageName": "github.com/kubernetes/kubernetes/pkg/volume/git_repo",
+      "securityProblemId": "10965700244432082338",
+      "status": "OPEN",
+      "technology": "KUBERNETES",
+      "title": "Improper Input Validation",
+      "url": "https://latest.managed-dev.dynalabs.io/e/aa5170aa-3c64-47de-abc5-5980b3f144a1/ui/security/problem/10965700244432082338",
+      "vulnerabilityType": "RUNTIME"
+    }
+  ],
+  "totalCount": 214
+}

@@ -1,0 +1,35 @@
+{
+  "pageSize": 50,
+  "slo": [
+    {
+      "burnRateMetricKey": "func:slo.errorBudgetBurnRate.dt_orders_k8_error_rate",
+      "denominatorValue": 0,
+      "enabled": true,
+      "error": "NONE",
+      "errorBudget": -1,
+      "errorBudgetBurnRate": {
+        "burnRateVisualizationEnabled": false
+      },
+      "errorBudgetMetricKey": "func:slo.errorBudget.dt_orders_k8_error_rate",
+      "evaluatedPercentage": -1,
+      "evaluationType": "AGGREGATE",
+      "filter": "mzName(\"dt-orders-k8\"),type(\"SERVICE\")",
+      "id": "1680ea77-eb8d-3611-9aca-99de422c6e2d",
+      "metricDenominator": "",
+      "metricExpression": "(100)*(builtin:service.errors.server.successCount:splitBy())/(builtin:service.requestCount.server:splitBy())",
+      "metricKey": "func:slo.dt_orders_k8_error_rate",
+      "metricName": "dt_orders_k8_error_rate",
+      "metricNumerator": "",
+      "metricRate": "",
+      "name": "DT-Orders K8 Error Rate",
+      "normalizedErrorBudgetMetricKey": "func:slo.normalizedErrorBudget.dt_orders_k8_error_rate",
+      "numeratorValue": 0,
+      "status": "SUCCESS",
+      "target": 95,
+      "timeframe": "-1d",
+      "useRateMetric": true,
+      "warning": 97
+    }
+  ],
+  "totalCount": 1
+}

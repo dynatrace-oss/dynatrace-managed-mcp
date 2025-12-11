@@ -1,0 +1,353 @@
+{
+  "dimensionKey": "dt.entity.service",
+  "displayName": "Service",
+  "entityLimitExceeded": false,
+  "fromRelationships": [
+    {
+      "id": "calls",
+      "toTypes": ["SERVICE"]
+    },
+    {
+      "id": "indirectlyReceivesFromQueue",
+      "toTypes": ["QUEUE"]
+    },
+    {
+      "id": "indirectlySendsToQueue",
+      "toTypes": ["QUEUE"]
+    },
+    {
+      "id": "isServiceOf",
+      "toTypes": ["CLOUD_APPLICATION"]
+    },
+    {
+      "id": "listensOnQueue",
+      "toTypes": ["QUEUE"]
+    },
+    {
+      "id": "receivesFromQueue",
+      "toTypes": ["QUEUE"]
+    },
+    {
+      "id": "runsOn",
+      "toTypes": [
+        "AWS_APPLICATION_LOAD_BALANCER",
+        "AWS_LAMBDA_FUNCTION",
+        "AWS_NETWORK_LOAD_BALANCER",
+        "AZURE_API_MANAGEMENT_SERVICE",
+        "AZURE_APPLICATION_GATEWAY",
+        "AZURE_COSMOS_DB",
+        "AZURE_EVENT_HUB_NAMESPACE",
+        "AZURE_FUNCTION_APP",
+        "AZURE_IOT_HUB",
+        "AZURE_LOAD_BALANCER",
+        "AZURE_REDIS_CACHE",
+        "AZURE_SERVICE_BUS_NAMESPACE",
+        "AZURE_SQL_SERVER",
+        "AZURE_STORAGE_ACCOUNT",
+        "CUSTOM_DEVICE",
+        "CUSTOM_DEVICE_GROUP",
+        "ELASTIC_LOAD_BALANCER",
+        "PROCESS_GROUP",
+        "RELATIONAL_DATABASE_SERVICE"
+      ]
+    },
+    {
+      "id": "runsOnHost",
+      "toTypes": [
+        "AWS_APPLICATION_LOAD_BALANCER",
+        "AWS_NETWORK_LOAD_BALANCER",
+        "AZURE_API_MANAGEMENT_SERVICE",
+        "AZURE_APPLICATION_GATEWAY",
+        "AZURE_COSMOS_DB",
+        "AZURE_EVENT_HUB_NAMESPACE",
+        "AZURE_IOT_HUB",
+        "AZURE_LOAD_BALANCER",
+        "AZURE_REDIS_CACHE",
+        "AZURE_SERVICE_BUS_NAMESPACE",
+        "AZURE_SQL_SERVER",
+        "AZURE_STORAGE_ACCOUNT",
+        "CUSTOM_DEVICE",
+        "ELASTIC_LOAD_BALANCER",
+        "HOST",
+        "RELATIONAL_DATABASE_SERVICE"
+      ]
+    },
+    {
+      "id": "runsOnProcessGroupInstance",
+      "toTypes": [
+        "AWS_APPLICATION_LOAD_BALANCER",
+        "AWS_LAMBDA_FUNCTION",
+        "AWS_NETWORK_LOAD_BALANCER",
+        "AZURE_API_MANAGEMENT_SERVICE",
+        "AZURE_APPLICATION_GATEWAY",
+        "AZURE_COSMOS_DB",
+        "AZURE_EVENT_HUB_NAMESPACE",
+        "AZURE_IOT_HUB",
+        "AZURE_LOAD_BALANCER",
+        "AZURE_REDIS_CACHE",
+        "AZURE_SERVICE_BUS_NAMESPACE",
+        "AZURE_SQL_SERVER",
+        "AZURE_STORAGE_ACCOUNT",
+        "CUSTOM_DEVICE",
+        "ELASTIC_LOAD_BALANCER",
+        "PROCESS_GROUP_INSTANCE",
+        "RELATIONAL_DATABASE_SERVICE"
+      ]
+    },
+    {
+      "id": "sendsToQueue",
+      "toTypes": ["QUEUE"]
+    }
+  ],
+  "managementZones": "List",
+  "properties": [
+    {
+      "displayName": "agentTechnologyType",
+      "id": "agentTechnologyType",
+      "type": "Enum"
+    },
+    {
+      "displayName": "akkaActorSystem",
+      "id": "akkaActorSystem",
+      "type": "String"
+    },
+    {
+      "displayName": "applicationBuildVersion",
+      "id": "applicationBuildVersion",
+      "type": "List"
+    },
+    {
+      "displayName": "applicationEnvironment",
+      "id": "applicationEnvironment",
+      "type": "List"
+    },
+    {
+      "displayName": "applicationName",
+      "id": "applicationName",
+      "type": "List"
+    },
+    {
+      "displayName": "applicationReleaseVersion",
+      "id": "applicationReleaseVersion",
+      "type": "List"
+    },
+    {
+      "displayName": "awsNameTag",
+      "id": "awsNameTag",
+      "type": "String"
+    },
+    {
+      "displayName": "boshName",
+      "id": "boshName",
+      "type": "String"
+    },
+    {
+      "displayName": "className",
+      "id": "className",
+      "type": "String"
+    },
+    {
+      "displayName": "cloudDatabaseProvider",
+      "id": "cloudDatabaseProvider",
+      "type": "Enum"
+    },
+    {
+      "displayName": "conditionalName",
+      "id": "conditionalName",
+      "type": "String"
+    },
+    {
+      "displayName": "contextRoot",
+      "id": "contextRoot",
+      "type": "String"
+    },
+    {
+      "displayName": "customizedName",
+      "id": "customizedName",
+      "type": "String"
+    },
+    {
+      "displayName": "databaseHostNames",
+      "id": "databaseHostNames",
+      "type": "List"
+    },
+    {
+      "displayName": "databaseName",
+      "id": "databaseName",
+      "type": "String"
+    },
+    {
+      "displayName": "databaseVendor",
+      "id": "databaseVendor",
+      "type": "String"
+    },
+    {
+      "displayName": "detectedName",
+      "id": "detectedName",
+      "type": "String"
+    },
+    {
+      "displayName": "dt.security_context",
+      "id": "dt.security_context",
+      "type": "List"
+    },
+    {
+      "displayName": "esbApplicationName",
+      "id": "esbApplicationName",
+      "type": "String"
+    },
+    {
+      "displayName": "fallbackServiceType",
+      "id": "fallbackServiceType",
+      "type": "Enum"
+    },
+    {
+      "displayName": "gcpZone",
+      "id": "gcpZone",
+      "type": "String"
+    },
+    {
+      "displayName": "ibmCtgGatewayUrl",
+      "id": "ibmCtgGatewayUrl",
+      "type": "String"
+    },
+    {
+      "displayName": "ibmCtgServerName",
+      "id": "ibmCtgServerName",
+      "type": "String"
+    },
+    {
+      "displayName": "ipAddress",
+      "id": "ipAddress",
+      "type": "List"
+    },
+    {
+      "displayName": "isExternalService",
+      "id": "isExternalService",
+      "type": "Boolean"
+    },
+    {
+      "displayName": "matchedServiceDetectionV2Rules",
+      "id": "matchedServiceDetectionV2Rules",
+      "type": "List"
+    },
+    {
+      "displayName": "oneAgentCustomHostName",
+      "id": "oneAgentCustomHostName",
+      "type": "String"
+    },
+    {
+      "displayName": "path",
+      "id": "path",
+      "type": "String"
+    },
+    {
+      "displayName": "port",
+      "id": "port",
+      "type": "Number"
+    },
+    {
+      "displayName": "publicCloudId",
+      "id": "publicCloudId",
+      "type": "String"
+    },
+    {
+      "displayName": "publicCloudRegion",
+      "id": "publicCloudRegion",
+      "type": "String"
+    },
+    {
+      "displayName": "publicDomainName",
+      "id": "publicDomainName",
+      "type": "String"
+    },
+    {
+      "displayName": "remoteCrossEnvironments",
+      "id": "remoteCrossEnvironments",
+      "type": "List"
+    },
+    {
+      "displayName": "remoteEndpoint",
+      "id": "remoteEndpoint",
+      "type": "String"
+    },
+    {
+      "displayName": "remoteServiceName",
+      "id": "remoteServiceName",
+      "type": "String"
+    },
+    {
+      "displayName": "serviceDetectionAttributes",
+      "id": "serviceDetectionAttributes",
+      "type": "Map"
+    },
+    {
+      "displayName": "serviceTechnologyTypes",
+      "id": "serviceTechnologyTypes",
+      "type": "List"
+    },
+    {
+      "displayName": "serviceType",
+      "id": "serviceType",
+      "type": "Enum"
+    },
+    {
+      "displayName": "softwareTechnologies",
+      "id": "softwareTechnologies",
+      "type": "List"
+    },
+    {
+      "displayName": "unifiedServiceIndicators",
+      "id": "unifiedServiceIndicators",
+      "type": "List"
+    },
+    {
+      "displayName": "webApplicationId",
+      "id": "webApplicationId",
+      "type": "String"
+    },
+    {
+      "displayName": "webServerName",
+      "id": "webServerName",
+      "type": "String"
+    },
+    {
+      "displayName": "webServiceName",
+      "id": "webServiceName",
+      "type": "String"
+    },
+    {
+      "displayName": "webServiceNamespace",
+      "id": "webServiceNamespace",
+      "type": "String"
+    }
+  ],
+  "tags": "List",
+  "toRelationships": [
+    {
+      "fromTypes": ["APPLICATION", "CUSTOM_APPLICATION", "HTTP_CHECK", "MOBILE_APPLICATION", "SERVICE"],
+      "id": "calls"
+    },
+    {
+      "fromTypes": ["KUBERNETES_CLUSTER"],
+      "id": "isClusterOfService"
+    },
+    {
+      "fromTypes": ["SERVICE_METHOD_GROUP"],
+      "id": "isGroupOf"
+    },
+    {
+      "fromTypes": ["SERVICE_INSTANCE"],
+      "id": "isInstanceOf"
+    },
+    {
+      "fromTypes": ["CLOUD_APPLICATION_NAMESPACE"],
+      "id": "isNamespaceOfService"
+    },
+    {
+      "fromTypes": ["SERVICE_METHOD"],
+      "id": "isServiceMethodOfService"
+    }
+  ],
+  "type": "SERVICE"
+}
