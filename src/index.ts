@@ -226,7 +226,7 @@ Never run queries that could return very large amounts of data, or that could be
     annotations: ToolAnnotations,
     cb: (args: z.objectOutputType<ZodRawShape, ZodTypeAny>) => Promise<string>,
   ) => {
-    const wrappedCb = async (args: ZodRawShape): Promise<CallToolResult> => {
+    const wrappedCb = async (args: any): Promise<CallToolResult> => {
       // Capture starttime for telemetry and rate limiting
       const startTime = Date.now();
 
@@ -283,7 +283,7 @@ Never run queries that could return very large amounts of data, or that could be
       }
     };
 
-    server.tool(name, description, paramsSchema, annotations, (args: z.ZodRawShape) => wrappedCb(args));
+    server.registerTool(name, { description: description }, (args: any) => wrappedCb(args));
   };
 
   tool(

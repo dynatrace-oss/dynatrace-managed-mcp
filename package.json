@@ -51,13 +51,13 @@
   "license": "MIT",
   "dependencies": {
     "@dynatrace/openkit-js": "^4.2.0",
-    "@modelcontextprotocol/sdk": "^1.21.2",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "axios": "^1.13.1",
     "commander": "^14.0.2",
     "open": "^8.4.2",
     "undici": "^7.16.0",
     "winston": "^3.18.3",
-    "zod-to-json-schema": "^3.24.6"
+    "zod-to-json-schema": "~3.25.0"
   },
   "devDependencies": {
     "@types/axios": "^0.14.4",
