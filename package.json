@@ -51,7 +51,7 @@
   "license": "MIT",
   "dependencies": {
     "@dynatrace/openkit-js": "^4.2.0",
-    "@modelcontextprotocol/sdk": "^1.21.2",
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "axios": "^1.13.1",
     "commander": "^14.0.2",
     "open": "^11.0.0",
