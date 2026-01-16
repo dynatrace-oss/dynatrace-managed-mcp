@@ -4,6 +4,8 @@
 
 The Dynatrace Managed MCP server is **already fully onboarded** to the MCP registry at https://github.com/mcp/.
 
+**Latest Update:** Enhanced the server description in `server.json` to better distinguish this Managed (self-hosted) version from the SaaS version, making it clearer for users browsing the MCP registry and https://github.com/mcp/.
+
 ## Evidence of Successful Onboarding
 
 ### 1. Release v0.4.0 Published Successfully
@@ -38,7 +40,7 @@ Publishing to https://registry.modelcontextprotocol.io...
 {
   "name": "io.github.dynatrace-oss/dynatrace-managed-mcp",
   "version": "0.4.0",
-  "description": "MCP server for Dynatrace Managed to access logs, events, and metrics.",
+  "description": "Model Context Protocol server for Dynatrace Managed (self-hosted) - access logs, events, metrics, problems, and security data.",
   "repository": {
     "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp",
     "source": "github"
@@ -86,6 +88,7 @@ Uses **GitHub OIDC authentication** which:
 ## MCP Registry Details
 
 - **Server Name:** `io.github.dynatrace-oss/dynatrace-managed-mcp`
+- **Description:** Model Context Protocol server for Dynatrace Managed (self-hosted) - access logs, events, metrics, problems, and security data.
 - **Current Version:** 0.4.0
 - **Package Registry:** npm
 - **Package Name:** `@dynatrace-oss/dynatrace-managed-mcp-server`
