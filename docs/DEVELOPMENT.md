@@ -221,6 +221,21 @@ This will:
 - update the version number in [package.json](../package.json),
 - commit the changes.
 
+### Publishing to MCP Registry
+
+The release workflow (`.github/workflows/release.yml`) automatically publishes the server to the [MCP Registry](https://github.com/mcp/) when a new release tag is pushed:
+
+1. Push a version tag (e.g., `git tag v0.5.0 && git push origin v0.5.0`)
+2. GitHub Actions workflow triggers automatically
+3. Package is published to npm
+4. MCP Publisher authenticates using GitHub OIDC
+5. Server metadata is published to https://registry.modelcontextprotocol.io
+6. Server becomes discoverable at https://github.com/mcp/
+
+No manual intervention is required - the workflow handles authentication and publishing automatically.
+
+For more details, see [ONBOARDING_STATUS.md](../ONBOARDING_STATUS.md).
+
 ## Design Decisions
 
 #### Processing API Responses
