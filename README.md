@@ -1,5 +1,7 @@
 # Dynatrace Managed MCP Server
 
+<!-- Dummy change for testing Snyk scan action -->
+
 <h4 align="center">
   <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp/releases">
     <img src="https://img.shields.io/github/release/dynatrace-oss/dynatrace-managed-mcp" />
