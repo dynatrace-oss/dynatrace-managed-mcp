@@ -2,6 +2,10 @@
 
 ## Unreleased Changes
 
+## 0.5.1
+
+- Add multienvironment support
+
 ## 0.5.0
 
 - Add arm container image
