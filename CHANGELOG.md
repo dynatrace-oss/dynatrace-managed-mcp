@@ -2,7 +2,7 @@
 
 ## Unreleased Changes
 
-## 0.5.3
+## 0.5.3 - 2026-01-27
 
 - Added multi-environment support, enabling you to connect to multiple Dynatrace Managed deployments simultaneously through a unified configuration
 
