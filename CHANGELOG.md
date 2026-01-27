@@ -2,6 +2,10 @@
 
 ## Unreleased Changes
 
+## 0.5.3
+
+- Added multi-environment support, enabling you to connect to multiple Dynatrace Managed deployments simultaneously through a unified configuration
+
 ## 0.5.0
 
 - Add arm container image
