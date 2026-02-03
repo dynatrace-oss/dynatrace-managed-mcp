@@ -267,7 +267,7 @@ Never run queries that could return very large amounts of data, or that could be
       }
     };
 
-    server.registerTool(
+    (server.registerTool as any)(
       name,
       {
         description,
