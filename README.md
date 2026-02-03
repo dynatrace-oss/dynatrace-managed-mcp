@@ -90,6 +90,27 @@ The easiest way to configure multiple environments is using a configuration file
 
 **Usage in MCP configuration (e.g., `claude_desktop_config.json`):**
 
+**Option A: Using npx (Recommended - no installation required)**
+
+```json
+{
+  "mcpServers": {
+    "dynatrace-managed": {
+      "command": "npx",
+      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
+      "env": {
+        "DT_CONFIG_FILE": "./dt-config.yaml",
+        "DT_PROD_TOKEN": "dt0c01.ABC123...",
+        "DT_STAGING_TOKEN": "dt0c01.XYZ789...",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+**Option B: Local development (requires cloning the repository)**
+
 ```json
 {
   "mcpServers": {
@@ -107,11 +128,13 @@ The easiest way to configure multiple environments is using a configuration file
 }
 ```
 
+> **Note:** Option B requires cloning this repository and running `npm install && npm run build` first.
+
 > **Security Best Practice:** Use environment variable interpolation (`${TOKEN_NAME}`) in your config files so you can commit them to version control without exposing secrets!
 
 See [examples/dt-config.yaml](examples/dt-config.yaml) and [examples/dt-config.json](examples/dt-config.json) for complete examples.
 
-### Method 2: Environment Variable (Legacy/Kubernetes)
+### Method 2: Environment Variable (Docker/Kubernetes)
 
 For Kubernetes deployments or if you prefer environment variables, you can set `DT_ENVIRONMENT_CONFIGS` with a JSON string:
 
@@ -440,7 +463,7 @@ AWS Lambda Functions:
   - Supports environment variable interpolation in file content (`${VAR_NAME}`)
   - Example: `DT_CONFIG_FILE=./dt-config.yaml`
 
-- **`DT_ENVIRONMENT_CONFIGS`** (optional): JSON string with environment configurations. **Legacy method, useful for Kubernetes/Docker.**
+- **`DT_ENVIRONMENT_CONFIGS`** (optional): JSON string with environment configurations. **Useful for Kubernetes/Docker.**
   - Used if `DT_CONFIG_FILE` is not set
   - Must be valid JSON array
   - Example: `DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"...","environmentId":"...","alias":"...","apiToken":"..."}]'`
