@@ -65,7 +65,7 @@ export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
     }
   }
 
-  // Priority 2: DT_ENVIRONMENT_CONFIGS - Parse JSON string (legacy/existing behavior)
+  // Priority 2: DT_ENVIRONMENT_CONFIGS - Parse JSON string
   const environmentConfigs = process.env.DT_ENVIRONMENT_CONFIGS;
   if (environmentConfigs) {
     logger.info('Loading configuration from DT_ENVIRONMENT_CONFIGS');
@@ -90,7 +90,7 @@ export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
   throw new Error(
     'Configuration not found. Please set one of:\n' +
       '  - DT_CONFIG_FILE: Path to config file (JSON or YAML)\n' +
-      '  - DT_ENVIRONMENT_CONFIGS: JSON string (legacy)\n\n' +
+      '  - DT_ENVIRONMENT_CONFIGS: JSON string\n\n' +
       'Example with file:\n' +
       '  DT_CONFIG_FILE=./dt-config.yaml\n\n' +
       'Example with JSON string:\n' +

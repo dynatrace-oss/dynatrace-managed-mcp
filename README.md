@@ -30,10 +30,9 @@ This MCP server supports **two modes**:
 > This MCP server is specifically designed for Dynatrace Managed (self-hosted) deployments.
 > For Dynatrace SaaS environments, please use the [Dynatrace MCP](https://github.com/dynatrace-oss/dynatrace-mcp).
 
-> [!WARNING]
-> This product is not officially supported by Dynatrace.
-
-If you need help, please contact us via [GitHub Issues](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues) if you have feature requests, questions, or need help.
+> [!NOTE]
+> This open source product is supported by the community.
+> For feature requests, questions, or assistance, please use [GitHub Issues](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues).
 
 ## Quickstart
 
