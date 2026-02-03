@@ -1,69 +1,170 @@
-# Dynatrace MCP Server
+# Dynatrace Managed MCP Server
 
-You are a Developer working on the Dynatrace Model-Context-Protocol (MCP) Server project.
+You are a Developer working on the Dynatrace Managed Model-Context-Protocol (MCP) Server project.
 
-It is written in TypeScript and uses Node.js as its runtime. You need to understand how to write MCP server code based on https://www.npmjs.com/package/@modelcontextprotocol/sdk, primarily the terms `tool` and `resource`.
+This is a TypeScript/Node.js MCP server that connects AI assistants to self-hosted Dynatrace Managed deployments. It uses the MCP SDK (https://www.npmjs.com/package/@modelcontextprotocol/sdk) to expose Dynatrace observability data as MCP `tools` and `resources`.
 
-## Guidelines
+## Build, Test, and Lint Commands
 
-- Follow the user's requirements carefully & to the letter.
-- First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
-- Confirm, then write code!
-- Focus on easy and readability code, over being performant.
-- Fully implement all requested functionality.
-- Leave NO todo's, placeholders or missing pieces.
-- Ensure code is complete! Verify thoroughly finalised.
-- Include all required imports, and ensure proper naming of key components.
-- Be concise, minimize any other prose.
-- If you think there might not be a correct answer, you say so.
-- If you do not know the answer, say so, instead of guessing.
-- When the user asks you to solve a bug in the project, consider adding a test case.
+```bash
+# Build
+npm run build              # Compile TypeScript to dist/
 
-## Repo Structure
+# Test
+npm test                   # Run all tests
+npm run test:unit          # Unit tests only (src/**/__tests__/*.test.ts)
+npm run test:integration   # Integration tests (tests/**/*.integration.test.ts)
+npm run coverage           # Generate coverage report (coverage/lcov-report/index.html)
 
-The repository is structured as follows:
+# Run specific test file
+npm test -- tests/integration/capabilities.integration.test.ts
 
-- `src/`: Contains the source code for the MCP server.
-- `src/index.ts`: Main entrypoint of the MCP server. Defines command line parameters, MCP Instructions, MCP Tools & MCP Resources.
-- `src/authentication/*.ts`: Contains authentication and HTTP client for making API calls to Managed Dynatrace
-- `src/authentication/__tests__/*.test.ts`: Unit tests for authentication and HTTP API calls
-- `src/capabilities/*.ts`: Contains the actual MCP tool definitions and implementations.
-- `src/capabilities/__tests__/*.test.ts`: unit tests for the MCP tools.
-- `src/interfaces/`: Typescript interfaces
-- `src/resources`: Static assets for MCP resources that need to be bundled into the build.
-- `src/utils/*.ts`: Utility functions
-- `src/utils/__tests__/*.test.ts`: Unit tests for utility functions
-- `tests/api-contract/*.test.ts`: Test actual API calls to validate our code matches the real API responses
-- `tests/integration/*.test.ts`: Integration tests
-- `dist/`: Output directory for compiled JavaScript files.
+# Formatting
+npm run prettier           # Check formatting
+npm run prettier:fix       # Auto-fix formatting
 
-## Coding Guidelines
+# Run server
+npm run serve              # Run HTTP server on port 8080
+node --env-file=.env ./dist/index.js        # Run with stdio transport
+node --env-file=.env ./dist/index.js --http # Run with HTTP transport
 
-Please try to follow basic TypeScript and Node.js coding conventions. We will define a concrete eslint setup at a later point.
+# Development tools
+npx @modelcontextprotocol/inspector node --env-file=.env ./dist/index.js  # MCP Inspector
+```
 
-## Dependencies
+**Integration tests** require a `.env` file with real Dynatrace Managed credentials (see `.env.template`). Tests expect two environments: one with alias `testAlias` (valid) and one with alias `invalidApiToken` (wrong token for error testing).
 
-The following dependencies are allowed:
+## Architecture
 
-- Core MCP SDK (`@modelcontextprotocol/sdk`),
-- ZOD schema validation (`zod-to-json-schema`),
-- Axios for API calls (`axios`).
+### High-Level Structure
 
-Please do not install any other dependencies.
+```
+MCP Client (AI Assistant)
+    ↓
+MCP Server (src/index.ts)
+    ↓
+Capability Clients (src/capabilities/*.ts)
+    ↓
+Auth Client Manager (src/authentication/managed-auth-client.ts)
+    ↓
+Dynatrace Managed API (multiple environments)
+```
 
-## Authentication
+The MCP server supports **multi-environment** setups via `DT_ENVIRONMENT_CONFIGS`, allowing queries across multiple Dynatrace Managed instances.
 
-For authentication, we are using API Tokens passed in the HTTP request headers.
+### Key Components
 
-## Building and Running
+- **`src/index.ts`**: Main entrypoint. Registers MCP tools, handles tool routing, defines MCP metadata/instructions
+- **`src/capabilities/*.ts`**: Each file implements one API domain (problems, entities, logs, metrics, etc.)
+  - Contains both API calls and response formatting logic
+  - Exports an API client class (e.g., `ProblemsApiClient`)
+  - Client methods like `listProblems()` make API calls
+  - Formatting methods like `formatList()` convert responses to LLM-friendly strings
+- **`src/authentication/managed-auth-client.ts`**: `ManagedAuthClientManager` manages API clients for multiple environments, handles authentication
+- **`src/utils/`**: Shared utilities (logging, date formatting, environment parsing, telemetry)
 
-Try to build every change using `npm run build`, and verify that you can still start the server using `npm run serve`. The server should be able to run without any errors.
-The `dist/` folder contains the output of the build process.
+### MCP Tooling Principles
 
-## Changelog
+1. **Tool naming**: Prefix all tools with `dynatrace_managed_` to avoid conflicts with Dynatrace SaaS MCP (e.g., `dynatrace_managed_list_problems`)
+2. **Response formatting**:
+   - **List tools** (e.g., `list_problems`): Extract key fields, format as readable strings for the LLM
+   - **Detail tools** (e.g., `get_problem_details`): Return raw JSON with contextual wrapper and "Next Steps" recommendations
+3. **Next Steps**: Include recommendations in tool responses to guide the LLM (e.g., suggest viewing Dynatrace UI, using related tools)
+4. **Error handling**: Let errors bubble to `index.ts` tool wrapper; trust Dynatrace API errors to be meaningful
 
-- Whenever you add a new feature, please also add a new line into `CHANGELOG.md`. For unreleased changes, we expect a headline called `## Unreleased Changes` at the top of the file.
-- Follow the existing format:
-  - Use semantic versioning (major.minor.patch)
-  - Group changes by type (Added, Changed, Fixed, etc.)
-  - Keep entries concise but descriptive
+## Repository Structure
+
+```
+src/
+├── index.ts                          # MCP server entrypoint, tool registration
+├── authentication/
+│   ├── managed-auth-client.ts        # Multi-environment auth manager
+│   └── __tests__/*.test.ts           # Auth unit tests
+├── capabilities/                     # API domain implementations
+│   ├── problems-api.ts               # Problems API client
+│   ├── entities-api.ts               # Entities API client
+│   ├── logs-api.ts                   # Logs API client
+│   ├── metrics-api.ts                # Metrics API client
+│   ├── events-api.ts                 # Events API client
+│   ├── security-api.ts               # Security problems API client
+│   ├── slo-api.ts                    # SLO API client
+│   └── __tests__/*.test.ts           # Capability unit tests
+├── utils/
+│   ├── logger.ts                     # Winston-based logging
+│   ├── environment.ts                # Parse DT_ENVIRONMENT_CONFIGS
+│   ├── telemetry-openkit.ts          # OpenKit telemetry
+│   ├── date-formatter.ts             # Timestamp formatting
+│   ├── user-agent.ts                 # User-Agent header generation
+│   ├── version.ts                    # Package version utils
+│   └── __tests__/*.test.ts           # Util unit tests
+└── interfaces/                       # TypeScript type definitions
+
+tests/
+├── integration/*.integration.test.ts # Integration tests (real API calls)
+└── api-contract/*.test.ts            # API contract validation tests
+
+dist/                                 # Build output (compiled JS)
+```
+
+## Key Conventions
+
+### Testing Strategy
+
+- **Unit tests** (`src/**/__tests__/*.test.ts`): Mock API responses, test formatting logic defensively
+- **Integration tests** (`tests/**/*.integration.test.ts`): Real API calls to Dynatrace Managed with `.env` credentials
+- **API contract tests** (`tests/api-contract/*.test.ts`): Validate code matches real API responses
+- All response object fields are declared as **optional** (defensive coding—don't assume API response structure)
+
+### Logging
+
+- Use `winston` logger from `src/utils/logger.ts` (not `console.log`)
+- Debug logs should include: tool call parameters, API responses (full JSON), tool return values
+- Logs written to `dynatrace-managed-mcp.log` in CWD
+- Set `LOG_LEVEL=debug` for development
+- Minimal `console.error()` use (only startup message)—prefer logging
+
+### Response Processing
+
+**Lists** (e.g., `list_problems`):
+
+- Define strongly-typed interfaces with all fields optional
+- Extract pertinent info and format as strings (LLMs struggle with complex JSON)
+
+**Details** (e.g., `get_problem_details`):
+
+- Return raw JSON (preserves all data, handles varying Davis configurations)
+- Wrap with context and Next Steps recommendations
+
+### Dependencies
+
+**Allowed only:**
+
+- `@modelcontextprotocol/sdk` (MCP framework)
+- `zod-to-json-schema` (schema validation)
+- `axios` (HTTP client)
+- `winston` (logging)
+- `commander` (CLI parsing)
+- `@dynatrace/openkit-js` (telemetry)
+
+**Do not install other dependencies** without discussion.
+
+### Authentication
+
+- Uses API tokens (not OAuth) passed in HTTP headers
+- Multi-environment support via `DT_ENVIRONMENT_CONFIGS` JSON array
+- Required API scopes documented in `README.md#api-scopes-for-managed-deployment`
+
+### Changelog Maintenance
+
+- Add entries to `CHANGELOG.md` under `## Unreleased Changes` for new features
+- Follow `.github/instructions/changelog.instructions.md` for formatting
+- Use past tense, user-centric language, semantic versioning
+
+## Development Guidelines
+
+- **Complete implementations**: No TODOs, placeholders, or missing pieces
+- **Readability over performance**: Code should be clear and maintainable
+- **Add tests for bugs**: When fixing bugs, add test cases
+- **Defensive typing**: All API response fields should be optional
+- **Verify builds**: Always run `npm run build` and `npm run serve` after changes
+- **Check logs**: Review `dynatrace-managed-mcp.log` during development

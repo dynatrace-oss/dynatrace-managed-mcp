@@ -2,6 +2,11 @@
 
 ## Unreleased Changes
 
+- Improved logging configuration with comprehensive environment variables `LOG_OUTPUT` and `LOG_FILE`, providing greater flexibility for log destinations. You can now:
+  - Redirect logs to stdout (`stdout` or `console`), stderr (errors/warnings only with `stderr`, or all levels with `stderr-all`), or a custom file path
+  - Use multiple destinations simultaneously (e.g., `file+console` to log to both file and stdout, or `file+stderr` for file logging with errors to stderr)
+  - Disable logging entirely with `disabled`
+
 ## 0.5.3
 
 - Add multi-environment support, enabling you to connect to multiple Dynatrace Managed deployments simultaneously through a unified configuration

@@ -361,7 +361,39 @@ AWS Lambda Functions:
 ## Environment Variables
 
 - `DT_ENVIRONMENT_CONFIGS`: An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. See below for contents of this.
-- `LOG_LEVEL` (optional): Log level, writing to dynatrace-managed-mcp.log in the current working directory (e.g. debug, info, warning, error)
+- `LOG_LEVEL` (optional): Log verbosity level (e.g. debug, info, warn, error). Default: `info`
+- `LOG_OUTPUT` (optional): Log output destination. Options:
+  - `file` (default): Write logs to a file
+  - `stdout`: Write logs to standard output
+  - `console`: Alias for `stdout`
+  - `stderr`: Write errors and warnings to standard error (info/debug still suppressed)
+  - `stderr-all`: Write all log levels to standard error
+  - `file+console` or `file+stdout`: Write logs to both file and stdout
+  - `file+stderr`: Write logs to file and errors/warnings to stderr
+  - `disabled`: Disable logging entirely
+- `LOG_FILE` (optional): Path to log file when `LOG_OUTPUT` includes `file`. Default: `dynatrace-managed-mcp.log` in current working directory
+
+**Logging Examples:**
+
+```bash
+# Log to standard output (useful for Docker/containerized environments)
+LOG_OUTPUT=stdout node dist/index.js
+
+# Log errors/warnings to stderr, suppress info/debug (standard Unix practice)
+LOG_OUTPUT=stderr node dist/index.js
+
+# Log to custom file path
+LOG_OUTPUT=file LOG_FILE=/var/log/dynatrace-mcp.log node dist/index.js
+
+# Log to both file and console (useful for debugging)
+LOG_OUTPUT=file+console LOG_LEVEL=debug node dist/index.js
+
+# Log to file, send errors/warnings to stderr (production use)
+LOG_OUTPUT=file+stderr LOG_FILE=/var/log/app.log node dist/index.js
+
+# Disable logging entirely (not recommended)
+LOG_OUTPUT=disabled node dist/index.js
+```
 
 ### Multienvironment Config Fields
 

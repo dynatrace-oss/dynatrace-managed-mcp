@@ -1,5 +1,48 @@
 import winston from 'winston';
 
+function createTransports(): winston.transport[] {
+  const logOutput = (process.env.LOG_OUTPUT || 'file').toLowerCase();
+  const logFile = process.env.LOG_FILE || 'dynatrace-managed-mcp.log';
+
+  switch (logOutput) {
+    case 'stderr':
+      // Send only errors and warnings to stderr (standard behavior)
+      return [
+        new winston.transports.Console({
+          stderrLevels: ['error', 'warn'],
+        }),
+      ];
+    case 'stderr-all':
+      // Send all log levels to stderr
+      return [
+        new winston.transports.Console({
+          stderrLevels: ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'],
+        }),
+      ];
+    case 'console':
+    case 'stdout':
+      // Send all logs to stdout
+      return [new winston.transports.Console()];
+    case 'file+console':
+    case 'file+stdout':
+      // Log to both file and stdout
+      return [new winston.transports.File({ filename: logFile }), new winston.transports.Console()];
+    case 'file+stderr':
+      // Log to file and send errors/warnings to stderr
+      return [
+        new winston.transports.File({ filename: logFile }),
+        new winston.transports.Console({
+          stderrLevels: ['error', 'warn'],
+        }),
+      ];
+    case 'disabled':
+      return [];
+    case 'file':
+    default:
+      return [new winston.transports.File({ filename: logFile })];
+  }
+}
+
 export const logger = winston.createLogger({
   level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
   format: winston.format.combine(
@@ -7,8 +50,9 @@ export const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json(),
   ),
-  transports: [new winston.transports.File({ filename: 'dynatrace-managed-mcp.log' })],
+  transports: createTransports(),
 });
+
 export async function flushLogger() {
   logger.end();
   await new Promise((resolve) => logger.once('finish', resolve));
