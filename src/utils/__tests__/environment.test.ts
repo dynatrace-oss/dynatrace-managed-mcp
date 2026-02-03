@@ -145,7 +145,7 @@ describe('getManagedEnvironmentConfig', () => {
 
   it('should throw error when DT_ENVIRONMENT_CONFIGS is missing', () => {
     process.env = {};
-    expect(() => getManagedEnvironmentConfigs()).toThrow('DT_ENVIRONMENT_CONFIGS is required');
+    expect(() => getManagedEnvironmentConfigs()).toThrow('Configuration not found');
   });
 
   it('should remove trailing slash from environment URL', () => {

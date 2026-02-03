@@ -1,0 +1,17 @@
+[
+  {
+    "dynatraceUrl": "https://my-dashboard.company.com/",
+    "apiEndpointUrl": "https://my-api.company.com/",
+    "environmentId": "abc-123",
+    "alias": "production",
+    "apiToken": "${DT_PROD_TOKEN}",
+    "httpProxyUrl": "http://proxy.company.com:8080"
+  },
+  {
+    "dynatraceUrl": "https://staging-dashboard.company.com/",
+    "apiEndpointUrl": "https://staging-api.company.com/",
+    "environmentId": "xyz-789",
+    "alias": "staging",
+    "apiToken": "${DT_STAGING_TOKEN}"
+  }
+]

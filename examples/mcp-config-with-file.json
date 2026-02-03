@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "dynatrace-managed": {
+      "command": "node",
+      "args": ["./dist/index.js"],
+      "env": {
+        "DT_CONFIG_FILE": "./dt-config.yaml",
+        "DT_PROD_TOKEN": "dt0c01.ABC123...",
+        "DT_STAGING_TOKEN": "dt0c01.XYZ789...",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}

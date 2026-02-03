@@ -40,8 +40,109 @@ If you need help, please contact us via [GitHub Issues](https://github.com/dynat
 You can add this MCP server to your AI Assistant such as VSCode, Claude, Cursor, Kiro, Windsurf, ChatGPT, or Github Copilot.
 For more details, please refer to the [configuration section below](#configuration).
 
-You need to configure the connection to your Dynatrace Managed environment(s). There is one variable to set (`DT_ENVIRONMENT_CONFIGS`)
-which contains escaped JSON that defines all of your managed deployments. These are held in an array, with one element per environment.
+## Configuration Methods
+
+There are **three ways** to configure your Dynatrace Managed environments. Choose the method that works best for your use case:
+
+### Method 1: Configuration File (Recommended for Local Development)
+
+The easiest way to configure multiple environments is using a configuration file (JSON or YAML). This method supports:
+
+- ✅ **Clean, readable format** - No quote escaping needed
+- ✅ **Comments** (YAML only) - Document your configuration
+- ✅ **Environment variable interpolation** - Keep tokens secure with `${VAR_NAME}` syntax
+- ✅ **Version control friendly** - Commit config files without tokens
+
+**Example: `dt-config.yaml`**
+
+```yaml
+# Production environment
+- dynatraceUrl: https://my-dashboard.company.com/
+  apiEndpointUrl: https://my-api.company.com/
+  environmentId: abc-123
+  alias: production
+  # Token is injected from environment variable at runtime
+  apiToken: ${DT_PROD_TOKEN}
+  httpProxyUrl: http://proxy.company.com:8080
+
+# Staging environment
+- dynatraceUrl: https://staging-dashboard.company.com/
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  alias: staging
+  apiToken: ${DT_STAGING_TOKEN}
+```
+
+**Example: `dt-config.json`**
+
+```json
+[
+  {
+    "dynatraceUrl": "https://my-dashboard.company.com/",
+    "apiEndpointUrl": "https://my-api.company.com/",
+    "environmentId": "abc-123",
+    "alias": "production",
+    "apiToken": "${DT_PROD_TOKEN}",
+    "httpProxyUrl": "http://proxy.company.com:8080"
+  }
+]
+```
+
+**Usage in MCP configuration (e.g., `claude_desktop_config.json`):**
+
+```json
+{
+  "mcpServers": {
+    "dynatrace-managed": {
+      "command": "node",
+      "args": ["./dist/index.js"],
+      "env": {
+        "DT_CONFIG_FILE": "./dt-config.yaml",
+        "DT_PROD_TOKEN": "dt0c01.ABC123...",
+        "DT_STAGING_TOKEN": "dt0c01.XYZ789...",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+> **Security Best Practice:** Use environment variable interpolation (`${TOKEN_NAME}`) in your config files so you can commit them to version control without exposing secrets!
+
+See [examples/dt-config.yaml](examples/dt-config.yaml) and [examples/dt-config.json](examples/dt-config.json) for complete examples.
+
+### Method 2: Environment Variable (Legacy/Kubernetes)
+
+For Kubernetes deployments or if you prefer environment variables, you can set `DT_ENVIRONMENT_CONFIGS` with a JSON string:
+
+```shell
+DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"https://api.example.com/","environmentId":"abc-123","alias":"production","apiToken":"dt0c01.ABC123"}]'
+```
+
+This method works well for:
+
+- ✅ Kubernetes ConfigMaps/Secrets
+- ✅ Docker containers
+- ✅ CI/CD pipelines
+- ⚠️ Not ideal for local development (quote escaping is cumbersome)
+
+### Method 3: .env File (Not Recommended)
+
+While you can use a `.env` file, multiline values don't work reliably. **Use Method 1 (config file) instead** for cleaner local development.
+
+## Configuration Priority
+
+If multiple configuration methods are set, the MCP server uses this priority:
+
+1. **`DT_CONFIG_FILE`** - External file (highest priority)
+2. **`DT_ENVIRONMENT_CONFIGS`** - JSON string
+3. **Error** - If neither is set
+
+## Configuration Fields
+
+You need to configure the connection to your Dynatrace Managed environment(s). Each environment requires:
+
+**Configuration structure:**
 
 ```json
 [
@@ -53,20 +154,11 @@ which contains escaped JSON that defines all of your managed deployments. These 
     "apiToken": "my-api-token",
     "httpProxyUrl": "",
     "httpsProxyUrl": ""
-  },
-  {
-    "dynatraceUrl": "https://my-dashboard2-endpoint.com/",
-    "apiEndpointUrl": "https://my-api2-endpoint.com/",
-    "environmentId": "my-env-id-2",
-    "alias": "alias-env-2",
-    "apiToken": "my-api-token-2",
-    "httpProxyUrl": "",
-    "httpsProxyUrl": ""
   }
 ]
 ```
 
-where:
+**Field descriptions:**
 
 - `dynatraceUrl`: base url for Dynatrace Managed dashboard, to which the environment id will be appended (e.g. `https://dmz123.dynatrace-managed.com`).
   If not specified, will default to use the same value as `DT_API_ENDPOINT_URL`.
@@ -76,33 +168,12 @@ where:
 - `apiToken`: API token with required scopes (see [Authentication](#authentication))
 - (optional) `httpProxyUrl`/`httpsProxyUrl`: URL of proxy server for requests (see [Environment Variables](#environment-variables))
 
-This needs to be escaped and set as the `DT_ENVIRONMENT_CONFIGS` environment variable, e.g.:
-
-```shell
-DT_ENVIRONMENT_CONFIGS='[
-    {
-        "dynatraceUrl": "https://my-dashboard-endpoint.com/",
-        "apiEndpointUrl": "https://my-api-endpoint.com/",
-        "environmentId": "my-env-id-1",
-        "alias": "alias-env",
-        "apiToken": "my-api-token",
-        "httpProxyUrl": "http://proxy.company.com:8080"
-    },
-    {
-        "dynatraceUrl": "https://my-dashboard2-endpoint.com/",
-        "apiEndpointUrl": "https://my-api2-endpoint.com/",
-        "environmentId": "my-env-id-2",
-        "alias": "alias-env-2",
-        "apiToken": "my-api-token-2",
-        "httpProxyUrl": "http://proxy.company.com:8080"
-    }
-]'
-```
+## Getting Started
 
 If you are using multiple environments, we strongly recommend you set up rules (see [Rules](#rule-file)) to steer your LLM to better
 understand each of your environments.
 
-Changes to environment configuration will need from an MCP server restart/reload. Changes won't be picked up until a fresh reload.
+Changes to environment configuration will need an MCP server restart/reload. Changes won't be picked up until a fresh reload.
 
 Once configured, you can start using [example prompts](#Example-Prompts) like `Get all details of the Dynatrace entity 'my-service'`
 or `What problems has Dynatrace identified? Give details of the first problem.`.
@@ -360,7 +431,24 @@ AWS Lambda Functions:
 
 ## Environment Variables
 
-- `DT_ENVIRONMENT_CONFIGS`: An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. See below for contents of this.
+### Configuration Variables
+
+- **`DT_CONFIG_FILE`** (optional): Path to configuration file (JSON or YAML). **Recommended for local development.**
+  - Supports relative paths (e.g., `./dt-config.yaml`)
+  - Supports absolute paths (e.g., `/etc/dynatrace/config.yaml`)
+  - Supports `~` expansion (e.g., `~/dt-config.yaml`)
+  - Supports environment variable interpolation in file content (`${VAR_NAME}`)
+  - Example: `DT_CONFIG_FILE=./dt-config.yaml`
+
+- **`DT_ENVIRONMENT_CONFIGS`** (optional): JSON string with environment configurations. **Legacy method, useful for Kubernetes/Docker.**
+  - Used if `DT_CONFIG_FILE` is not set
+  - Must be valid JSON array
+  - Example: `DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"...","environmentId":"...","alias":"...","apiToken":"..."}]'`
+
+> **Note:** If both `DT_CONFIG_FILE` and `DT_ENVIRONMENT_CONFIGS` are set, `DT_CONFIG_FILE` takes priority.
+
+### Logging Variables
+
 - `LOG_LEVEL` (optional): Log level, writing to dynatrace-managed-mcp.log in the current working directory (e.g. debug, info, warning, error)
 
 ### Multienvironment Config Fields

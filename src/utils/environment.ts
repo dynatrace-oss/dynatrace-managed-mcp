@@ -1,4 +1,6 @@
 import { JSONObject } from '@dynatrace/openkit-js';
+import { ConfigFileLoader } from './config-loader';
+import { logger } from './logger';
 
 export interface ManagedEnvironmentConfig {
   environmentId: string;
@@ -39,25 +41,62 @@ export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): Mana
 }
 
 export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
-  const environmentConfigs = process.env.DT_ENVIRONMENT_CONFIGS;
-  if (!environmentConfigs) {
-    throw new Error('DT_ENVIRONMENT_CONFIGS is required');
-  }
-  let environmentConfigurations;
-  try {
-    environmentConfigurations = JSON.parse(environmentConfigs);
-  } catch (e) {
-    if (e instanceof SyntaxError) {
-      throw new Error(`JSON syntax error in environment file: ${e}`);
-    } else {
-      throw e;
+  // Priority 1: DT_CONFIG_FILE - Load from external file (JSON or YAML)
+  if (process.env.DT_CONFIG_FILE) {
+    logger.info(`Loading configuration from file: ${process.env.DT_CONFIG_FILE}`);
+
+    // Warn if both methods are set
+    if (process.env.DT_ENVIRONMENT_CONFIGS) {
+      logger.warn(
+        'Both DT_CONFIG_FILE and DT_ENVIRONMENT_CONFIGS are set. ' + 'Using DT_CONFIG_FILE (higher priority).',
+      );
+    }
+
+    try {
+      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE);
+      let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+      for (const environmentConfig of environmentConfigurations) {
+        parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
+      }
+      return parsedManagedEnvironmentConfigs;
+    } catch (error: any) {
+      logger.error(`Failed to load configuration file: ${error.message}`);
+      throw error;
     }
   }
-  let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
-  for (const environmentConfig of environmentConfigurations) {
-    parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
+
+  // Priority 2: DT_ENVIRONMENT_CONFIGS - Parse JSON string (legacy/existing behavior)
+  const environmentConfigs = process.env.DT_ENVIRONMENT_CONFIGS;
+  if (environmentConfigs) {
+    logger.info('Loading configuration from DT_ENVIRONMENT_CONFIGS');
+    let environmentConfigurations;
+    try {
+      environmentConfigurations = JSON.parse(environmentConfigs);
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        throw new Error(`JSON syntax error in environment file: ${e}`);
+      } else {
+        throw e;
+      }
+    }
+    let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+    for (const environmentConfig of environmentConfigurations) {
+      parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
+    }
+    return parsedManagedEnvironmentConfigs;
   }
-  return parsedManagedEnvironmentConfigs;
+
+  // Neither provided - helpful error message
+  throw new Error(
+    'Configuration not found. Please set one of:\n' +
+      '  - DT_CONFIG_FILE: Path to config file (JSON or YAML)\n' +
+      '  - DT_ENVIRONMENT_CONFIGS: JSON string (legacy)\n\n' +
+      'Example with file:\n' +
+      '  DT_CONFIG_FILE=./dt-config.yaml\n\n' +
+      'Example with JSON string:\n' +
+      '  DT_ENVIRONMENT_CONFIGS=\'[{"apiEndpointUrl":"...","environmentId":"..."}]\'\n\n' +
+      'See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp#configuration',
+  );
 }
 
 export function validateEnvironments(environmentConfigurations: ManagedEnvironmentConfig[]): {

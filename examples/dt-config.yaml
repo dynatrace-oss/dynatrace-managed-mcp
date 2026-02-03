@@ -1,0 +1,28 @@
+# Dynatrace Managed Environments Configuration
+# This file demonstrates YAML format with comments and environment variable interpolation
+
+# Production environment
+- dynatraceUrl: https://my-dashboard.company.com/
+  apiEndpointUrl: https://my-api.company.com/
+  environmentId: abc-123
+  alias: production
+  # Environment variable interpolation - tokens are injected at runtime
+  apiToken: ${DT_PROD_TOKEN}
+  # Optional: HTTP proxy configuration
+  httpProxyUrl: http://proxy.company.com:8080
+
+# Staging environment
+- dynatraceUrl: https://staging-dashboard.company.com/
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  alias: staging
+  # Tokens can also be hardcoded (not recommended for production)
+  # apiToken: dt0c01.ABC123...
+  # But using env vars is more secure:
+  apiToken: ${DT_STAGING_TOKEN}
+# Add more environments as needed:
+# - dynatraceUrl: https://dev-dashboard.company.com/
+#   apiEndpointUrl: https://dev-api.company.com/
+#   environmentId: dev-456
+#   alias: development
+#   apiToken: your-dev-token-here
