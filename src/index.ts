@@ -99,7 +99,6 @@ const main = async () => {
     {
       capabilities: {
         tools: {},
-        elicitation: {},
       },
       instructions: `
 This MCP server connects to Dynatrace Managed (self-hosted) environments for Observabilitiy. This can include metrics, logs and traces,
@@ -209,9 +208,9 @@ Never run queries that could return very large amounts of data, or that could be
     description: string,
     paramsSchema: ZodRawShape,
     annotations: ToolAnnotations,
-    cb: (args: z.objectOutputType<ZodRawShape, ZodTypeAny>) => Promise<string>,
+    cb: (args: any) => Promise<string>,
   ) => {
-    const wrappedCb = async (args: ZodRawShape): Promise<CallToolResult> => {
+    const wrappedCb = async (args: any): Promise<CallToolResult> => {
       // Capture starttime for telemetry and rate limiting
       const startTime = Date.now();
 
@@ -268,7 +267,15 @@ Never run queries that could return very large amounts of data, or that could be
       }
     };
 
-    server.tool(name, description, paramsSchema, annotations, (args: z.ZodRawShape) => wrappedCb(args));
+    server.registerTool(
+      name,
+      {
+        description,
+        inputSchema: paramsSchema,
+        annotations,
+      },
+      wrappedCb,
+    );
   };
 
   const envAliasValidate = (alias: string) => {

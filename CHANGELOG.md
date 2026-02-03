@@ -2,6 +2,8 @@
 
 ## Unreleased Changes
 
+- Fixed Docker build TypeScript errors by removing invalid `elicitation` capability (client-only feature), simplifying type annotations to prevent deep type instantiation issues, and migrating to `registerTool` API from deprecated `tool` method
+
 ## 0.5.3
 
 - Add multi-environment support, enabling you to connect to multiple Dynatrace Managed deployments simultaneously through a unified configuration
