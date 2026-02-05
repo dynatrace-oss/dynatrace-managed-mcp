@@ -1198,6 +1198,20 @@ Never run queries that could return very large amounts of data, or that could be
     // Default stdio mode
     const transport = new StdioServerTransport();
 
+    // Warn if LOG_OUTPUT is set to stdout/console (won't work with stdio)
+    const logOutput = (process.env.LOG_OUTPUT || '').toLowerCase();
+    if (
+      logOutput === 'console' ||
+      logOutput === 'stdout' ||
+      logOutput === 'file+console' ||
+      logOutput === 'file+stdout'
+    ) {
+      console.error(
+        `WARNING: LOG_OUTPUT=${process.env.LOG_OUTPUT} won't show logs in stdio transport. ` +
+          `Stdout is reserved for MCP protocol. Use LOG_OUTPUT=stderr-all or LOG_OUTPUT=file instead.`,
+      );
+    }
+
     logger.info('Connecting server to transport...');
     await server.connect(transport);
 

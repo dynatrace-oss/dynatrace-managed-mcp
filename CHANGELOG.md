@@ -15,6 +15,9 @@
   - Redirect logs to stdout (`stdout` or `console`), stderr (errors/warnings only with `stderr`, or all levels with `stderr-all`), or a custom file path
   - Use multiple destinations simultaneously (e.g., `file+console` to log to both file and stdout, or `file+stderr` for file logging with errors to stderr)
   - Disable logging entirely with `disabled`
+- Improved log readability for console and stderr output by switching from JSON to human-readable format (`YYYY-MM-DD HH:mm:ss.SSS [level] message`), making debugging easier when using `LOG_OUTPUT=console` or `LOG_OUTPUT=stderr-all`. File logging continues to use JSON format for machine parsing
+- Added runtime warning when `LOG_OUTPUT=console` or `LOG_OUTPUT=stdout` is used with stdio transport (default for VS Code), guiding users to use `LOG_OUTPUT=stderr-all` or `LOG_OUTPUT=file` instead, as stdout is reserved for MCP protocol communication
+- Enhanced documentation with clear guidance on which `LOG_OUTPUT` settings work with stdio transport (VS Code, Claude Desktop) versus HTTP transport, including practical examples for each scenario
 
 ## 0.5.3
 

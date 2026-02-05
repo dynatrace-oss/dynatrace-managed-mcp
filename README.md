@@ -471,37 +471,47 @@ AWS Lambda Functions:
 
 ### Logging Variables
 
-- `LOG_LEVEL` (optional): Log level, writing to dynatrace-managed-mcp.log in the current working directory (e.g. debug, info, warning, error)
-- `DT_ENVIRONMENT_CONFIGS`: An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. See below for contents of this.
 - `LOG_LEVEL` (optional): Log verbosity level (e.g. debug, info, warn, error). Default: `info`
-- `LOG_OUTPUT` (optional): Log output destination. Options:
-  - `file` (default): Write logs to a file
-  - `stdout`: Write logs to standard output
-  - `console`: Alias for `stdout`
-  - `stderr`: Write errors and warnings to standard error (info/debug still suppressed)
-  - `stderr-all`: Write all log levels to standard error
-  - `file+console` or `file+stdout`: Write logs to both file and stdout
+- `LOG_OUTPUT` (optional): Log output destination. Default: `file`
+  - `file`: Write logs to a file (default behavior)
+  - `stdout` / `console`: Write logs to standard output (⚠️ **stdio transport only**: Not visible in VS Code Output panel - use `stderr-all` instead)
+  - `stderr`: Write errors and warnings to standard error (info/debug suppressed)
+  - `stderr-all`: Write all log levels to standard error (✅ **Recommended for VS Code with stdio transport**)
+  - `file+console` / `file+stdout`: Write logs to both file and stdout
   - `file+stderr`: Write logs to file and errors/warnings to stderr
   - `disabled`: Disable logging entirely
 - `LOG_FILE` (optional): Path to log file when `LOG_OUTPUT` includes `file`. Default: `dynatrace-managed-mcp.log` in current working directory
 
+> [!IMPORTANT]
+> **Choosing the right LOG_OUTPUT for your setup:**
+>
+> - **VS Code with stdio transport (default)**: Use `LOG_OUTPUT=stderr-all` or `LOG_OUTPUT=file` (default)
+>   - ❌ `LOG_OUTPUT=console` won't work - stdout is reserved for MCP protocol
+>   - ✅ `LOG_OUTPUT=stderr-all` shows all logs in VS Code's Output panel
+>   - ✅ `LOG_OUTPUT=file` writes to log file (read with `tail -f dynatrace-managed-mcp.log`)
+> - **HTTP transport (`--http` mode)**: Any `LOG_OUTPUT` option works
+>   - ✅ `LOG_OUTPUT=console` visible in terminal
+>   - ✅ `LOG_OUTPUT=stderr-all` visible in terminal
+>   - ✅ `LOG_OUTPUT=file` writes to log file
+
 **Logging Examples:**
 
 ```bash
-# Log to standard output (useful for Docker/containerized environments)
-LOG_OUTPUT=stdout node dist/index.js
+# VS Code with stdio transport - see logs in Output panel
+LOG_OUTPUT=stderr-all LOG_LEVEL=debug
 
-# Log errors/warnings to stderr, suppress info/debug (standard Unix practice)
-LOG_OUTPUT=stderr node dist/index.js
+# VS Code with stdio transport - write to file (default)
+LOG_LEVEL=debug
+# Read with: tail -f dynatrace-managed-mcp.log
+
+# HTTP transport - log to console
+LOG_OUTPUT=console LOG_LEVEL=debug node dist/index.js --http
+
+# HTTP transport - log to file and console
+LOG_OUTPUT=file+console LOG_LEVEL=debug node dist/index.js --http
 
 # Log to custom file path
 LOG_OUTPUT=file LOG_FILE=/var/log/dynatrace-mcp.log node dist/index.js
-
-# Log to both file and console (useful for debugging)
-LOG_OUTPUT=file+console LOG_LEVEL=debug node dist/index.js
-
-# Log to file, send errors/warnings to stderr (production use)
-LOG_OUTPUT=file+stderr LOG_FILE=/var/log/app.log node dist/index.js
 
 # Disable logging entirely (not recommended)
 LOG_OUTPUT=disabled node dist/index.js
