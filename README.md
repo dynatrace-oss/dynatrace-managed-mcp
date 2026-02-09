@@ -593,7 +593,7 @@ This Managed Dynatrace MCP can be run alongside the SaaS Dynatrace MCP to enable
 To set this up, you should:
 
 1. Follow the [instructions above](#configuration) to set up this Dynatrace Managed MCP server
-2. Follow the [instructions for Dynatrace SaaS MCP](https://github.com/dynatrace-oss/dynatrace-mcp) to set it up, making    sure to name the two servers differently in your MCP config file
+2. Follow the [instructions for Dynatrace SaaS MCP](https://github.com/dynatrace-oss/dynatrace-mcp) to set it up, making sure to name the two servers differently in your MCP config file
 3. In your AI Assistant, confirm that it is connected to both
 4. (optional, but recommended) Set up rules or steering for your AI Assistant to give it clear guidance on using both MCPs
 
