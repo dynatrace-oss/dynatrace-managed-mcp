@@ -2,6 +2,8 @@
 
 ## Unreleased Changes
 
+## 0.5.5
+
 - Added multi-format configuration support with `DT_CONFIG_FILE` environment variable
   - Supports JSON and YAML configuration files for cleaner, more readable configuration
   - YAML files support comments for better documentation
