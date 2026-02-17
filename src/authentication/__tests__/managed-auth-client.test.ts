@@ -89,7 +89,7 @@ describe('ManagedAuthClient', () => {
       expect(result).toBe(true);
     });
   });
-  
+
   describe('getClusterVersion', () => {
     it('should return minimum version when clusterversion is forbidden', async () => {
       const mockGet = jest.fn().mockRejectedValueOnce({ response: { status: 403 } });
