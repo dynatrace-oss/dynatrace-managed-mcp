@@ -89,4 +89,23 @@ describe('ManagedAuthClient', () => {
       expect(result).toBe(true);
     });
   });
+  
+  describe('getClusterVersion', () => {
+    it('should return minimum version when clusterversion is forbidden', async () => {
+      const mockGet = jest.fn().mockRejectedValueOnce({ response: { status: 403 } });
+      mockCreate.mockReturnValue({ get: mockGet });
+      client = new ManagedAuthClient({
+        apiBaseUrl: 'https://managed.test.com',
+        dashboardBaseUrl: 'https://managed-dashboard.test.com',
+        apiToken: 'test-token',
+        alias: 'testAlias',
+        minimum_version: '1.328.0',
+      });
+
+      const result = await client.getClusterVersion();
+
+      expect(result).toEqual({ version: '1.328.0' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/config/clusterversion');
+    });
+  });
 });

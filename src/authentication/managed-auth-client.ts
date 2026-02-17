@@ -141,8 +141,19 @@ export class ManagedAuthClient {
 
   async getClusterVersion(): Promise<ClusterVersion> {
     // Try cluster version endpoint for Managed environments
-    const response = await this.httpClient.get('/api/v1/config/clusterversion');
-    return response.data;
+    try {
+      const response = await this.httpClient.get('/api/v1/config/clusterversion');
+      return response.data;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        logger.warn(
+          `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; using minimum version ${this.MINIMUM_VERSION}`,
+        );
+        return { version: this.MINIMUM_VERSION };
+      }
+      throw error;
+    }
   }
 
   validateMinimumVersion(clusterVersion: ClusterVersion): boolean {
