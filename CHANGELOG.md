@@ -2,6 +2,10 @@
 
 ## Unreleased Changes
 
+## 0.5.6
+
+- Updated ajv dependency to version 8.18.0 to address SNYK-JS-AJV-15274295 security vulnerability (ReDoS in schema compilation)
+
 ## 0.5.5
 
 - Added multi-format configuration support with `DT_CONFIG_FILE` environment variable
