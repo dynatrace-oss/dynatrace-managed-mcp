@@ -2,6 +2,9 @@
 
 ## Unreleased Changes
 
+- Fixed typo in `MetricDataResponse` interface: renamed `vaules` field to `values`
+- Fixed typo in `dynatrace_managed_query_metrics_data` tool description: corrected "retreived" to "retrieved"
+
 ## 0.5.6
 
 - Updated ajv dependency to version 8.18.0 to address SNYK-JS-AJV-15274295 security vulnerability (ReDoS in schema compilation)
