@@ -29,7 +29,7 @@ export interface MetricDataResponse {
   result?: Array<{
     data?: Array<{
       timestamps?: number[];
-      vaules?: any[];
+      values?: any[];
       dimensionMap?: Record<string, string>;
       dimensions?: string[];
     }>;
