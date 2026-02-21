@@ -2,6 +2,10 @@
 
 ## Unreleased Changes
 
+## Unreleased
+
+- fix: npm run build on Windows
+
 ## 0.5.6
 
 - Updated ajv dependency to version 8.18.0 to address SNYK-JS-AJV-15274295 security vulnerability (ReDoS in schema compilation)
