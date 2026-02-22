@@ -417,7 +417,7 @@ Never run queries that could return very large amounts of data, or that could be
   tool(
     'dynatrace_managed_query_metrics_data',
     `Query metric data for a specific time range and metric selector.
-    Must limit the amount of data being retreived:
+    Must limit the amount of data being retrieved:
     must use a specific entitySelector, such as using specific entityIds;
     must use a narrow timerange (with from and to);
     must use a resolution in line with the timerange, for example if getting data covering several days then the resolution should be hours rather than minutes.`,
