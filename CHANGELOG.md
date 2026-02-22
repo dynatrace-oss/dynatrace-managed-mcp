@@ -4,6 +4,7 @@
 
 - Fixed typo in `MetricDataResponse` interface: renamed `vaules` field to `values`
 - Fixed typo in `dynatrace_managed_query_metrics_data` tool description: corrected "retreived" to "retrieved"
+- fix: npm run build on Windows
 
 ## 0.5.6
 

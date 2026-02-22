@@ -36,7 +36,7 @@
     "dist": "dist"
   },
   "scripts": {
-    "build": "tsc --build && chmod u+x dist/index.js",
+    "build": "tsc --build && node -e \"if(process.platform!=='win32')require('child_process').execSync('chmod u+x dist/index.js')\"",
     "prepare": "husky",
     "watch": "tsc --watch",
     "test": "jest",
