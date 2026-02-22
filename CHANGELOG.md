@@ -2,6 +2,7 @@
 
 ## Unreleased Changes
 
+- Added configurable rate limiting via `DT_MCP_RATE_LIMIT_MAX_CALLS` and `DT_MCP_RATE_LIMIT_WINDOW_MS` environment variables. You can now tune the rate limit to your needs. Defaults changed from 5 calls per 20 seconds to 20 calls per 20 seconds.
 - Fixed typo in `MetricDataResponse` interface: renamed `vaules` field to `values`
 - Fixed typo in `dynatrace_managed_query_metrics_data` tool description: corrected "retreived" to "retrieved"
 - fix: npm run build on Windows

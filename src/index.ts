@@ -19,6 +19,8 @@ import { ProblemsApiClient } from './capabilities/problems-api';
 import { SecurityApiClient } from './capabilities/security-api';
 import { SloApiClient } from './capabilities/slo-api';
 
+import { getRateLimitConfig } from './utils/rate-limit';
+
 // Import logger after environment is loaded
 import { logger, flushLogger } from './utils/logger';
 
@@ -35,6 +37,9 @@ const MANAGED_API_SCOPES = [
   'ReadSecurityProblems', // Read security problems
   'ReadSLO', // Read Service Level Objectives
 ];
+
+// Rate limiting configuration (configurable via DT_MCP_RATE_LIMIT_MAX_CALLS and DT_MCP_RATE_LIMIT_WINDOW_MS)
+const { maxCalls: RATE_LIMIT_MAX_CALLS, windowMs: RATE_LIMIT_WINDOW_MS } = getRateLimitConfig();
 
 // Rate limiting state: store timestamps of tool calls
 let toolCallTimestamps: number[] = [];
@@ -215,19 +220,23 @@ Never run queries that could return very large amounts of data, or that could be
       const startTime = Date.now();
 
       /**
-       * Rate Limit: Max. 5 requests per 20 seconds.
+       * Rate Limit: configurable via DT_MCP_RATE_LIMIT_MAX_CALLS and DT_MCP_RATE_LIMIT_WINDOW_MS.
+       * Defaults: max 20 requests per 20 seconds.
        */
-      const twentySecondsAgo = startTime - 20000;
+      const windowStart = startTime - RATE_LIMIT_WINDOW_MS;
 
-      // First, remove all tool calls older than 20s
-      toolCallTimestamps = toolCallTimestamps.filter((ts) => ts > twentySecondsAgo);
+      // First, remove all tool calls older than the window
+      toolCallTimestamps = toolCallTimestamps.filter((ts) => ts > windowStart);
 
-      // Second, check whether we have 5 or more calls in the past 20s
-      if (toolCallTimestamps.length >= 5) {
+      // Second, check whether we have reached the limit
+      if (toolCallTimestamps.length >= RATE_LIMIT_MAX_CALLS) {
         logger.debug(`Rate-limiting tool execution: ${name}; args: ${JSON.stringify(args)}`);
         return {
           content: [
-            { type: 'text', text: 'Rate limit exceeded: Maximum 5 tool calls per 20 seconds. Please try again later.' },
+            {
+              type: 'text',
+              text: `Rate limit exceeded: Maximum ${RATE_LIMIT_MAX_CALLS} tool calls per ${RATE_LIMIT_WINDOW_MS / 1000} seconds. Please try again later.`,
+            },
           ],
           isError: true,
         };
