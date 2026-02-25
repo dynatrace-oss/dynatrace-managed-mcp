@@ -53,13 +53,17 @@ const main = async () => {
   /* eslint-disable @typescript-eslint/no-require-imports */
   const zodToJsonSchemaModule = require('zod-to-json-schema') as { zodToJsonSchema: (...args: unknown[]) => unknown };
   const originalZodToJsonSchema = zodToJsonSchemaModule.zodToJsonSchema;
-  zodToJsonSchemaModule.zodToJsonSchema = (...args: unknown[]): unknown => {
+  const patchedFn = (...args: unknown[]): unknown => {
     const result = originalZodToJsonSchema(...args);
     if (result && typeof result === 'object') {
       delete (result as Record<string, unknown>)['$schema'];
     }
     return result;
   };
+  Object.defineProperty(zodToJsonSchemaModule, 'zodToJsonSchema', {
+    get: () => patchedFn,
+    configurable: true,
+  });
   /* eslint-enable @typescript-eslint/no-require-imports */
 
   logger.info(`Initializing Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
