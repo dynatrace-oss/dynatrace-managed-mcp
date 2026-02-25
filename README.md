@@ -507,6 +507,18 @@ LOG_OUTPUT=file LOG_FILE=/var/log/dynatrace-mcp.log node dist/index.js
 LOG_OUTPUT=disabled node dist/index.js
 ```
 
+### Rate Limiting Variables
+
+- **`DT_MCP_RATE_LIMIT_MAX_CALLS`** (optional): Maximum number of tool calls allowed within the rate limit window. Default: `20`
+- **`DT_MCP_RATE_LIMIT_WINDOW_MS`** (optional): Rate limit window size in milliseconds. Default: `20000` (20 seconds)
+
+**Example:** Allow 50 calls per 30 seconds:
+
+```bash
+DT_MCP_RATE_LIMIT_MAX_CALLS=50
+DT_MCP_RATE_LIMIT_WINDOW_MS=30000
+```
+
 ### Multienvironment Config Fields
 
 Inside the `DT_ENVIRONMENT_CONFIGS` variable, the elements of the array must contain all of these fields for each environment:

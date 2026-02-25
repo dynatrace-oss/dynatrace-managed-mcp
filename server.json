@@ -19,6 +19,18 @@
       },
       "environmentVariables": [
         {
+          "name": "DT_MCP_RATE_LIMIT_MAX_CALLS",
+          "description": "Maximum number of tool calls allowed per rate limit window. Defaults to 20.",
+          "isRequired": false,
+          "format": "number"
+        },
+        {
+          "name": "DT_MCP_RATE_LIMIT_WINDOW_MS",
+          "description": "Rate limit window size in milliseconds. Defaults to 20000 (20 seconds).",
+          "isRequired": false,
+          "format": "number"
+        },
+        {
           "name": "DT_ENVIRONMENT_CONFIGS",
           "description": "An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. See README file for contents of this.",
           "isRequired": true,
