@@ -45,27 +45,6 @@ const { maxCalls: RATE_LIMIT_MAX_CALLS, windowMs: RATE_LIMIT_WINDOW_MS } = getRa
 let toolCallTimestamps: number[] = [];
 
 const main = async () => {
-  // Patch zod-to-json-schema to omit the $schema property from generated schemas.
-  // Some MCP clients (e.g. Copilot CLI) forward tool inputSchemas verbatim to the AI model
-  // API, which rejects schemas containing $schema with HTTP 400 Bad Request.
-  // The MCP SDK uses zod-to-json-schema internally; patching its cached module export here
-  // ensures the fix applies to all tool registrations without requiring SDK changes.
-  /* eslint-disable @typescript-eslint/no-require-imports */
-  const zodToJsonSchemaModule = require('zod-to-json-schema') as { zodToJsonSchema: (...args: unknown[]) => unknown };
-  const originalZodToJsonSchema = zodToJsonSchemaModule.zodToJsonSchema;
-  const patchedFn = (...args: unknown[]): unknown => {
-    const result = originalZodToJsonSchema(...args);
-    if (result && typeof result === 'object') {
-      delete (result as Record<string, unknown>)['$schema'];
-    }
-    return result;
-  };
-  Object.defineProperty(zodToJsonSchemaModule, 'zodToJsonSchema', {
-    get: () => patchedFn,
-    configurable: true,
-  });
-  /* eslint-enable @typescript-eslint/no-require-imports */
-
   logger.info(`Initializing Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
 
   // Read Managed environment configuration
@@ -1142,6 +1121,20 @@ Never run queries that could return very large amounts of data, or that could be
         return sloClient.formatDetails(response);
       },
     );
+
+    // Strip $schema from all registered tool inputSchemas.
+    // Some MCP clients (e.g. Copilot CLI) forward inputSchemas verbatim to the AI model
+    // API, which rejects schemas containing $schema with HTTP 400 Bad Request.
+    // The MCP SDK generates these via zod-to-json-schema which adds $schema by default.
+    // $schema is optional per JSON Schema spec; removing it does not affect schema validity.
+    const registeredTools = (
+      server as unknown as { _registeredTools: Map<string, { inputSchema?: Record<string, unknown> }> }
+    )._registeredTools;
+    for (const tool of registeredTools.values()) {
+      if (tool.inputSchema) {
+        delete tool.inputSchema['$schema'];
+      }
+    }
 
     return server;
   }; // end createConfiguredMcpServer
