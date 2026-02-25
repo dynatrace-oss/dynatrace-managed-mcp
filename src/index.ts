@@ -1122,18 +1122,23 @@ Never run queries that could return very large amounts of data, or that could be
       },
     );
 
-    // Strip $schema from all registered tool inputSchemas.
+    // Wrap the tools/list request handler to strip $schema from all tool inputSchemas.
     // Some MCP clients (e.g. Copilot CLI) forward inputSchemas verbatim to the AI model
     // API, which rejects schemas containing $schema with HTTP 400 Bad Request.
-    // The MCP SDK generates these via zod-to-json-schema which adds $schema by default.
-    // $schema is optional per JSON Schema spec; removing it does not affect schema validity.
-    const registeredTools = (
-      server as unknown as { _registeredTools: Map<string, { inputSchema?: Record<string, unknown> }> }
-    )._registeredTools;
-    for (const tool of registeredTools.values()) {
-      if (tool.inputSchema) {
-        delete tool.inputSchema['$schema'];
-      }
+    // The MCP SDK generates $schema via zod-to-json-schema; $schema is optional per JSON
+    // Schema spec so removing it does not affect schema validity for any other client.
+    type ToolsListHandler = (req: unknown) => Promise<{ tools: Array<Record<string, unknown>> }>;
+    const innerServer = (server as unknown as { server: { _requestHandlers: Map<string, ToolsListHandler> } }).server;
+    const originalToolsListHandler = innerServer._requestHandlers.get('tools/list');
+    if (originalToolsListHandler) {
+      innerServer._requestHandlers.set('tools/list', async (req: unknown) => {
+        const result = await originalToolsListHandler(req);
+        for (const tool of result.tools) {
+          const schema = tool['inputSchema'] as Record<string, unknown> | undefined;
+          if (schema) delete schema['$schema'];
+        }
+        return result;
+      });
     }
 
     return server;
