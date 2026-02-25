@@ -1149,8 +1149,11 @@ Never run queries that could return very large amounts of data, or that could be
       // Parse request body for POST requests
       let body: unknown;
       // Create a new Stateless HTTP Transport
+      // enableJsonResponse: true returns application/json instead of keeping SSE streams open,
+      // which is required for MCP clients that don't support persistent SSE connections (e.g. Copilot CLI).
       const httpTransport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined, // No Session ID needed
+        enableJsonResponse: true,
       });
 
       // Create a fresh McpServer per request (stateless HTTP requirement)
