@@ -45,6 +45,23 @@ const { maxCalls: RATE_LIMIT_MAX_CALLS, windowMs: RATE_LIMIT_WINDOW_MS } = getRa
 let toolCallTimestamps: number[] = [];
 
 const main = async () => {
+  // Patch zod-to-json-schema to omit the $schema property from generated schemas.
+  // Some MCP clients (e.g. Copilot CLI) forward tool inputSchemas verbatim to the AI model
+  // API, which rejects schemas containing $schema with HTTP 400 Bad Request.
+  // The MCP SDK uses zod-to-json-schema internally; patching its cached module export here
+  // ensures the fix applies to all tool registrations without requiring SDK changes.
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const zodToJsonSchemaModule = require('zod-to-json-schema') as { zodToJsonSchema: (...args: unknown[]) => unknown };
+  const originalZodToJsonSchema = zodToJsonSchemaModule.zodToJsonSchema;
+  zodToJsonSchemaModule.zodToJsonSchema = (...args: unknown[]): unknown => {
+    const result = originalZodToJsonSchema(...args);
+    if (result && typeof result === 'object') {
+      delete (result as Record<string, unknown>)['$schema'];
+    }
+    return result;
+  };
+  /* eslint-enable @typescript-eslint/no-require-imports */
+
   logger.info(`Initializing Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
 
   // Read Managed environment configuration
