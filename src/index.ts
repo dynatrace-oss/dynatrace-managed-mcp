@@ -1122,11 +1122,14 @@ Never run queries that could return very large amounts of data, or that could be
       },
     );
 
-    // Wrap the tools/list request handler to strip $schema from all tool inputSchemas.
-    // Some MCP clients (e.g. Copilot CLI) forward inputSchemas verbatim to the AI model
-    // API, which rejects schemas containing $schema with HTTP 400 Bad Request.
-    // The MCP SDK generates $schema via zod-to-json-schema; $schema is optional per JSON
-    // Schema spec so removing it does not affect schema validity for any other client.
+    // Wrap the tools/list request handler to strip properties that cause some MCP clients
+    // (e.g. Copilot CLI) to receive a 400 Bad Request from their AI model API:
+    //   - $schema: added by zod-to-json-schema; rejected by GitHub Copilot model API
+    //   - additionalProperties: false: triggers OpenAI strict-mode validation which requires
+    //     ALL properties to be listed in `required`; our tools have optional params so this
+    //     combination is rejected. Removing it allows optional params without strict-mode errors.
+    // Both properties are optional per JSON Schema spec; removing them does not affect
+    // schema validity or tool behaviour for any other client.
     type ToolsListHandler = (req: unknown) => Promise<{ tools: Array<Record<string, unknown>> }>;
     const innerServer = (server as unknown as { server: { _requestHandlers: Map<string, ToolsListHandler> } }).server;
     const originalToolsListHandler = innerServer._requestHandlers.get('tools/list');
@@ -1135,7 +1138,10 @@ Never run queries that could return very large amounts of data, or that could be
         const result = await originalToolsListHandler(req);
         for (const tool of result.tools) {
           const schema = tool['inputSchema'] as Record<string, unknown> | undefined;
-          if (schema) delete schema['$schema'];
+          if (schema) {
+            delete schema['$schema'];
+            delete schema['additionalProperties'];
+          }
         }
         return result;
       });
