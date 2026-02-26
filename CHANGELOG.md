@@ -2,10 +2,17 @@
 
 ## Unreleased Changes
 
+## 0.5.7
+
+- Fixed HTTP transport to return `application/json` responses instead of keeping persistent SSE connections open. This resolves indefinite hangs experienced by MCP clients (such as GitHub Copilot CLI) that do not support server-sent event streams.
+- Fixed tool `inputSchema` in `tools/list` responses to strip the `$schema` and `additionalProperties` fields added by the MCP SDK. These caused HTTP 400 errors from OpenAI-compatible model APIs with strict JSON Schema validation, preventing tool use in clients such as GitHub Copilot CLI.
+- **Breaking change**: Renamed tool `dynatrace_managed_check_for_configuration_errors` to `dynatrace_managed_check_config_errors` to comply with the 64-character function name limit imposed by OpenAI-compatible model APIs when tool names are namespace-qualified by the MCP client. MCP clients that discover tools dynamically (the typical case) are unaffected; any automation or configuration referencing the old tool name by string must be updated.
+- Refactored HTTP server to create a fresh `McpServer` instance per request, satisfying the MCP SDK stateless HTTP requirement and preventing transport reuse errors.
 - Added configurable rate limiting via `DT_MCP_RATE_LIMIT_MAX_CALLS` and `DT_MCP_RATE_LIMIT_WINDOW_MS` environment variables. You can now tune the rate limit to your needs. Defaults changed from 5 calls per 20 seconds to 20 calls per 20 seconds.
 - Fixed typo in `MetricDataResponse` interface: renamed `vaules` field to `values`
 - Fixed typo in `dynatrace_managed_query_metrics_data` tool description: corrected "retreived" to "retrieved"
-- fix: npm run build on Windows
+- Fixed `npm run build` on Windows
+- Fixed security vulnerabilities in dependencies: updated `hono` to 4.12.2, `diff` to 4.0.4, and `minimatch` to latest patch versions
 
 ## 0.5.6
 
