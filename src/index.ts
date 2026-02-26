@@ -304,7 +304,7 @@ Never run queries that could return very large amounts of data, or that could be
     };
 
     tool(
-      'dynatrace_managed_check_for_configuration_errors',
+      'dynatrace_managed_check_config_errors',
       'Returns information about environment configurations and any potential error found during initialization',
       {},
       {
@@ -1142,6 +1142,10 @@ Never run queries that could return very large amounts of data, or that could be
             delete schema['$schema'];
             delete schema['additionalProperties'];
           }
+          // Strip MCP-specific fields that some clients (e.g. Copilot CLI) may pass
+          // verbatim to the model API, which only accepts name/description/parameters.
+          delete tool['annotations'];
+          delete tool['execution'];
         }
         return result;
       });
