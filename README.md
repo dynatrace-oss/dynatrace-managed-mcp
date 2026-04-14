@@ -576,6 +576,7 @@ Your API token must include the following scopes for full functionality:
 
 **Required Scopes:**
 
+- Access problem and event feed, metrics, and topology (`DataExport`)
 - Read audit logs (`auditLogs.read`)
 - Read entities (`entities.read`)
 - Read events (`events.read`)
