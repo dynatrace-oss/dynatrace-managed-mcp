@@ -593,6 +593,8 @@ Note that the `httpProxyUrl`/`httpsProxyUrl` variables are per-environment, so y
 
 Dynatrace Managed uses API token-based authentication. Create an API token in your Managed cluster with the required scopes (see next subsection).
 
+> In **stdio/local mode**, this token is configured server-side (see [Configuration Methods](#configuration-methods)). In **HTTP mode**, the server holds no tokens — each user supplies their own per-environment tokens via the `X-Dynatrace-Tokens` request header (see [HTTP authentication (per-user tokens)](#http-authentication-per-user-tokens)). The scopes below apply to the token regardless of how it is supplied.
+
 For more information about creating API tokens in Managed deployments, refer to the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
 
 ### API Scopes for Managed Deployment
