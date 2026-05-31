@@ -7,8 +7,14 @@ import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { Command } from 'commander';
 import { z, ZodRawShape, ZodTypeAny } from 'zod';
 import { getPackageJsonVersion } from './utils/version';
-import { ManagedAuthClientManager } from './authentication/managed-auth-client';
-import { getManagedEnvironmentConfigs, validateEnvironments } from './utils/environment';
+import {
+  ManagedAuthClientManager,
+  ManagedAuthClient,
+  buildManagedAuthClients,
+  validateManagedClients,
+} from './authentication/managed-auth-client';
+import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from './utils/environment';
+import { parseTokenHeader, deriveUserKey } from './utils/token-header';
 import { createTelemetry } from './utils/telemetry-openkit';
 import { MetricsApiClient } from './capabilities/metrics-api';
 import { LogsApiClient } from './capabilities/logs-api';
@@ -19,7 +25,7 @@ import { ProblemsApiClient } from './capabilities/problems-api';
 import { SecurityApiClient } from './capabilities/security-api';
 import { SloApiClient } from './capabilities/slo-api';
 
-import { getRateLimitConfig } from './utils/rate-limit';
+import { RateLimiter } from './utils/rate-limit';
 
 // Import logger after environment is loaded
 import { logger, flushLogger } from './utils/logger';
@@ -38,19 +44,34 @@ const MANAGED_API_SCOPES = [
   'ReadSLO', // Read Service Level Objectives
 ];
 
-// Rate limiting configuration (configurable via DT_MCP_RATE_LIMIT_MAX_CALLS and DT_MCP_RATE_LIMIT_WINDOW_MS)
-const { maxCalls: RATE_LIMIT_MAX_CALLS, windowMs: RATE_LIMIT_WINDOW_MS } = getRateLimitConfig();
-
-// Rate limiting state: store timestamps of tool calls
-let toolCallTimestamps: number[] = [];
+// Per-user (per-token) rate limiter, shared across requests for the life of the process.
+// In stdio mode there is a single user key, which reproduces the previous single-bucket behavior.
+const rateLimiter = new RateLimiter();
 
 const main = async () => {
   logger.info(`Initializing Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
 
-  // Read Managed environment configuration
+  // Parse CLI options first so the server mode is known before configuration is loaded.
+  const program = new Command();
+  program
+    .name('dynatrace-managed-mcp')
+    .description('Dynatrace Managed Model Context Protocol (MCP) Server')
+    .version(getPackageJsonVersion())
+    .option('--http', 'enable HTTP server mode instead of stdio')
+    .option('--server', 'enable HTTP server mode (alias for --http)')
+    .option('-p, --port <number>', 'port for HTTP server', '3000')
+    .option('-H, --host <host>', 'host for HTTP server', '127.0.0.1')
+    .parse();
 
-  const managedConfigs = getManagedEnvironmentConfigs();
-  const validatedConfigs = validateEnvironments(managedConfigs);
+  const options = program.opts();
+  const httpMode = options.http || options.server;
+  const httpPort = parseInt(options.port, 10);
+  const host = options.host || '127.0.0.1';
+
+  // Read Managed environment configuration. In HTTP mode tokens are supplied per request
+  // (X-Dynatrace-Tokens header), so apiToken is not required in the config.
+  const managedConfigs = getManagedEnvironmentConfigs(!httpMode);
+  const validatedConfigs = validateEnvironments(managedConfigs, !httpMode);
 
   const initErrors = validatedConfigs['errors'];
   const initConfigs = validatedConfigs['valid_configs'];
@@ -67,17 +88,25 @@ const main = async () => {
     process.exit(1);
   }
 
-  const authClientManager = new ManagedAuthClientManager(initConfigs);
-  await authClientManager.isConfigured();
+  // Build shared, token-less auth clients (axios instances are created once and reused).
+  const allClients = buildManagedAuthClients(initConfigs);
 
-  // Initialize API clients
-  const metricsClient = new MetricsApiClient(authClientManager);
-  const logsClient = new LogsApiClient(authClientManager);
-  const eventsClient = new EventsApiClient(authClientManager);
-  const entitiesClient = new EntitiesApiClient(authClientManager);
-  const problemsClient = new ProblemsApiClient(authClientManager);
-  const securityClient = new SecurityApiClient(authClientManager);
-  const sloClient = new SloApiClient(authClientManager);
+  // Resolve queryable environments + token source per mode.
+  let validClients: ManagedAuthClient[];
+  let validAliases: string[];
+  let startupTokens: Map<string, string>;
+  if (httpMode) {
+    // No server-side tokens; tokens arrive per request. No startup connectivity test.
+    validClients = allClients;
+    validAliases = ['ALL_ENVIRONMENTS', ...allClients.map((c) => c.alias)];
+    startupTokens = new Map();
+  } else {
+    // stdio: tokens come from the local config/env vars; validate connections at startup.
+    startupTokens = buildConfigTokenMap(initConfigs);
+    const validation = await validateManagedClients(allClients, startupTokens);
+    validClients = validation.validClients;
+    validAliases = validation.validAliases;
+  }
 
   // Initialize usage tracking
   const telemetry = createTelemetry();
@@ -95,10 +124,20 @@ const main = async () => {
     };
   };
 
-  // Factory: creates a new McpServer with all tools registered.
+  // Factory: creates a new McpServer with all tools registered, bound to this caller's tokens.
   // Must be called per-request in stateless HTTP mode (the SDK forbids connecting
   // the same McpServer instance to more than one transport).
-  const createConfiguredMcpServer = () => {
+  const createConfiguredMcpServer = (tokenMap: Map<string, string>, userKey: string) => {
+    // Per-request auth router + API clients.
+    const authClientManager = new ManagedAuthClientManager(allClients, validClients, validAliases, tokenMap);
+    const metricsClient = new MetricsApiClient(authClientManager);
+    const logsClient = new LogsApiClient(authClientManager);
+    const eventsClient = new EventsApiClient(authClientManager);
+    const entitiesClient = new EntitiesApiClient(authClientManager);
+    const problemsClient = new ProblemsApiClient(authClientManager);
+    const securityClient = new SecurityApiClient(authClientManager);
+    const sloClient = new SloApiClient(authClientManager);
+
     const server = new McpServer(
       {
         name: 'Dynatrace Managed MCP Server',
@@ -222,32 +261,19 @@ Never run queries that could return very large amounts of data, or that could be
         // Capture starttime for telemetry and rate limiting
         const startTime = Date.now();
 
-        /**
-         * Rate Limit: configurable via DT_MCP_RATE_LIMIT_MAX_CALLS and DT_MCP_RATE_LIMIT_WINDOW_MS.
-         * Defaults: max 20 requests per 20 seconds.
-         */
-        const windowStart = startTime - RATE_LIMIT_WINDOW_MS;
-
-        // First, remove all tool calls older than the window
-        toolCallTimestamps = toolCallTimestamps.filter((ts) => ts > windowStart);
-
-        // Second, check whether we have reached the limit
-        if (toolCallTimestamps.length >= RATE_LIMIT_MAX_CALLS) {
+        // Per-user (per-token) rate limiting. userKey identifies the caller for this request.
+        if (!rateLimiter.tryAcquire(userKey)) {
           logger.debug(`Rate-limiting tool execution: ${name}; args: ${JSON.stringify(args)}`);
           return {
             content: [
               {
                 type: 'text',
-                text: `Rate limit exceeded: Maximum ${RATE_LIMIT_MAX_CALLS} tool calls per ${RATE_LIMIT_WINDOW_MS / 1000} seconds. Please try again later.`,
+                text: `Rate limit exceeded: Maximum ${rateLimiter.maxCalls} tool calls per ${rateLimiter.windowMs / 1000} seconds. Please try again later.`,
               },
             ],
             isError: true,
           };
         }
-
-        // Last but not least, record this call
-        toolCallTimestamps.push(startTime);
-        /** Rate Limit End */
 
         let toolCallSuccessful = false;
 
@@ -338,18 +364,24 @@ Never run queries that could return very large amounts of data, or that could be
           resp += `- Environment Alias: ${authClient.alias}\n`;
           resp += `- API URL: ${authClient.apiBaseUrl}\n`;
           resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
-          resp += `- Valid Environment: ${authClient.isValid ? 'Yes' : 'No'}\n`;
-          let clusterVersion;
-          let isValidVersion;
-          if (authClient.isValid) {
-            clusterVersion = await authClient.getClusterVersion();
-            isValidVersion = authClient.validateMinimumVersion(clusterVersion);
 
+          const token = authClientManager.tokenFor(authClient.alias);
+          if (!token) {
+            resp += `- Valid Environment: No\n`;
+            resp += `- Error message: No token supplied for this environment. Add \`${authClient.alias}=<token>\` to your X-Dynatrace-Tokens header to query it.\n\n`;
+            continue;
+          }
+
+          try {
+            const clusterVersion = await authClient.getClusterVersion(token);
+            const isValidVersion = authClient.validateMinimumVersion(clusterVersion);
+            resp += `- Valid Environment: Yes\n`;
             resp += `- Version: ${clusterVersion.version}\n`;
             resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
             resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-          } else {
-            resp += `- Error message: ${authClient.validationError}\n`;
+          } catch (error: any) {
+            resp += `- Valid Environment: No\n`;
+            resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
           }
         }
 
@@ -1150,23 +1182,7 @@ Never run queries that could return very large amounts of data, or that could be
     return server;
   }; // end createConfiguredMcpServer
 
-  // Parse command line arguments using commander
-  const program = new Command();
-
-  program
-    .name('dynatrace-managed-mcp')
-    .description('Dynatrace Managed Model Context Protocol (MCP) Server')
-    .version(getPackageJsonVersion())
-    .option('--http', 'enable HTTP server mode instead of stdio')
-    .option('--server', 'enable HTTP server mode (alias for --http)')
-    .option('-p, --port <number>', 'port for HTTP server', '3000')
-    .option('-H, --host <host>', 'host for HTTP server', '127.0.0.1')
-    .parse();
-
-  const options = program.opts();
-  const httpMode = options.http || options.server;
-  const httpPort = parseInt(options.port, 10);
-  const host = options.host || '127.0.0.1';
+  // CLI options were parsed at the start of main(); httpMode, httpPort, and host are already set.
 
   // HTTP server mode (Stateless)
   if (httpMode) {
@@ -1181,8 +1197,13 @@ Never run queries that could return very large amounts of data, or that could be
         enableJsonResponse: true,
       });
 
+      // Per-request tokens come from the X-Dynatrace-Tokens header (alias=token;alias=token).
+      const tokenHeader = req.headers['x-dynatrace-tokens'];
+      const tokenMap = parseTokenHeader(tokenHeader);
+      const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
+
       // Create a fresh McpServer per request (stateless HTTP requirement)
-      const server = createConfiguredMcpServer();
+      const server = createConfiguredMcpServer(tokenMap, userKey);
 
       res.on('close', () => {
         // close transport and server, but not the httpServer itself
@@ -1244,7 +1265,7 @@ Never run queries that could return very large amounts of data, or that could be
     );
   } else {
     // Default stdio mode
-    const server = createConfiguredMcpServer();
+    const server = createConfiguredMcpServer(startupTokens, 'local');
     const transport = new StdioServerTransport();
 
     // Warn if LOG_OUTPUT is set to stdout/console (won't work with stdio)
