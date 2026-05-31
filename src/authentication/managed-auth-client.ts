@@ -211,7 +211,11 @@ export async function validateManagedClients(
   const validClients: ManagedAuthClient[] = [];
   const validAliases: string[] = ['ALL_ENVIRONMENTS'];
   for (const client of clients) {
-    const token = tokens.get(client.alias) ?? '';
+    const token = tokens.get(client.alias);
+    if (!token) {
+      logger.warn(`[Alias: ${client.alias}] No token found; skipping startup validation`);
+      continue;
+    }
     const ok = await client.isConfigured(token);
     if (ok) {
       client.isValid = true;
@@ -231,8 +235,8 @@ export class ManagedAuthClientManager {
 
   constructor(
     public readonly rawClients: ManagedAuthClient[],
-    public clients: ManagedAuthClient[],
-    public validAliases: string[],
+    public readonly clients: ManagedAuthClient[],
+    public readonly validAliases: string[],
     private readonly tokens: Map<string, string>,
   ) {}
 

@@ -1,4 +1,10 @@
-import { ManagedAuthClient, ManagedAuthClientManager, MissingTokenError } from '../managed-auth-client';
+import {
+  ManagedAuthClient,
+  ManagedAuthClientManager,
+  MissingTokenError,
+  buildManagedAuthClients,
+  validateManagedClients,
+} from '../managed-auth-client';
 import axios from 'axios';
 
 jest.mock('axios');
@@ -202,5 +208,76 @@ describe('ManagedAuthClientManager', () => {
     const mgr = new ManagedAuthClientManager([prod], [prod], ['ALL_ENVIRONMENTS', 'prod'], new Map([['prod', 't']]));
     expect(mgr.tokenFor('prod')).toBe('t');
     expect(mgr.tokenFor('missing')).toBeUndefined();
+  });
+
+  it('throws MissingTokenError for a specific alias the caller has no token for', async () => {
+    const prod = fakeClient('prod');
+    const staging = fakeClient('staging');
+    const mgr = new ManagedAuthClientManager(
+      [prod, staging],
+      [prod, staging],
+      ['ALL_ENVIRONMENTS', 'prod', 'staging'],
+      new Map([['staging', 't']]),
+    );
+    await expect(mgr.makeRequests('/x', {}, 'prod')).rejects.toBeInstanceOf(MissingTokenError);
+    expect(prod.makeRequest).not.toHaveBeenCalled();
+  });
+});
+
+describe('buildManagedAuthClients', () => {
+  const mockCreate = jest.fn();
+  beforeEach(() => {
+    mockedAxios.create = mockCreate;
+    mockCreate.mockReturnValue({ get: jest.fn() });
+  });
+  afterEach(() => jest.clearAllMocks());
+
+  it('builds one token-less client per config with mapped url/alias fields', () => {
+    const clients = buildManagedAuthClients([
+      {
+        alias: 'prod',
+        apiUrl: 'https://prod-api/e/abc',
+        dashboardUrl: 'https://prod-dash/e/abc',
+        environmentId: 'abc',
+        apiToken: 'ignored-in-build',
+        httpProxy: '',
+        httpsProxy: '',
+      },
+    ]);
+    expect(clients).toHaveLength(1);
+    expect(clients[0].alias).toBe('prod');
+    expect(clients[0].apiBaseUrl).toBe('https://prod-api/e/abc');
+    expect(clients[0].dashboardBaseUrl).toBe('https://prod-dash/e/abc');
+  });
+});
+
+describe('validateManagedClients', () => {
+  function fakeAuthClient(alias: string, ok: boolean) {
+    return { alias, isValid: false, isConfigured: jest.fn().mockResolvedValue(ok) } as any;
+  }
+
+  it('includes reachable clients (sets isValid) and excludes unreachable ones', async () => {
+    const good = fakeAuthClient('prod', true);
+    const bad = fakeAuthClient('staging', false);
+    const { validClients, validAliases } = await validateManagedClients(
+      [good, bad],
+      new Map([
+        ['prod', 't1'],
+        ['staging', 't2'],
+      ]),
+    );
+    expect(good.isConfigured).toHaveBeenCalledWith('t1');
+    expect(bad.isConfigured).toHaveBeenCalledWith('t2');
+    expect(good.isValid).toBe(true);
+    expect(validClients).toEqual([good]);
+    expect(validAliases).toEqual(['ALL_ENVIRONMENTS', 'prod']);
+  });
+
+  it('skips clients with no token without calling isConfigured', async () => {
+    const noToken = fakeAuthClient('prod', true);
+    const { validClients, validAliases } = await validateManagedClients([noToken], new Map());
+    expect(noToken.isConfigured).not.toHaveBeenCalled();
+    expect(validClients).toEqual([]);
+    expect(validAliases).toEqual(['ALL_ENVIRONMENTS']);
   });
 });
