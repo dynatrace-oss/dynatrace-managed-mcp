@@ -66,6 +66,10 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
   }
 
   // Priority 2: DT_ENVIRONMENT_CONFIGS - Parse JSON string
+  // Unlike the DT_CONFIG_FILE path (which validates required fields up front in the loader,
+  // honoring requireToken), this branch performs no early structural check. Field-presence
+  // validation - including apiToken when requireToken is true - is enforced downstream by
+  // validateEnvironments(configs, requireToken), which the server always calls after loading.
   const environmentConfigs = process.env.DT_ENVIRONMENT_CONFIGS;
   if (environmentConfigs) {
     logger.info('Loading configuration from DT_ENVIRONMENT_CONFIGS');
