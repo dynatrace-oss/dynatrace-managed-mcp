@@ -1,4 +1,4 @@
-import { getManagedEnvironmentConfigs, validateEnvironments } from '../environment';
+import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from '../environment';
 
 describe('getManagedEnvironmentConfig', () => {
   const originalEnv = process.env;
@@ -180,5 +180,27 @@ describe('getManagedEnvironmentConfig', () => {
       httpProxy: '',
       httpsProxy: '',
     });
+  });
+
+  it('does not require apiToken when requireToken is false (HTTP mode)', () => {
+    process.env.DT_ENVIRONMENT_CONFIGS = fullEnv;
+    const config = getManagedEnvironmentConfigs();
+    const validated = validateEnvironments(config, false);
+    const aliases = validated.valid_configs.map((c) => c.alias);
+
+    // Env #3 has no apiToken — valid in HTTP mode.
+    expect(aliases).toContain('missing-api-key-env-id-3');
+    // Structural problems are still rejected regardless of token mode.
+    expect(aliases).not.toContain('invalid-alias-env-id;-2'); // semicolon in alias
+    expect(aliases).not.toContain('missing-api-url-env-5'); // missing apiEndpointUrl
+  });
+
+  it('buildConfigTokenMap maps alias -> token and skips empty tokens', () => {
+    const map = buildConfigTokenMap([
+      { alias: 'a', apiToken: 't1', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
+      { alias: 'b', apiToken: '', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
+    ]);
+    expect(map.get('a')).toBe('t1');
+    expect(map.has('b')).toBe(false);
   });
 });
