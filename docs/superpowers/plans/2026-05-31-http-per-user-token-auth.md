@@ -48,6 +48,7 @@ No commit (no changes yet).
 Pure functions with no dependency on the rest of the system. Build them first so later tasks can rely on them.
 
 **Files:**
+
 - Create: `src/utils/token-header.ts`
 - Test: `src/utils/__tests__/token-header.test.ts`
 
@@ -203,6 +204,7 @@ git commit -m "feat: add X-Dynatrace-Tokens header parser and per-user key"
 Extract rate limiting into a reusable, testable class keyed by user. Default behavior matches today's limits.
 
 **Files:**
+
 - Modify: `src/utils/rate-limit.ts` (append a `RateLimiter` class)
 - Test: `src/utils/__tests__/rate-limit.test.ts` (append a `RateLimiter` describe block)
 
@@ -329,6 +331,7 @@ git commit -m "feat: add per-user RateLimiter class"
 Rewrite `src/authentication/managed-auth-client.ts`: the client takes the token per call (no `Authorization` baked into axios defaults); add `MissingTokenError`, the per-request `ManagedAuthClientManager`, and startup helpers. Update the unit test and both integration tests for the new signatures.
 
 **Files:**
+
 - Modify (full rewrite): `src/authentication/managed-auth-client.ts`
 - Modify (full rewrite): `src/authentication/__tests__/managed-auth-client.test.ts`
 - Modify: `tests/integration/managed-auth.integration.test.ts`
@@ -931,15 +934,15 @@ In `tests/integration/managed-auth.integration.test.ts`: drop `apiToken` from th
 In `tests/integration/proxy.integration.test.ts`: drop `apiToken` from the constructor and pass a token to `makeRequest`. Change the client construction and the request call inside the `it('should use HTTP_PROXY', ...)` block to:
 
 ```typescript
-      let client = new ManagedAuthClient({
-        apiBaseUrl: 'http://example.com',
-        dashboardBaseUrl: 'http://example-dashboard.com',
-        alias: 'alias',
-        httpsProxy: proxyUrl,
-        minimum_version: '1.328.0',
-      });
+let client = new ManagedAuthClient({
+  apiBaseUrl: 'http://example.com',
+  dashboardBaseUrl: 'http://example-dashboard.com',
+  alias: 'alias',
+  httpsProxy: proxyUrl,
+  minimum_version: '1.328.0',
+});
 
-      const response = await client.makeRequest('/anything/mypath', 'my-example-token');
+const response = await client.makeRequest('/anything/mypath', 'my-example-token');
 ```
 
 - [ ] **Step 6: Type-check the integration project compiles**
@@ -971,6 +974,7 @@ git commit -m "refactor: make ManagedAuthClient token-stateless with per-request
 Make `apiToken` optional in HTTP mode and add a helper to build the stdio token map from config. Backward compatible via a `requireToken = true` default, so existing tests stay green.
 
 **Files:**
+
 - Modify: `src/utils/environment.ts`
 - Modify: `src/utils/config-loader.ts`
 - Test: `src/utils/__tests__/environment.test.ts` (append cases)
@@ -989,48 +993,48 @@ import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap
 Append these tests:
 
 ```typescript
-  it('does not require apiToken when requireToken is false (HTTP mode)', () => {
-    process.env.DT_ENVIRONMENT_CONFIGS = fullEnv;
-    const config = getManagedEnvironmentConfigs();
-    const validated = validateEnvironments(config, false);
-    const aliases = validated.valid_configs.map((c) => c.alias);
+it('does not require apiToken when requireToken is false (HTTP mode)', () => {
+  process.env.DT_ENVIRONMENT_CONFIGS = fullEnv;
+  const config = getManagedEnvironmentConfigs();
+  const validated = validateEnvironments(config, false);
+  const aliases = validated.valid_configs.map((c) => c.alias);
 
-    // Env #3 has no apiToken — valid in HTTP mode.
-    expect(aliases).toContain('missing-api-key-env-id-3');
-    // Structural problems are still rejected regardless of token mode.
-    expect(aliases).not.toContain('invalid-alias-env-id;-2'); // semicolon in alias
-    expect(aliases).not.toContain('missing-api-url-env-5'); // missing apiEndpointUrl
-  });
+  // Env #3 has no apiToken — valid in HTTP mode.
+  expect(aliases).toContain('missing-api-key-env-id-3');
+  // Structural problems are still rejected regardless of token mode.
+  expect(aliases).not.toContain('invalid-alias-env-id;-2'); // semicolon in alias
+  expect(aliases).not.toContain('missing-api-url-env-5'); // missing apiEndpointUrl
+});
 
-  it('buildConfigTokenMap maps alias -> token and skips empty tokens', () => {
-    const map = buildConfigTokenMap([
-      { alias: 'a', apiToken: 't1', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
-      { alias: 'b', apiToken: '', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
-    ]);
-    expect(map.get('a')).toBe('t1');
-    expect(map.has('b')).toBe(false);
-  });
+it('buildConfigTokenMap maps alias -> token and skips empty tokens', () => {
+  const map = buildConfigTokenMap([
+    { alias: 'a', apiToken: 't1', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
+    { alias: 'b', apiToken: '', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
+  ]);
+  expect(map.get('a')).toBe('t1');
+  expect(map.has('b')).toBe(false);
+});
 ```
 
 Append to `src/utils/__tests__/config-loader.test.ts` (inside the `describe('Configuration validation', ...)` block, after the last `it`):
 
 ```typescript
-    it('does not require apiToken when requireToken is false', () => {
-      const configPath = path.join(testDir, 'config.json');
-      const config = [
-        {
-          apiEndpointUrl: 'https://api.example.com/',
-          environmentId: 'test-123',
-          alias: 'production',
-        },
-      ];
+it('does not require apiToken when requireToken is false', () => {
+  const configPath = path.join(testDir, 'config.json');
+  const config = [
+    {
+      apiEndpointUrl: 'https://api.example.com/',
+      environmentId: 'test-123',
+      alias: 'production',
+    },
+  ];
 
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath, false);
-      expect(result).toHaveLength(1);
-      expect(result[0].alias).toBe('production');
-    });
+  const result = ConfigFileLoader.loadFromFile(configPath, false);
+  expect(result).toHaveLength(1);
+  expect(result[0].alias).toBe('production');
+});
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -1049,13 +1053,13 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
 and (inside the `DT_CONFIG_FILE` branch) change:
 
 ```typescript
-      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE);
+const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE);
 ```
 
 to:
 
 ```typescript
-      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
+const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
 ```
 
 Change `validateEnvironments` to make the token requirement conditional. Replace its signature and `requiredKeys`:
@@ -1101,13 +1105,13 @@ Thread `requireToken` through. Change `loadFromFile`'s signature:
 Change its final call from:
 
 ```typescript
-    return this.validateAndReturnConfig(config, resolvedPath);
+return this.validateAndReturnConfig(config, resolvedPath);
 ```
 
 to:
 
 ```typescript
-    return this.validateAndReturnConfig(config, resolvedPath, requireToken);
+return this.validateAndReturnConfig(config, resolvedPath, requireToken);
 ```
 
 Change `validateAndReturnConfig`:
@@ -1142,6 +1146,7 @@ git commit -m "feat: make apiToken optional in HTTP mode and add config token ma
 Restructure `src/index.ts`: parse CLI first, load config mode-aware, build shared clients, branch token source per mode, make the MCP-server factory per-request (tokens + userKey), parse the header in the HTTP handler, rewrite `get_environments_info`, and use the per-user rate limiter.
 
 **Files:**
+
 - Modify: `src/index.ts` (imports, module state, `main()` head, factory, `get_environments_info`, tool rate-limit, HTTP handler, stdio handler, remove the old CLI block)
 
 > All edits are in one file. Apply them in order; each `old` snippet is unique. After all edits, verify with `npm run build` + `npm run test:unit`.
@@ -1413,100 +1418,100 @@ with:
 Replace the whole `dynatrace_managed_get_environments_info` tool block (currently around `src/index.ts:327-368`), from `tool(` to its closing `);`:
 
 ```typescript
-    tool(
-      'dynatrace_managed_get_environments_info',
-      'Get information about all connected Dynatrace Managed clusters and verify the connections and authentication services.',
-      {},
-      {
-        readOnlyHint: true,
-      },
-      async ({}) => {
-        let resp = `Dynatrace Managed Cluster Information - Listing info for ${authClientManager.rawClients.length} environments:\n\n`;
+tool(
+  'dynatrace_managed_get_environments_info',
+  'Get information about all connected Dynatrace Managed clusters and verify the connections and authentication services.',
+  {},
+  {
+    readOnlyHint: true,
+  },
+  async ({}) => {
+    let resp = `Dynatrace Managed Cluster Information - Listing info for ${authClientManager.rawClients.length} environments:\n\n`;
 
-        for (let authClient of authClientManager.rawClients) {
-          resp += `- Environment Alias: ${authClient.alias}\n`;
-          resp += `- API URL: ${authClient.apiBaseUrl}\n`;
-          resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
-          let clusterVersion;
-          let isValidVersion;
-          if (authClient.isValid) {
-            clusterVersion = await authClient.getClusterVersion();
-            isValidVersion = authClient.validateMinimumVersion(clusterVersion);
+    for (let authClient of authClientManager.rawClients) {
+      resp += `- Environment Alias: ${authClient.alias}\n`;
+      resp += `- API URL: ${authClient.apiBaseUrl}\n`;
+      resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
+      let clusterVersion;
+      let isValidVersion;
+      if (authClient.isValid) {
+        clusterVersion = await authClient.getClusterVersion();
+        isValidVersion = authClient.validateMinimumVersion(clusterVersion);
 
-            resp += `- Version: ${clusterVersion.version}\n`;
-            resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
-            resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-          } else {
-            resp += `- Error message: ${authClient.validationError}\n`;
-          }
-        }
+        resp += `- Version: ${clusterVersion.version}\n`;
+        resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
+        resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+      } else {
+        resp += `- Error message: ${authClient.validationError}\n`;
+      }
+    }
 
-        if (initErrors.length > 0) {
-          resp += `Issues were found in environment configurations during start up: \n`;
-          for (const errorMessage of initErrors) {
-            resp += `- ${errorMessage}\n`;
-          }
-          resp += `\nPlease review all environments connection information. \n`;
-        }
+    if (initErrors.length > 0) {
+      resp += `Issues were found in environment configurations during start up: \n`;
+      for (const errorMessage of initErrors) {
+        resp += `- ${errorMessage}\n`;
+      }
+      resp += `\nPlease review all environments connection information. \n`;
+    }
 
-        resp += `\n\n\nAll Dynatrace Managed Cluster Environments listed. Environment showing connection errors and environments with "Valid environment" set to "No" are invalid environments.\n\n`;
+    resp += `\n\n\nAll Dynatrace Managed Cluster Environments listed. Environment showing connection errors and environments with "Valid environment" set to "No" are invalid environments.\n\n`;
 
-        return resp;
-      },
-    );
+    return resp;
+  },
+);
 ```
 
 with:
 
 ```typescript
-    tool(
-      'dynatrace_managed_get_environments_info',
-      'Get information about all connected Dynatrace Managed clusters and verify the connections and authentication services.',
-      {},
-      {
-        readOnlyHint: true,
-      },
-      async ({}) => {
-        let resp = `Dynatrace Managed Cluster Information - Listing info for ${authClientManager.rawClients.length} environments:\n\n`;
+tool(
+  'dynatrace_managed_get_environments_info',
+  'Get information about all connected Dynatrace Managed clusters and verify the connections and authentication services.',
+  {},
+  {
+    readOnlyHint: true,
+  },
+  async ({}) => {
+    let resp = `Dynatrace Managed Cluster Information - Listing info for ${authClientManager.rawClients.length} environments:\n\n`;
 
-        for (let authClient of authClientManager.rawClients) {
-          resp += `- Environment Alias: ${authClient.alias}\n`;
-          resp += `- API URL: ${authClient.apiBaseUrl}\n`;
-          resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
+    for (let authClient of authClientManager.rawClients) {
+      resp += `- Environment Alias: ${authClient.alias}\n`;
+      resp += `- API URL: ${authClient.apiBaseUrl}\n`;
+      resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
 
-          const token = authClientManager.tokenFor(authClient.alias);
-          if (!token) {
-            resp += `- Valid Environment: No\n`;
-            resp += `- Error message: No token supplied for this environment. Add \`${authClient.alias}=<token>\` to your X-Dynatrace-Tokens header to query it.\n\n`;
-            continue;
-          }
+      const token = authClientManager.tokenFor(authClient.alias);
+      if (!token) {
+        resp += `- Valid Environment: No\n`;
+        resp += `- Error message: No token supplied for this environment. Add \`${authClient.alias}=<token>\` to your X-Dynatrace-Tokens header to query it.\n\n`;
+        continue;
+      }
 
-          try {
-            const clusterVersion = await authClient.getClusterVersion(token);
-            const isValidVersion = authClient.validateMinimumVersion(clusterVersion);
-            resp += `- Valid Environment: Yes\n`;
-            resp += `- Version: ${clusterVersion.version}\n`;
-            resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
-            resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-          } catch (error: any) {
-            resp += `- Valid Environment: No\n`;
-            resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
-          }
-        }
+      try {
+        const clusterVersion = await authClient.getClusterVersion(token);
+        const isValidVersion = authClient.validateMinimumVersion(clusterVersion);
+        resp += `- Valid Environment: Yes\n`;
+        resp += `- Version: ${clusterVersion.version}\n`;
+        resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
+        resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+      } catch (error: any) {
+        resp += `- Valid Environment: No\n`;
+        resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
+      }
+    }
 
-        if (initErrors.length > 0) {
-          resp += `Issues were found in environment configurations during start up: \n`;
-          for (const errorMessage of initErrors) {
-            resp += `- ${errorMessage}\n`;
-          }
-          resp += `\nPlease review all environments connection information. \n`;
-        }
+    if (initErrors.length > 0) {
+      resp += `Issues were found in environment configurations during start up: \n`;
+      for (const errorMessage of initErrors) {
+        resp += `- ${errorMessage}\n`;
+      }
+      resp += `\nPlease review all environments connection information. \n`;
+    }
 
-        resp += `\n\n\nAll Dynatrace Managed Cluster Environments listed. Environment showing connection errors and environments with "Valid environment" set to "No" are invalid environments.\n\n`;
+    resp += `\n\n\nAll Dynatrace Managed Cluster Environments listed. Environment showing connection errors and environments with "Valid environment" set to "No" are invalid environments.\n\n`;
 
-        return resp;
-      },
-    );
+    return resp;
+  },
+);
 ```
 
 - [ ] **Step 7: Remove the now-duplicate CLI parsing block lower in `main()`**
@@ -1514,29 +1519,29 @@ with:
 Replace (currently around `src/index.ts:1153-1169`):
 
 ```typescript
-  // Parse command line arguments using commander
-  const program = new Command();
+// Parse command line arguments using commander
+const program = new Command();
 
-  program
-    .name('dynatrace-managed-mcp')
-    .description('Dynatrace Managed Model Context Protocol (MCP) Server')
-    .version(getPackageJsonVersion())
-    .option('--http', 'enable HTTP server mode instead of stdio')
-    .option('--server', 'enable HTTP server mode (alias for --http)')
-    .option('-p, --port <number>', 'port for HTTP server', '3000')
-    .option('-H, --host <host>', 'host for HTTP server', '127.0.0.1')
-    .parse();
+program
+  .name('dynatrace-managed-mcp')
+  .description('Dynatrace Managed Model Context Protocol (MCP) Server')
+  .version(getPackageJsonVersion())
+  .option('--http', 'enable HTTP server mode instead of stdio')
+  .option('--server', 'enable HTTP server mode (alias for --http)')
+  .option('-p, --port <number>', 'port for HTTP server', '3000')
+  .option('-H, --host <host>', 'host for HTTP server', '127.0.0.1')
+  .parse();
 
-  const options = program.opts();
-  const httpMode = options.http || options.server;
-  const httpPort = parseInt(options.port, 10);
-  const host = options.host || '127.0.0.1';
+const options = program.opts();
+const httpMode = options.http || options.server;
+const httpPort = parseInt(options.port, 10);
+const host = options.host || '127.0.0.1';
 ```
 
 with:
 
 ```typescript
-  // CLI options were parsed at the start of main(); httpMode, httpPort, and host are already set.
+// CLI options were parsed at the start of main(); httpMode, httpPort, and host are already set.
 ```
 
 - [ ] **Step 8: Parse the token header in the HTTP handler**
@@ -1544,20 +1549,20 @@ with:
 Replace (currently around `src/index.ts:1184-1185`):
 
 ```typescript
-      // Create a fresh McpServer per request (stateless HTTP requirement)
-      const server = createConfiguredMcpServer();
+// Create a fresh McpServer per request (stateless HTTP requirement)
+const server = createConfiguredMcpServer();
 ```
 
 with:
 
 ```typescript
-      // Per-request tokens come from the X-Dynatrace-Tokens header (alias=token;alias=token).
-      const tokenHeader = req.headers['x-dynatrace-tokens'];
-      const tokenMap = parseTokenHeader(tokenHeader);
-      const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
+// Per-request tokens come from the X-Dynatrace-Tokens header (alias=token;alias=token).
+const tokenHeader = req.headers['x-dynatrace-tokens'];
+const tokenMap = parseTokenHeader(tokenHeader);
+const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
 
-      // Create a fresh McpServer per request (stateless HTTP requirement)
-      const server = createConfiguredMcpServer(tokenMap, userKey);
+// Create a fresh McpServer per request (stateless HTTP requirement)
+const server = createConfiguredMcpServer(tokenMap, userKey);
 ```
 
 - [ ] **Step 9: Pass the startup token map in stdio mode**
@@ -1565,15 +1570,15 @@ with:
 Replace (currently around `src/index.ts:1246-1247`):
 
 ```typescript
-    // Default stdio mode
-    const server = createConfiguredMcpServer();
+// Default stdio mode
+const server = createConfiguredMcpServer();
 ```
 
 with:
 
 ```typescript
-    // Default stdio mode
-    const server = createConfiguredMcpServer(startupTokens, 'local');
+// Default stdio mode
+const server = createConfiguredMcpServer(startupTokens, 'local');
 ```
 
 - [ ] **Step 10: Build to verify `src` compiles**
@@ -1592,6 +1597,7 @@ Start the server: `node ./dist/index.js --http --port 8080`
 In another shell, send a request without tokens and confirm it responds (the server is up and routing):
 
 Run:
+
 ```bash
 curl -s -X POST http://127.0.0.1:8080/ \
   -H 'Content-Type: application/json' \
@@ -1599,6 +1605,7 @@ curl -s -X POST http://127.0.0.1:8080/ \
   -H 'X-Dynatrace-Tokens: prod=dummy' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
+
 Expected: a JSON-RPC response (either a `result` with the tool list, or a JSON-RPC error about missing `initialize` — either proves the header is accepted and the server is running). Stop the server with Ctrl-C.
 
 - [ ] **Step 13: Commit**
@@ -1615,6 +1622,7 @@ git commit -m "feat: pass per-user X-Dynatrace-Tokens through to Managed request
 Prove end-to-end (over a real socket, offline) that the supplied token becomes the `Api-Token` Authorization header and that concurrent calls with different tokens don't cross-contaminate.
 
 **Files:**
+
 - Create: `tests/integration/token-passthrough.integration.test.ts`
 
 - [ ] **Step 1: Write the test**
@@ -1695,6 +1703,7 @@ git commit -m "test: verify per-user token reaches request as Api-Token header"
 Document the HTTP per-user token model: header format, token-less config, client config example, TLS requirement, and the breaking change.
 
 **Files:**
+
 - Create: `examples/dt-config-http.yaml`
 - Create: `examples/mcp-config-http.json`
 - Modify: `README.md`
@@ -1832,23 +1841,26 @@ git commit -m "docs: document HTTP per-user token authentication"
 
 ## Spec Coverage Map
 
-| Spec requirement | Task |
-| --- | --- |
-| `X-Dynatrace-Tokens` header parsed to alias→token map (lenient, duplicate=last) | Task 1 |
-| Per-user key derivation for rate limiting | Task 1 |
-| Per-token rate limiting (replaces global counter) | Task 2, Task 5 (Step 5) |
-| Token-less `ManagedAuthClient`; per-call `Authorization`; no default mutation | Task 3 |
-| `MissingTokenError` with actionable message | Task 3 |
-| Per-request `ManagedAuthClientManager`; `ALL_ENVIRONMENTS` = token-supplied subset | Task 3 |
-| Startup helpers: `buildManagedAuthClients`, `validateManagedClients` | Task 3 |
-| `apiToken` optional in HTTP mode (config-loader + environment validation) | Task 4 |
-| `buildConfigTokenMap` for stdio token source | Task 4 |
-| CLI parsed first; mode-aware config load; per-mode token source & validation | Task 5 (Step 3) |
-| Per-request factory seeded with tokenMap + userKey; API clients built per request | Task 5 (Step 4) |
-| HTTP handler parses header; stdio uses config token map (unified path) | Task 5 (Steps 8–9) |
-| `get_environments_info` lists all envs, marks ones without a token, tests with caller token | Task 5 (Step 6) |
-| Concurrency isolation (no cross-contamination) verified | Task 3 (unit), Task 6 (integration) |
-| Docs: README, .env.template, examples, DEVELOPMENT, CHANGELOG; TLS note; breaking change | Task 7 |
-| stdio unchanged for users | Tasks 3–5 (config token map + default `requireToken=true`) |
-| No token in logs (redacted parser warnings; headers not logged) | Task 1, Task 5 |
+| Spec requirement                                                                            | Task                                                       |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `X-Dynatrace-Tokens` header parsed to alias→token map (lenient, duplicate=last)             | Task 1                                                     |
+| Per-user key derivation for rate limiting                                                   | Task 1                                                     |
+| Per-token rate limiting (replaces global counter)                                           | Task 2, Task 5 (Step 5)                                    |
+| Token-less `ManagedAuthClient`; per-call `Authorization`; no default mutation               | Task 3                                                     |
+| `MissingTokenError` with actionable message                                                 | Task 3                                                     |
+| Per-request `ManagedAuthClientManager`; `ALL_ENVIRONMENTS` = token-supplied subset          | Task 3                                                     |
+| Startup helpers: `buildManagedAuthClients`, `validateManagedClients`                        | Task 3                                                     |
+| `apiToken` optional in HTTP mode (config-loader + environment validation)                   | Task 4                                                     |
+| `buildConfigTokenMap` for stdio token source                                                | Task 4                                                     |
+| CLI parsed first; mode-aware config load; per-mode token source & validation                | Task 5 (Step 3)                                            |
+| Per-request factory seeded with tokenMap + userKey; API clients built per request           | Task 5 (Step 4)                                            |
+| HTTP handler parses header; stdio uses config token map (unified path)                      | Task 5 (Steps 8–9)                                         |
+| `get_environments_info` lists all envs, marks ones without a token, tests with caller token | Task 5 (Step 6)                                            |
+| Concurrency isolation (no cross-contamination) verified                                     | Task 3 (unit), Task 6 (integration)                        |
+| Docs: README, .env.template, examples, DEVELOPMENT, CHANGELOG; TLS note; breaking change    | Task 7                                                     |
+| stdio unchanged for users                                                                   | Tasks 3–5 (config token map + default `requireToken=true`) |
+| No token in logs (redacted parser warnings; headers not logged)                             | Task 1, Task 5                                             |
+
+```
+
 ```

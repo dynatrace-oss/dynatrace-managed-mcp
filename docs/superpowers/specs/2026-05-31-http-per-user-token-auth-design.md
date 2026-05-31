@@ -35,21 +35,21 @@ the same session.
 
 - TLS/transport encryption in the server itself (documentation only — see Security).
 - OAuth, token introspection, SSO, or any server-side token storage/management.
-- Per-user *tool visibility* (all configured environment aliases remain visible to all
+- Per-user _tool visibility_ (all configured environment aliases remain visible to all
   callers; authorization is enforced at execution time).
 - Changing stdio mode configuration or behavior.
 
 ## Resolved Decisions
 
-| Decision | Choice |
-| --- | --- |
-| Per user, how many environments? | Several at once → multi-token scheme required. |
-| Token transport | **One bundled header**: `X-Dynatrace-Tokens: alias=token;alias=token`. |
-| Relationship to current HTTP behavior | **Replace** it. HTTP mode requires the header; no server-side tokens, no fallback. |
-| Plumbing | **Strategy A** — per-request scoped auth; capability layer untouched. |
-| Alias visibility | Simple — any *configured* alias is accepted by the param; execution requires a token. |
-| Rate limiting | **Per-token**, in scope. |
-| TLS | Documentation only. |
+| Decision                              | Choice                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| Per user, how many environments?      | Several at once → multi-token scheme required.                                        |
+| Token transport                       | **One bundled header**: `X-Dynatrace-Tokens: alias=token;alias=token`.                |
+| Relationship to current HTTP behavior | **Replace** it. HTTP mode requires the header; no server-side tokens, no fallback.    |
+| Plumbing                              | **Strategy A** — per-request scoped auth; capability layer untouched.                 |
+| Alias visibility                      | Simple — any _configured_ alias is accepted by the param; execution requires a token. |
+| Rate limiting                         | **Per-token**, in scope.                                                              |
+| TLS                                   | Documentation only.                                                                   |
 
 ## Token Header Format
 
@@ -143,8 +143,8 @@ Claude Code
 ## Error Handling & Edge Cases
 
 - **No token for a requested alias:** the tool returns `isError: true` with:
-  *"No token supplied for environment 'prod'. Add `prod=<token>` to your X-Dynatrace-Tokens
-  header."*
+  _"No token supplied for environment 'prod'. Add `prod=<token>` to your X-Dynatrace-Tokens
+  header."_
 - **`ALL_ENVIRONMENTS`:** operates only on the environments the caller supplied tokens for,
   and notes which configured environments were skipped (you cannot query what you cannot
   authenticate).
