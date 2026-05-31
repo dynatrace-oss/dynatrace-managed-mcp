@@ -211,6 +211,31 @@ Minimum supported version: Dynatrace Managed 1.328.0
 
 ![Architecture (remote mode)](./assets/dynatrace-managed-mcp-arch-remote.png?raw=true)
 
+#### HTTP authentication (per-user tokens)
+
+In HTTP mode the server holds **no** Dynatrace API tokens. Each request must carry the caller's
+per-environment tokens in a single `X-Dynatrace-Tokens` header, formatted as an `alias=token`
+map separated by semicolons:
+
+```
+X-Dynatrace-Tokens: prod=dt0c01.AAA;staging=dt0c01.BBB
+```
+
+The server uses the caller's token for the environment named by `environment_alias`, so each user
+only accesses the data their token allows. A request that targets an environment with no supplied
+token is rejected with a message naming the missing alias.
+
+Because tokens are sent in a header, run the HTTP server **behind TLS** (for example, terminate TLS
+at a reverse proxy in front of it). The server itself binds to `127.0.0.1` by default and does not
+terminate TLS.
+
+Environment config in HTTP mode does not include `apiToken` — only `alias` + URLs, which are
+non-secret. See [`examples/dt-config-http.yaml`](./examples/dt-config-http.yaml) and
+[`examples/mcp-config-http.json`](./examples/mcp-config-http.json).
+
+> The Configuration Methods described above (server-side `apiToken` values) apply to **stdio /
+> local mode**. In HTTP mode, tokens come from the `X-Dynatrace-Tokens` header instead.
+
 ## Use cases
 
 There are two ways that Dynatrace Managed, and thus the MCP, may be used:

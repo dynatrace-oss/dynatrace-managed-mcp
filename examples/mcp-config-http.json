@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dynatrace-managed": {
+      "type": "http",
+      "url": "https://mcp.internal.company.com/",
+      "headers": {
+        "X-Dynatrace-Tokens": "prod=dt0c01.PROD_TOKEN;staging=dt0c01.STAGING_TOKEN"
+      }
+    }
+  }
+}
