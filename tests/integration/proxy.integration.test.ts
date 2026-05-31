@@ -52,13 +52,12 @@ describe('ProxyConfig', () => {
       let client = new ManagedAuthClient({
         apiBaseUrl: 'http://example.com',
         dashboardBaseUrl: 'http://example-dashboard.com',
-        apiToken: 'my-example-token',
         alias: 'alias',
         httpsProxy: proxyUrl,
         minimum_version: '1.328.0',
       });
 
-      const response = await client.makeRequest('/anything/mypath');
+      const response = await client.makeRequest('/anything/mypath', 'my-example-token');
 
       console.log(`response: ${JSON.stringify(response)}`);
       expect(response.headers.Myproxyheader).toEqual('myproxyval');
