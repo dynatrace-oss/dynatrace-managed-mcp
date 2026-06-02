@@ -1,5 +1,7 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased Changes
+
 ## 0.6.0
 
 - **Breaking change (HTTP mode):** the HTTP server no longer uses server-side API tokens. Each request must supply per-environment tokens via the `X-Dynatrace-Tokens` header (`alias=token;alias=token`); the server authenticates each environment with the caller's token, so each user only accesses data their token allows. In HTTP mode, environment config no longer requires `apiToken` (just `alias` + URLs). Run the HTTP server behind TLS. Rate limiting is now per-token. **stdio / local mode is unchanged** (tokens still come from the local config file / env vars).
