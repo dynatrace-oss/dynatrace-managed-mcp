@@ -1,8 +1,9 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
-## Unreleased Changes
+## 0.6.0
 
 - **Breaking change (HTTP mode):** the HTTP server no longer uses server-side API tokens. Each request must supply per-environment tokens via the `X-Dynatrace-Tokens` header (`alias=token;alias=token`); the server authenticates each environment with the caller's token, so each user only accesses data their token allows. In HTTP mode, environment config no longer requires `apiToken` (just `alias` + URLs). Run the HTTP server behind TLS. Rate limiting is now per-token. **stdio / local mode is unchanged** (tokens still come from the local config file / env vars).
+- Documented HTTP header size limits for large multi-environment deployments: Node.js enforces a 16 KB default (approximately 140–150 environments); use `--max-http-header-size` to increase it. Added nginx example for raising the `large_client_header_buffers` limit when running behind a reverse proxy.
 
 ## 0.5.7
 

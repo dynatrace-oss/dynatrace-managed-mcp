@@ -236,6 +236,27 @@ non-secret. See [`examples/dt-config-http.yaml`](./examples/dt-config-http.yaml)
 > The Configuration Methods described above (server-side `apiToken` values) apply to **stdio /
 > local mode**. In HTTP mode, tokens come from the `X-Dynatrace-Tokens` header instead.
 
+#### Large numbers of environments and header size limits
+
+The `X-Dynatrace-Tokens` header grows with the number of environments. Each entry is roughly
+`alias=dt0c01.<token>;` (~110 characters). Node.js enforces a default HTTP header size limit of
+**16 KB**, which accommodates approximately 140–150 environments before requests are rejected.
+
+If you need more environments, increase the limit at server startup with the `--max-http-header-size`
+flag:
+
+```bash
+node --max-http-header-size=65536 ./dist/index.js --http
+```
+
+If you are running a **reverse proxy** (such as nginx) in front of the MCP server, the proxy also
+enforces its own limit. nginx defaults to 8 KB (`large_client_header_buffers`), which fits roughly
+70 environments. Raise it in your nginx configuration:
+
+```nginx
+large_client_header_buffers 4 32k;
+```
+
 ## Use cases
 
 There are two ways that Dynatrace Managed, and thus the MCP, may be used:
