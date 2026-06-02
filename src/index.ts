@@ -369,6 +369,10 @@ Never run queries that could return very large amounts of data, or that could be
           if (!httpMode) {
             if (authClient.isValid) {
               resp += `- Valid Environment: Yes\n`;
+              if (authClient.clusterVersion) {
+                resp += `- Version: ${authClient.clusterVersion}\n`;
+                resp += `- Minimum Version Check: PASSED\n`;
+              }
               resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
             } else {
               resp += `- Valid Environment: No\n`;

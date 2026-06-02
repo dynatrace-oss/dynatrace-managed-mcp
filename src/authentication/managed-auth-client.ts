@@ -43,6 +43,7 @@ export class ManagedAuthClient {
   public alias: string;
   public isValid: boolean;
   public validationError: string;
+  public clusterVersion: string;
   private proxy: AxiosProxyConfig | undefined;
   private httpClient: AxiosInstance;
   public MINIMUM_VERSION: string;
@@ -55,6 +56,7 @@ export class ManagedAuthClient {
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
+    this.clusterVersion = '';
 
     // NOTE: Authorization is intentionally NOT baked in here. The token is provided per call
     // (per user) so one shared client instance can serve many callers concurrently.
@@ -165,6 +167,7 @@ export class ManagedAuthClient {
       }
       const clusterVersion = await this.getClusterVersion(token);
       logger.info(`Connected to Managed cluster version ${clusterVersion.version}`);
+      this.clusterVersion = clusterVersion.version;
 
       const isValidVersion = this.validateMinimumVersion(clusterVersion);
       if (!isValidVersion) {

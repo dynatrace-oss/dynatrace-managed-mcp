@@ -2,6 +2,9 @@
 
 ## Unreleased Changes
 
+- Improved `get_environments_info` in stdio mode: now uses cached startup validation results (version, validity, error) instead of re-probing live on every call, eliminating redundant network requests. The cluster version and minimum version check are now displayed from the cached result.
+- Improved rate-limiting key stability: `deriveUserKey` now normalises the `X-Dynatrace-Tokens` header (sorts aliases, strips whitespace) so equivalent token sets produce the same rate-limit bucket regardless of header ordering.
+
 ## 0.6.0
 
 - **Breaking change (HTTP mode):** the HTTP server no longer uses server-side API tokens. Each request must supply per-environment tokens via the `X-Dynatrace-Tokens` header (`alias=token;alias=token`); the server authenticates each environment with the caller's token, so each user only accesses data their token allows. In HTTP mode, environment config no longer requires `apiToken` (just `alias` + URLs). Run the HTTP server behind TLS. Rate limiting is now per-token. **stdio / local mode is unchanged** (tokens still come from the local config file / env vars).
