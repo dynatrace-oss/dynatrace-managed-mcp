@@ -377,6 +377,7 @@ Never run queries that could return very large amounts of data, or that could be
             continue;
           }
 
+          // HTTP mode: probe live because tokens are supplied per request.
           const token = authClientManager.tokenFor(authClient.alias);
           if (!token) {
             resp += `- Valid Environment: No\n`;
