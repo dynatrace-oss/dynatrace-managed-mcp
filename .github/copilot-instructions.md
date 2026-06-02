@@ -159,7 +159,7 @@ Configurable via env vars: `DT_MCP_RATE_LIMIT_MAX_CALLS` (default: 20) and `DT_M
 
 ### HTTP Mode Architecture
 
-In `--http` mode, `src/index.ts` creates a **new `McpServer` instance per request** (the MCP SDK forbids reusing the same server instance across transports). Capability API clients are initialized once and shared.
+In `--http` mode, `src/index.ts` creates a **new `McpServer` instance per request** (the MCP SDK forbids reusing the same server instance across transports). `ManagedAuthClient` instances are initialized once and shared; a per-request `ManagedAuthClientManager` (token map) and the capability API clients are created per request.
 
 ### Dependencies
 
