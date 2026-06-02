@@ -91,13 +91,14 @@ src/
 │   └── __tests__/*.test.ts           # Capability unit tests
 ├── utils/
 │   ├── logger.ts                     # Winston-based logging
-│   ├── environment.ts                # Parse DT_ENVIRONMENT_CONFIGS
+│   ├── environment.ts                # Parse environment configs, defines ManagedEnvironmentConfig
+│   ├── config-loader.ts              # Load config from JSON/YAML file (DT_CONFIG_FILE)
+│   ├── rate-limit.ts                 # Rate limiting configuration
 │   ├── telemetry-openkit.ts          # OpenKit telemetry
 │   ├── date-formatter.ts             # Timestamp formatting
 │   ├── user-agent.ts                 # User-Agent header generation
 │   ├── version.ts                    # Package version utils
 │   └── __tests__/*.test.ts           # Util unit tests
-└── interfaces/                       # TypeScript type definitions
 
 tests/
 ├── integration/*.integration.test.ts # Integration tests (real API calls)
@@ -135,9 +136,34 @@ dist/                                 # Build output (compiled JS)
 - Return raw JSON (preserves all data, handles varying Davis configurations)
 - Wrap with context and Next Steps recommendations
 
+### Environment Configuration
+
+Two methods for providing environment configs (priority order):
+
+1. **`DT_CONFIG_FILE`** (recommended): Path to a YAML or JSON file. Supports `${VAR_NAME}` interpolation for secrets. See `dt-config.yaml` and `examples/` for format.
+2. **`DT_ENVIRONMENT_CONFIGS`**: Inline JSON array string (useful for Docker/Kubernetes).
+
+Required config fields: `apiEndpointUrl`, `environmentId`, `alias`, `apiToken`. Optional: `dynatraceUrl`, `httpProxyUrl`, `httpsProxyUrl`.
+
+### Logging Configuration
+
+| Variable     | Description                                                                         | Default                     |
+| ------------ | ----------------------------------------------------------------------------------- | --------------------------- |
+| `LOG_LEVEL`  | `debug`, `info`, `warn`, `error`                                                    | `info`                      |
+| `LOG_OUTPUT` | `file`, `stdout`, `stderr`, `stderr-all`, `file+console`, `file+stderr`, `disabled` | `file`                      |
+| `LOG_FILE`   | Log file path (when `LOG_OUTPUT` includes `file`)                                   | `dynatrace-managed-mcp.log` |
+
+### Rate Limiting
+
+Configurable via env vars: `DT_MCP_RATE_LIMIT_MAX_CALLS` (default: 20) and `DT_MCP_RATE_LIMIT_WINDOW_MS` (default: 20000ms).
+
+### HTTP Mode Architecture
+
+In `--http` mode, `src/index.ts` creates a **new `McpServer` instance per request** (the MCP SDK forbids reusing the same server instance across transports). Capability API clients are initialized once and shared.
+
 ### Dependencies
 
-**Allowed only:**
+**Current production dependencies:**
 
 - `@modelcontextprotocol/sdk` (MCP framework)
 - `zod-to-json-schema` (schema validation)
@@ -145,6 +171,10 @@ dist/                                 # Build output (compiled JS)
 - `winston` (logging)
 - `commander` (CLI parsing)
 - `@dynatrace/openkit-js` (telemetry)
+- `ajv` (JSON schema validation)
+- `js-yaml` (YAML config file parsing)
+- `open` (open URLs)
+- `undici` (HTTP/2 support)
 
 **Do not install other dependencies** without discussion.
 
