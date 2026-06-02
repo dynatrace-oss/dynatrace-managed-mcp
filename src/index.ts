@@ -365,6 +365,18 @@ Never run queries that could return very large amounts of data, or that could be
           resp += `- API URL: ${authClient.apiBaseUrl}\n`;
           resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
 
+          // In stdio mode, use cached startup validation results to avoid redundant live probes.
+          if (!httpMode) {
+            if (authClient.isValid) {
+              resp += `- Valid Environment: Yes\n`;
+              resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+            } else {
+              resp += `- Valid Environment: No\n`;
+              resp += `- Error message: ${authClient.validationError || 'Environment failed startup validation'}\n\n`;
+            }
+            continue;
+          }
+
           const token = authClientManager.tokenFor(authClient.alias);
           if (!token) {
             resp += `- Valid Environment: No\n`;
