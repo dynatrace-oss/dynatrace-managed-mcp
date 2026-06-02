@@ -42,5 +42,24 @@ export function deriveUserKey(tokenHeaderValue: string | undefined): string {
   if (!tokenHeaderValue || tokenHeaderValue.trim() === '') {
     return 'anonymous';
   }
-  return createHash('sha256').update(tokenHeaderValue).digest('hex');
+
+  // Normalize so equivalent headers (whitespace/order) produce the same key.
+  const map = new Map<string, string>();
+  for (const pair of tokenHeaderValue.split(';')) {
+    const trimmed = pair.trim();
+    if (trimmed === '') continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const alias = trimmed.slice(0, eq).trim();
+    const token = trimmed.slice(eq + 1).trim();
+    if (alias === '' || token === '') continue;
+    map.set(alias, token); // duplicate alias -> last value wins
+  }
+
+  const canonical = [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([alias, token]) => `${alias}=${token}`)
+    .join(';');
+
+  return createHash('sha256').update(canonical).digest('hex');
 }
