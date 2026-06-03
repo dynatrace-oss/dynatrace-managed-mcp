@@ -5,6 +5,7 @@
     "esModuleInterop": true,
     "rootDir": "./src",
     "moduleResolution": "bundler",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "module": "CommonJS",
     "outDir": "./dist",
