@@ -1233,9 +1233,24 @@ Never run queries that could return very large amounts of data, or that could be
 
       // Handle POST Requests for this endpoint
       if (req.method === 'POST') {
+        const maxBodySize = parseInt(process.env.DT_MCP_MAX_BODY_SIZE ?? String(1 * 1024 * 1024), 10); // default 1MB
         const chunks: Buffer[] = [];
+        let totalSize = 0;
+        let tooLarge = false;
         for await (const chunk of req) {
+          totalSize += chunk.length;
+          if (totalSize > maxBodySize) {
+            tooLarge = true;
+            break;
+          }
           chunks.push(chunk);
+        }
+        if (tooLarge) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Request Entity Too Large' } }),
+          );
+          return;
         }
         const rawBody = Buffer.concat(chunks).toString();
         try {
