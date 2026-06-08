@@ -5,6 +5,8 @@
     "esModuleInterop": true,
     "rootDir": "./src",
     "moduleResolution": "bundler",
+    "types": ["node", "jest"],
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "module": "CommonJS",
     "outDir": "./dist",

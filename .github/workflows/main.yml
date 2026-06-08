@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Required by SonarCloud for blame information and new code detection
 
       - name: Use Node.js # will read version from .nvmrc
         uses: actions/setup-node@v6
@@ -33,3 +35,8 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

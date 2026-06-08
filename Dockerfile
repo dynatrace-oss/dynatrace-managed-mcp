@@ -19,8 +19,11 @@ FROM node:26.2.0-alpine3.22
 WORKDIR /app
 
 # Copy package files and install production dependencies
-COPY --from=build --chown=node:node /app/package.json /app/package-lock.json /app/
-RUN npm ci --only=production --ignore-scripts && npm cache clean --force
+COPY --from=build --chown=node:node /app/package.json /app/package-lock.json /app/.npmrc /app/
+RUN npm ci --only=production --ignore-scripts \
+  && npm cache clean --force \
+  && rm -rf /usr/local/lib/node_modules/npm \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx
 
 # Copy the built application
 COPY --from=build --chown=node:node /app/dist /app/dist

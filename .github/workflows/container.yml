@@ -27,3 +27,31 @@ jobs:
           push: false
           platforms: linux/amd64,linux/arm64
           tags: mcp/dynatrace-managed-mcp-server:latest
+
+  scan:
+    runs-on: ubuntu-latest
+    # Skip for PRs from forks since secrets are not available
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build container image for scanning
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: mcp/dynatrace-managed-mcp-server:scan
+
+      - name: Run Snyk container scan
+        uses: snyk/actions/docker@v1.0.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+        with:
+          image: mcp/dynatrace-managed-mcp-server:scan
+          args: >-
+            --severity-threshold=high
+            --project-business-criticality=low
+            --project-lifecycle=development
+            --project-tags=team=team-se-cloud-automation
