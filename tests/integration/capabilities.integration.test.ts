@@ -14,8 +14,8 @@
  * need populated, one with valid credential and one with invalid credentials (apiToken),
  * with aliases "testAlias" and "invalidApiToken" respectively.
  */
-import { ManagedAuthClientManager } from '../../src/authentication/managed-auth-client';
-import { getManagedEnvironmentConfigs, validateEnvironments } from '../../src/utils/environment';
+import { ManagedAuthClientManager, buildManagedAuthClients } from '../../src/authentication/managed-auth-client';
+import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from '../../src/utils/environment';
 import { MetricsApiClient } from '../../src/capabilities/metrics-api';
 import { LogsApiClient } from '../../src/capabilities/logs-api';
 import { EventsApiClient } from '../../src/capabilities/events-api';
@@ -48,15 +48,14 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
   beforeAll(() => {
     const config = getManagedEnvironmentConfigs();
     const validEnvironments = validateEnvironments(config);
+    const validConfigs = validEnvironments['valid_configs'];
 
-    authManager = new ManagedAuthClientManager(validEnvironments['valid_configs']);
-
-    // Forcing clients to be valid, so we don't have to call isConfigured() before each.
-    for (const authClient of authManager.rawClients) {
-      authClient.isValid = true;
-    }
-
-    authManager.clients = authManager.rawClients;
+    // Build the shared token-less clients and a token map from config (mirrors stdio startup).
+    // No startup validation needed here: all configured clients are treated as queryable.
+    const allClients = buildManagedAuthClients(validConfigs);
+    const tokens = buildConfigTokenMap(validConfigs);
+    const validAliases = ['ALL_ENVIRONMENTS', ...allClients.map((c) => c.alias)];
+    authManager = new ManagedAuthClientManager(allClients, allClients, validAliases, tokens);
 
     metricsClient = new MetricsApiClient(authManager);
     logsClient = new LogsApiClient(authManager);

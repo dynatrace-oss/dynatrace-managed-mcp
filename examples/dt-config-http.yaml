@@ -1,0 +1,13 @@
+# HTTP mode configuration: NO tokens here.
+# Each user supplies their own per-environment tokens at request time via the
+# X-Dynatrace-Tokens header (alias=token;alias=token). Only non-secret connection
+# details live in this file, so it is safe to commit to version control.
+- alias: prod
+  apiEndpointUrl: https://prod-api.company.com/
+  environmentId: abc-123
+  dynatraceUrl: https://prod-dashboard.company.com/
+
+- alias: staging
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  dynatraceUrl: https://staging-dashboard.company.com/

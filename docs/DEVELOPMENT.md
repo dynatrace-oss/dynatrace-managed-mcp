@@ -65,6 +65,17 @@ or:
 node --env-file=.env ./dist/index.js --http
 ```
 
+When running in HTTP mode, clients authenticate per request with the `X-Dynatrace-Tokens` header
+(`alias=token;alias=token`) — the server holds no tokens itself. You can smoke-test locally with:
+
+```bash
+curl -s -X POST http://127.0.0.1:3000/ \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'X-Dynatrace-Tokens: alias-env=dt0c01.YOUR_TOKEN' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
 This can be useful to test that nothing is seriously broken. However, it is impractical to interact directly with
 the MCP Server in this way. Instead, see the [MCP Inspector](#mcp-inspector) section below.
 

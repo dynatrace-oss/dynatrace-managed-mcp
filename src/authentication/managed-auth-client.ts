@@ -2,6 +2,8 @@ import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
 import { logger } from '../utils/logger';
 import { ManagedEnvironmentConfig } from '../utils/environment';
 
+export const MINIMUM_VERSION = '1.328.0';
+
 const MANAGED_API_SCOPES = [
   'DataExport', // Read metrics and topology
   'ReadConfig', // Read configuration and cluster version
@@ -20,7 +22,6 @@ export interface ClusterVersion {
 export interface ManagedAuthClientParams {
   apiBaseUrl: string;
   dashboardBaseUrl: string;
-  apiToken: string;
   alias: string;
   httpProxy?: string;
   httpsProxy?: string;
@@ -28,62 +29,11 @@ export interface ManagedAuthClientParams {
   minimum_version: string;
 }
 
-export class ManagedAuthClientManager {
-  public readonly rawClients: ManagedAuthClient[];
-  public clients: ManagedAuthClient[];
-  public validAliases: string[] = [];
-  public readonly MINIMUM_VERSION = '1.328.0';
-
-  constructor(managedEnvironments: ManagedEnvironmentConfig[]) {
-    this.rawClients = [];
-    this.clients = [];
-    this.validAliases = ['ALL_ENVIRONMENTS'];
-
-    logger.warn('Validating Environments');
-    for (let managedEnvironment of managedEnvironments) {
-      let newClient = new ManagedAuthClient({
-        apiBaseUrl: managedEnvironment.apiUrl,
-        dashboardBaseUrl: managedEnvironment.dashboardUrl,
-        apiToken: managedEnvironment.apiToken,
-        alias: managedEnvironment.alias,
-        httpProxy: managedEnvironment.httpProxy,
-        httpsProxy: managedEnvironment.httpsProxy,
-        minimum_version: this.MINIMUM_VERSION,
-      });
-      this.rawClients.push(newClient);
-    }
-  }
-
-  async makeRequests(endpoint: string, params: Record<string, any>, environments: string): Promise<Map<string, any>> {
-    const selectedAliases = environments === 'ALL_ENVIRONMENTS' ? this.validAliases : environments.split(';');
-    let responses = new Map<string, any>();
-    for (const client of this.clients) {
-      if (selectedAliases.indexOf(client.alias) > -1) {
-        const response = await client.makeRequest(endpoint, params);
-        responses.set(client.alias, response);
-      }
-    }
-    return responses;
-  }
-
-  async isConfigured(): Promise<void> {
-    for (let client of this.rawClients) {
-      let validClient = await client.isConfigured();
-      if (validClient) {
-        client.isValid = true;
-        this.clients.push(client);
-        this.validAliases.push(client.alias);
-      }
-    }
-  }
-
-  getBaseUrl(alias: string): string {
-    for (let client of this.clients) {
-      if (client.alias === alias) {
-        return client.dashboardBaseUrl;
-      }
-    }
-    return '';
+/** Thrown when a request targets an environment for which the caller supplied no token. */
+export class MissingTokenError extends Error {
+  constructor(public readonly alias: string) {
+    super(`No token supplied for environment '${alias}'. Add \`${alias}=<token>\` to your X-Dynatrace-Tokens header.`);
+    this.name = 'MissingTokenError';
   }
 }
 
@@ -93,6 +43,7 @@ export class ManagedAuthClient {
   public alias: string;
   public isValid: boolean;
   public validationError: string;
+  public clusterVersion: string;
   private proxy: AxiosProxyConfig | undefined;
   private httpClient: AxiosInstance;
   public MINIMUM_VERSION: string;
@@ -105,11 +56,13 @@ export class ManagedAuthClient {
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
+    this.clusterVersion = '';
 
+    // NOTE: Authorization is intentionally NOT baked in here. The token is provided per call
+    // (per user) so one shared client instance can serve many callers concurrently.
     this.httpClient = axios.create({
       baseURL: this.apiBaseUrl,
       headers: {
-        'Authorization': `Api-Token ${params.apiToken}`,
         'Content-Type': 'application/json',
         'Connection': 'close',
       },
@@ -118,10 +71,16 @@ export class ManagedAuthClient {
     });
   }
 
-  async validateConnection(): Promise<boolean> {
+  private authHeader(token: string): Record<string, string> {
+    return { Authorization: `Api-Token ${token}` };
+  }
+
+  async validateConnection(token: string): Promise<boolean> {
     try {
       // Try cluster version endpoint for Managed environments
-      const response = await this.httpClient.get('/api/v1/config/clusterversion');
+      const response = await this.httpClient.get('/api/v1/config/clusterversion', {
+        headers: this.authHeader(token),
+      });
       return response.status === 200;
     } catch (error) {
       logger.error(
@@ -130,7 +89,10 @@ export class ManagedAuthClient {
       );
       // Fallback: try a basic API endpoint that exists in both SaaS and Managed
       try {
-        const response = await this.httpClient.get('/api/v2/metrics', { params: { pageSize: 1 } });
+        const response = await this.httpClient.get('/api/v2/metrics', {
+          params: { pageSize: 1 },
+          headers: this.authHeader(token),
+        });
         return response.status === 200;
       } catch (fallbackError) {
         logger.error(`[Alias: ${this.alias}] Failed calling /api/v2/metrics`, { error: fallbackError });
@@ -139,10 +101,11 @@ export class ManagedAuthClient {
     }
   }
 
-  async getClusterVersion(): Promise<ClusterVersion> {
-    // Try cluster version endpoint for Managed environments
+  async getClusterVersion(token: string): Promise<ClusterVersion> {
     try {
-      const response = await this.httpClient.get('/api/v1/config/clusterversion');
+      const response = await this.httpClient.get('/api/v1/config/clusterversion', {
+        headers: this.authHeader(token),
+      });
       return response.data;
     } catch (error: any) {
       const status = error?.response?.status;
@@ -177,41 +140,34 @@ export class ManagedAuthClient {
   cleanup(): void {
     // Destroy the axios instance to close connections
     if (this.httpClient) {
-      // Clear interceptors
       this.httpClient.interceptors.request.clear();
       this.httpClient.interceptors.response.clear();
-
-      // Set very short timeout to force connection closure
       this.httpClient.defaults.timeout = 1;
-
-      // Clear the instance
       (this.httpClient as any) = null;
     }
   }
 
-  async makeRequest(endpoint: string, params?: Record<string, any>): Promise<any> {
+  async makeRequest(endpoint: string, token: string, params: Record<string, any> = {}): Promise<any> {
     const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const response = await this.httpClient.get(url, {
       proxy: this.proxy ?? undefined,
-      params: params || {},
+      params,
+      headers: this.authHeader(token),
     });
     return response.data;
   }
 
-  async isConfigured() {
-    // Test connection to Managed cluster
+  async isConfigured(token: string): Promise<boolean> {
     logger.info(`Testing connection to Dynatrace Managed environment "${this.alias}": ${this.apiBaseUrl}...`);
     try {
-      const isConnected = await this.validateConnection();
+      const isConnected = await this.validateConnection(token);
       if (!isConnected) {
-        //throw new Error('Connection validation failed'); // CANT CONNECT
         this.validationError = "Connection validation failed: Can't connect to environment " + this.alias;
         return false;
       }
-      logger.info(`Called validateConnection`);
-
-      const clusterVersion = await this.getClusterVersion();
+      const clusterVersion = await this.getClusterVersion(token);
       logger.info(`Connected to Managed cluster version ${clusterVersion.version}`);
+      this.clusterVersion = clusterVersion.version;
 
       const isValidVersion = this.validateMinimumVersion(clusterVersion);
       if (!isValidVersion) {
@@ -226,12 +182,99 @@ export class ManagedAuthClient {
         `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}.`,
       );
       logger.error('Please verify:');
-      logger.error('1. DT_ENVIRONMENT_CONFIGS is correct');
+      logger.error('1. The environment configuration (apiEndpointUrl, environmentId) is correct');
       logger.error(`2. API Token has required scopes: ${MANAGED_API_SCOPES.join(', ')}`);
       logger.error('3. Network connectivity to the Managed environment');
       this.validationError = `Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}. Please verify connection details are correct.`;
       return false;
     }
+  }
+}
+
+/** Build the shared, token-less clients for all configured environments (startup, once). */
+export function buildManagedAuthClients(configs: ManagedEnvironmentConfig[]): ManagedAuthClient[] {
+  return configs.map(
+    (env) =>
+      new ManagedAuthClient({
+        apiBaseUrl: env.apiUrl,
+        dashboardBaseUrl: env.dashboardUrl,
+        alias: env.alias,
+        httpProxy: env.httpProxy,
+        httpsProxy: env.httpsProxy,
+        minimum_version: MINIMUM_VERSION,
+      }),
+  );
+}
+
+/** stdio startup validation using config-provided tokens. Returns the reachable subset. */
+export async function validateManagedClients(
+  clients: ManagedAuthClient[],
+  tokens: Map<string, string>,
+): Promise<{ validClients: ManagedAuthClient[]; validAliases: string[] }> {
+  const validClients: ManagedAuthClient[] = [];
+  const validAliases: string[] = ['ALL_ENVIRONMENTS'];
+  for (const client of clients) {
+    const token = tokens.get(client.alias);
+    if (!token) {
+      logger.warn(`[Alias: ${client.alias}] No token found; skipping startup validation`);
+      continue;
+    }
+    const ok = await client.isConfigured(token);
+    if (ok) {
+      client.isValid = true;
+      validClients.push(client);
+      validAliases.push(client.alias);
+    }
+  }
+  return { validClients, validAliases };
+}
+
+/**
+ * Per-request router. Holds references to the shared clients plus this caller's tokens.
+ * Cheap to construct (one per HTTP request); the API clients consume it exactly as before.
+ */
+export class ManagedAuthClientManager {
+  public readonly MINIMUM_VERSION = MINIMUM_VERSION;
+
+  constructor(
+    public readonly rawClients: ManagedAuthClient[],
+    public readonly clients: ManagedAuthClient[],
+    public readonly validAliases: string[],
+    private readonly tokens: Map<string, string>,
+  ) {}
+
+  /** The caller's token for an alias, or undefined. Used by get_environments_info. */
+  tokenFor(alias: string): string | undefined {
+    return this.tokens.get(alias);
+  }
+
+  async makeRequests(endpoint: string, params: Record<string, any>, environments: string): Promise<Map<string, any>> {
+    const selectedAliases =
+      environments === 'ALL_ENVIRONMENTS'
+        ? this.clients.map((c) => c.alias).filter((alias) => this.tokens.has(alias))
+        : environments.split(';');
+
+    const responses = new Map<string, any>();
+    for (const client of this.clients) {
+      if (selectedAliases.indexOf(client.alias) > -1) {
+        const token = this.tokens.get(client.alias);
+        if (!token) {
+          throw new MissingTokenError(client.alias);
+        }
+        const response = await client.makeRequest(endpoint, token, params);
+        responses.set(client.alias, response);
+      }
+    }
+    return responses;
+  }
+
+  getBaseUrl(alias: string): string {
+    for (const client of this.clients) {
+      if (client.alias === alias) {
+        return client.dashboardBaseUrl;
+      }
+    }
+    return '';
   }
 }
 

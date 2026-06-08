@@ -2,6 +2,16 @@
 
 ## Unreleased Changes
 
+- Improved `get_environments_info` in stdio mode: now uses cached startup validation results (version, validity, error) instead of re-probing live on every call, eliminating redundant network requests. The cluster version and minimum version check are now displayed from the cached result.
+- Improved rate-limiting key stability: `deriveUserKey` now normalises the `X-Dynatrace-Tokens` header (sorts aliases, strips whitespace) so equivalent token sets produce the same rate-limit bucket regardless of header ordering.
+
+## 0.6.0
+
+- **Breaking change (HTTP mode):** the HTTP server no longer uses server-side API tokens. Each request must supply per-environment tokens via the `X-Dynatrace-Tokens` header (`alias=token;alias=token`); the server authenticates each environment with the caller's token, so each user only accesses data their token allows. In HTTP mode, environment config no longer requires `apiToken` (just `alias` + URLs). Run the HTTP server behind TLS. Rate limiting is now per-token. **stdio / local mode is unchanged** (tokens still come from the local config file / env vars).
+- Documented HTTP header size limits for large multi-environment deployments: Node.js enforces a 16 KB default (approximately 140–150 environments); use `--max-http-header-size` to increase it. Added nginx example for raising the `large_client_header_buffers` limit when running behind a reverse proxy.
+- Fixed Docker container build failure caused by `ts-jest@29.4.6` incompatibility with TypeScript 6; updated `ts-jest` to 29.4.11 (supports TypeScript `>=4.3 <7`) and added `tsconfig.test.json` so Jest type definitions resolve correctly under TypeScript 6.
+- Fixed TypeScript 6 build error: migrated `tsconfig.json` from deprecated `moduleResolution: "node"` to `"bundler"`; TypeScript 6 treats the old setting as a hard error on clean builds (e.g., in Docker).
+
 ## 0.5.7
 
 - Fixed HTTP transport to return `application/json` responses instead of keeping persistent SSE connections open. This resolves indefinite hangs experienced by MCP clients (such as GitHub Copilot CLI) that do not support server-sent event streams.

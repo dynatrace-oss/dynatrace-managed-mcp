@@ -40,7 +40,7 @@ export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): Mana
   };
 }
 
-export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
+export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnvironmentConfig[] {
   // Priority 1: DT_CONFIG_FILE - Load from external file (JSON or YAML)
   if (process.env.DT_CONFIG_FILE) {
     logger.info(`Loading configuration from file: ${process.env.DT_CONFIG_FILE}`);
@@ -53,7 +53,7 @@ export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
     }
 
     try {
-      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE);
+      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
       let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
       for (const environmentConfig of environmentConfigurations) {
         parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
@@ -66,6 +66,10 @@ export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
   }
 
   // Priority 2: DT_ENVIRONMENT_CONFIGS - Parse JSON string
+  // Unlike the DT_CONFIG_FILE path (which validates required fields up front in the loader,
+  // honoring requireToken), this branch performs no early structural check. Field-presence
+  // validation - including apiToken when requireToken is true - is enforced downstream by
+  // validateEnvironments(configs, requireToken), which the server always calls after loading.
   const environmentConfigs = process.env.DT_ENVIRONMENT_CONFIGS;
   if (environmentConfigs) {
     logger.info('Loading configuration from DT_ENVIRONMENT_CONFIGS');
@@ -99,11 +103,16 @@ export function getManagedEnvironmentConfigs(): ManagedEnvironmentConfig[] {
   );
 }
 
-export function validateEnvironments(environmentConfigurations: ManagedEnvironmentConfig[]): {
+export function validateEnvironments(
+  environmentConfigurations: ManagedEnvironmentConfig[],
+  requireToken = true,
+): {
   valid_configs: ManagedEnvironmentConfig[];
   errors: string[];
 } {
-  const requiredKeys = ['apiUrl', 'environmentId', 'alias', 'apiToken'];
+  const requiredKeys = requireToken
+    ? ['apiUrl', 'environmentId', 'alias', 'apiToken']
+    : ['apiUrl', 'environmentId', 'alias'];
   const originalKeys = {
     apiUrl: 'apiEndpointUrl',
     environmentId: 'environmentId',
@@ -137,4 +146,15 @@ export function validateEnvironments(environmentConfigurations: ManagedEnvironme
   });
 
   return { valid_configs: validConfigurations, errors: errors };
+}
+
+/** Build the alias -> token map from config (stdio mode, once at startup). */
+export function buildConfigTokenMap(configs: ManagedEnvironmentConfig[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const config of configs) {
+    if (config.apiToken) {
+      map.set(config.alias, config.apiToken);
+    }
+  }
+  return map;
 }

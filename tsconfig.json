@@ -4,7 +4,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "rootDir": "./src",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "module": "CommonJS",
     "outDir": "./dist",

@@ -1,4 +1,4 @@
-import { getRateLimitConfig } from '../rate-limit';
+import { getRateLimitConfig, RateLimiter } from '../rate-limit';
 
 describe('getRateLimitConfig', () => {
   const originalEnv = process.env;
@@ -39,5 +39,40 @@ describe('getRateLimitConfig', () => {
     const config = getRateLimitConfig();
     expect(config.maxCalls).toBe(100);
     expect(config.windowMs).toBe(60000);
+  });
+});
+
+describe('RateLimiter', () => {
+  it('exposes the configured limits', () => {
+    const rl = new RateLimiter({ maxCalls: 3, windowMs: 5000 });
+    expect(rl.maxCalls).toBe(3);
+    expect(rl.windowMs).toBe(5000);
+  });
+
+  it('allows up to maxCalls then blocks within the window', () => {
+    let now = 1000;
+    const rl = new RateLimiter({ maxCalls: 2, windowMs: 100, now: () => now });
+    expect(rl.tryAcquire('user-a')).toBe(true);
+    expect(rl.tryAcquire('user-a')).toBe(true);
+    expect(rl.tryAcquire('user-a')).toBe(false);
+  });
+
+  it('tracks each user key independently', () => {
+    let now = 1000;
+    const rl = new RateLimiter({ maxCalls: 1, windowMs: 100, now: () => now });
+    expect(rl.tryAcquire('user-a')).toBe(true);
+    expect(rl.tryAcquire('user-a')).toBe(false);
+    // A different user is unaffected by user-a hitting the limit.
+    expect(rl.tryAcquire('user-b')).toBe(true);
+  });
+
+  it('allows again once the window slides past old calls', () => {
+    let now = 1000;
+    const rl = new RateLimiter({ maxCalls: 1, windowMs: 100, now: () => now });
+    expect(rl.tryAcquire('user-a')).toBe(true);
+    now = 1050;
+    expect(rl.tryAcquire('user-a')).toBe(false);
+    now = 1101; // first call now outside the 100ms window
+    expect(rl.tryAcquire('user-a')).toBe(true);
   });
 });

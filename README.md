@@ -211,6 +211,52 @@ Minimum supported version: Dynatrace Managed 1.328.0
 
 ![Architecture (remote mode)](./assets/dynatrace-managed-mcp-arch-remote.png?raw=true)
 
+#### HTTP authentication (per-user tokens)
+
+In HTTP mode the server holds **no** Dynatrace API tokens. Each request must carry the caller's
+per-environment tokens in a single `X-Dynatrace-Tokens` header, formatted as an `alias=token`
+map separated by semicolons:
+
+```
+X-Dynatrace-Tokens: prod=dt0c01.AAA;staging=dt0c01.BBB
+```
+
+The server uses the caller's token for the environment named by `environment_alias`, so each user
+only accesses the data their token allows. A request that targets an environment with no supplied
+token is rejected with a message naming the missing alias.
+
+Because tokens are sent in a header, run the HTTP server **behind TLS** (for example, terminate TLS
+at a reverse proxy in front of it). The server itself binds to `127.0.0.1` by default and does not
+terminate TLS.
+
+Environment config in HTTP mode does not include `apiToken` — only `alias` + URLs, which are
+non-secret. See [`examples/dt-config-http.yaml`](./examples/dt-config-http.yaml) and
+[`examples/mcp-config-http.json`](./examples/mcp-config-http.json).
+
+> The Configuration Methods described above (server-side `apiToken` values) apply to **stdio /
+> local mode**. In HTTP mode, tokens come from the `X-Dynatrace-Tokens` header instead.
+
+#### Large numbers of environments and header size limits
+
+The `X-Dynatrace-Tokens` header grows with the number of environments. Each entry is roughly
+`alias=dt0c01.<token>;` (~110 characters). Node.js enforces a default HTTP header size limit of
+**16 KB**, which accommodates approximately 140–150 environments before requests are rejected.
+
+If you need more environments, increase the limit at server startup with the `--max-http-header-size`
+flag:
+
+```bash
+node --max-http-header-size=65536 ./dist/index.js --http
+```
+
+If you are running a **reverse proxy** (such as nginx) in front of the MCP server, the proxy also
+enforces its own limit. nginx defaults to 8 KB (`large_client_header_buffers`), which fits roughly
+70 environments. Raise it in your nginx configuration:
+
+```nginx
+large_client_header_buffers 4 32k;
+```
+
 ## Use cases
 
 There are two ways that Dynatrace Managed, and thus the MCP, may be used:
@@ -567,6 +613,8 @@ Note that the `httpProxyUrl`/`httpsProxyUrl` variables are per-environment, so y
 ## Authentication
 
 Dynatrace Managed uses API token-based authentication. Create an API token in your Managed cluster with the required scopes (see next subsection).
+
+> In **stdio/local mode**, this token is configured server-side (see [Configuration Methods](#configuration-methods)). In **HTTP mode**, the server holds no tokens — each user supplies their own per-environment tokens via the `X-Dynatrace-Tokens` request header (see [HTTP authentication (per-user tokens)](#http-authentication-per-user-tokens)). The scopes below apply to the token regardless of how it is supplied.
 
 For more information about creating API tokens in Managed deployments, refer to the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
 

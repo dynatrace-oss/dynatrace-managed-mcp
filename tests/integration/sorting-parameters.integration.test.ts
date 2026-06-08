@@ -7,8 +7,8 @@ import { ProblemsApiClient } from '../../src/capabilities/problems-api';
 import { SecurityApiClient } from '../../src/capabilities/security-api';
 import { SloApiClient } from '../../src/capabilities/slo-api';
 import { LogsApiClient } from '../../src/capabilities/logs-api';
-import { ManagedAuthClientManager } from '../../src/authentication/managed-auth-client';
-import { getManagedEnvironmentConfigs, validateEnvironments } from '../../src/utils/environment';
+import { ManagedAuthClientManager, buildManagedAuthClients } from '../../src/authentication/managed-auth-client';
+import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from '../../src/utils/environment';
 import { config } from 'dotenv';
 import { MetricsApiClient } from '../../src/capabilities/metrics-api';
 import { EventsApiClient } from '../../src/capabilities/events-api';
@@ -34,8 +34,12 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
   beforeAll(() => {
     const config = getManagedEnvironmentConfigs();
     const validEnvironments = validateEnvironments(config);
+    const validConfigs = validEnvironments['valid_configs'];
 
-    const authManager = new ManagedAuthClientManager(validEnvironments['valid_configs']);
+    const allClients = buildManagedAuthClients(validConfigs);
+    const tokens = buildConfigTokenMap(validConfigs);
+    const validAliases = ['ALL_ENVIRONMENTS', ...allClients.map((c) => c.alias)];
+    const authManager = new ManagedAuthClientManager(allClients, allClients, validAliases, tokens);
 
     metricsClient = new MetricsApiClient(authManager);
     logsClient = new LogsApiClient(authManager);

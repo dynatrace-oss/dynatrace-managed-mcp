@@ -423,6 +423,23 @@ describe('ConfigFileLoader', () => {
         httpProxyUrl: 'http://proxy.example.com:8080',
       });
     });
+
+    it('does not require apiToken when requireToken is false', () => {
+      const configPath = path.join(testDir, 'config.json');
+      const config = [
+        {
+          apiEndpointUrl: 'https://api.example.com/',
+          environmentId: 'test-123',
+          alias: 'production',
+        },
+      ];
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      const result = ConfigFileLoader.loadFromFile(configPath, false);
+      expect(result).toHaveLength(1);
+      expect(result[0].alias).toBe('production');
+    });
   });
 
   describe('Unsupported file formats', () => {

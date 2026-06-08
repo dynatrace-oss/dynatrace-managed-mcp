@@ -23,7 +23,7 @@ export class ConfigFileLoader {
    * Load configuration from a file (JSON or YAML)
    * Returns JSONObject[] for compatibility with existing parsing logic
    */
-  static loadFromFile(filePath: string): JSONObject[] {
+  static loadFromFile(filePath: string, requireToken = true): JSONObject[] {
     logger.debug(`Loading configuration from file: ${filePath}`);
 
     // Resolve path (handle ~, relative, absolute, env vars)
@@ -73,7 +73,7 @@ export class ConfigFileLoader {
     logger.info(`Successfully loaded ${config.length} environment(s) from ${resolvedPath}`);
 
     // Validate each environment config
-    return this.validateAndReturnConfig(config, resolvedPath);
+    return this.validateAndReturnConfig(config, resolvedPath, requireToken);
   }
 
   /**
@@ -132,9 +132,11 @@ export class ConfigFileLoader {
   /**
    * Validate configuration structure and required fields
    */
-  private static validateAndReturnConfig(config: any[], filePath: string): JSONObject[] {
+  private static validateAndReturnConfig(config: any[], filePath: string, requireToken = true): JSONObject[] {
     // Validate required fields
-    const required = ['apiEndpointUrl', 'environmentId', 'alias', 'apiToken'];
+    const required = requireToken
+      ? ['apiEndpointUrl', 'environmentId', 'alias', 'apiToken']
+      : ['apiEndpointUrl', 'environmentId', 'alias'];
 
     config.forEach((env, index) => {
       const missing = required.filter((field) => !env[field]);
