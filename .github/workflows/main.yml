@@ -37,6 +37,7 @@ jobs:
         run: npm run build
 
       - name: SonarCloud Scan
+        if: github.event_name != 'pull_request'
         uses: SonarSource/sonarcloud-github-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
