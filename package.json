@@ -52,7 +52,7 @@
   "dependencies": {
     "@dynatrace/openkit-js": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.21.2",
-    "ajv": "8.18.0",
+    "ajv": "8.20.0",
     "axios": "^1.13.1",
     "commander": "^15.0.0",
     "js-yaml": "^4.1.1",
