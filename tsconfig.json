@@ -4,14 +4,16 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "rootDir": "./src",
+    // "bundler" tolerates extensionless relative imports and ESM-only packages (e.g. commander v15)
+    // without requiring the strict ESM/CJS boundary enforcement of "node16"/"nodenext".
     "moduleResolution": "bundler",
     "types": ["node", "jest"],
     "strict": true,
     "module": "CommonJS",
     "outDir": "./dist",
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
   },
   "include": ["src/**/*", "package.json"],
-  "exclude": ["node_modules", "**/*.test.*", "**/__tests__/**"]
+  "exclude": ["node_modules", "**/*.test.*", "**/__tests__/**"],
 }
