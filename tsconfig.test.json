@@ -2,8 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["jest", "node"],
-    "rootDir": "."
+    "rootDir": ".",
   },
   "include": ["src/**/*", "tests/**/*", "package.json"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }

@@ -4,15 +4,14 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "rootDir": "./src",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "types": ["node", "jest"],
-    "ignoreDeprecations": "6.0",
     "strict": true,
     "module": "CommonJS",
     "outDir": "./dist",
     "resolveJsonModule": true,
-    "sourceMap": true
+    "sourceMap": true,
   },
   "include": ["src/**/*", "package.json"],
-  "exclude": ["node_modules", "**/*.test.*", "**/__tests__/**"]
+  "exclude": ["node_modules", "**/*.test.*", "**/__tests__/**"],
 }
