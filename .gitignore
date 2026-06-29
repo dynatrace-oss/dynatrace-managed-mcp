@@ -7,6 +7,7 @@ coverage/
 .DS_Store
 
 tsconfig.tsbuildinfo
+dt-config.yaml
 
 # Token cache directory - contains sensitive OAuth tokens
 .dt-mcp/
