@@ -1,7 +1,7 @@
 import winston from 'winston';
 import axios from 'axios';
 
-const sanitizeErrors = winston.format((info) => {
+export const sanitizeErrors = winston.format((info) => {
   // This shouldn't happen, since it would require developer to type in something like:
   // logger.error(error)
   // Where `error` is of Error type (cast to any) instead of a string
