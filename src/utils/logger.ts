@@ -2,9 +2,7 @@ import winston from 'winston';
 import axios from 'axios';
 
 export const sanitizeErrors = winston.format((info) => {
-  // This shouldn't happen, since it would require developer to type in something like:
-  // logger.error(error)
-  // Where `error` is of Error type (cast to any) instead of a string
+  // In case AxiosError is passed as sole message object
   if (axios.isAxiosError(info)) {
     delete info.config;
     delete info.request;
