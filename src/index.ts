@@ -292,7 +292,6 @@ Never run queries that could return very large amounts of data, or that could be
             .trackError(error, `tool_${name}`)
             .catch((e) => logger.warn(`Failed to track error: ${e.message}`, { error: e }));
           logger.error(`Failed to run tool ${name}: ${error.message}`, { error: error });
-          logger.error(error);
           return {
             content: [{ type: 'text', text: `Error: ${error.message}` }],
             isError: true,
