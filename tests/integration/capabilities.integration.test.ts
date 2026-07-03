@@ -113,10 +113,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       // Assumes there are at least 3 metrics (2 in the first page; and more in subsequent pages)
       const responses = await metricsClient.listAvailableMetrics({ pageSize: 2 }, 'testAlias');
       const response = responses.get('testAlias');
-      let totalCount = response?.totalCount || -1;
-      let numMetrics = response?.metrics?.length || 0;
-      let nextPageKey = response?.nextPageKey;
-      let firstMetricId = response?.metrics && numMetrics > 0 ? response?.metrics[0].metricId : undefined;
+      const totalCount = response?.totalCount || -1;
+      const numMetrics = response?.metrics?.length || 0;
+      const nextPageKey = response?.nextPageKey;
+      const firstMetricId = response?.metrics && numMetrics > 0 ? response?.metrics[0].metricId : undefined;
 
       expect(numMetrics).toEqual(2);
       expect(totalCount > numMetrics);

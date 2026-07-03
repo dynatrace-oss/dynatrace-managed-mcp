@@ -6,10 +6,11 @@
 import { ManagedAuthClient } from '../../src/authentication/managed-auth-client';
 import httpProxy from 'http-proxy';
 import { logger } from '../../src/utils/logger';
+import { IncomingMessage, ServerResponse } from 'node:http';
 
 describe('ProxyConfig', () => {
   let proxyUrl: string;
-  let proxy: any;
+  let proxy: httpProxy<IncomingMessage, ServerResponse<IncomingMessage>>;
   let originalEnvs: NodeJS.ProcessEnv;
 
   beforeEach(async () => {
@@ -49,7 +50,7 @@ describe('ProxyConfig', () => {
   it(
     'should use HTTP_PROXY',
     async () => {
-      let client = new ManagedAuthClient({
+      const client = new ManagedAuthClient({
         apiBaseUrl: 'http://example.com',
         dashboardBaseUrl: 'http://example-dashboard.com',
         alias: 'alias',

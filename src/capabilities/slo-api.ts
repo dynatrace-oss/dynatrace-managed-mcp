@@ -113,13 +113,13 @@ export class SloApiClient {
     let result = '';
     let totalNumSlo = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numSLOs = data.slo?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numSLOs = data.slo?.length || 0;
       totalNumSlo += numSLOs;
-      let isLimited = totalCount != 0 - 1 && totalCount > numSLOs;
+      const isLimited = totalCount != 0 - 1 && totalCount > numSLOs;
 
       result +=
         'Listing ' +

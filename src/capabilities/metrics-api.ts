@@ -113,13 +113,13 @@ export class MetricsApiClient {
     let result = '';
     let totalNumMetrics = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numMetrics = data.metrics?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numMetrics = data.metrics?.length || 0;
       totalNumMetrics += numMetrics;
-      let isLimited = totalCount != 0 - 1 && totalCount > numMetrics;
+      const isLimited = totalCount != 0 - 1 && totalCount > numMetrics;
 
       result +=
         'Listing ' +
@@ -180,7 +180,7 @@ export class MetricsApiClient {
 
   formatMetricDetails(responses: Map<string, any>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result +=
@@ -194,11 +194,11 @@ export class MetricsApiClient {
   formatMetricData(responses: Map<string, MetricDataResponse>): string {
     let result = '';
     let allEmpty = true;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let resolution = data.resolution;
-      let isNonEmpty = data.result && data.result.length > 0 && data.result[0].data && data.result[0].data.length > 0;
+      const resolution = data.resolution;
+      const isNonEmpty = data.result && data.result.length > 0 && data.result[0].data && data.result[0].data.length > 0;
 
       result += 'Listing data series from environment ' + alias;
 
@@ -214,14 +214,14 @@ export class MetricsApiClient {
       }
 
       data.result?.forEach((metric: any) => {
-        let numDataseries = metric.data?.length || 0;
+        const numDataseries = metric.data?.length || 0;
 
         result += 'Listing ' + numDataseries + ' data series\n';
         result += `metricId: ${metric.metricId}\n`;
 
         metric.data?.forEach((series: any) => {
-          let timestamps = series.timestamps || [];
-          let values = series.values || [];
+          const timestamps = series.timestamps || [];
+          const values = series.values || [];
 
           if (series.dimensionMap) {
             result += `  dimensionData: ${JSON.stringify(series.dimensionMap)}\n`;
@@ -231,7 +231,7 @@ export class MetricsApiClient {
           }
           if (timestamps.length > 0) {
             let formattedDatapoints = '';
-            let numDatapoints = Math.min(timestamps.length, values.length);
+            const numDatapoints = Math.min(timestamps.length, values.length);
             for (let i = 0; i < Math.min(numDatapoints, MetricsApiClient.MAX_DATA_POINTS); i++) {
               formattedDatapoints += `${timestamps[i]}: ${values[i]}, `;
             }

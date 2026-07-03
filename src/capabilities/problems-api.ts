@@ -108,13 +108,13 @@ export class ProblemsApiClient {
     let result = '';
     let totalNumProblems = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numProblems = data.problems?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numProblems = data.problems?.length || 0;
       totalNumProblems += numProblems;
-      let isLimited = totalCount != 0 - 1 && totalCount > numProblems;
+      const isLimited = totalCount != 0 - 1 && totalCount > numProblems;
 
       result +=
         'Listing ' +
@@ -170,7 +170,7 @@ export class ProblemsApiClient {
 
   formatDetails(responses: Map<string, any>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result +=

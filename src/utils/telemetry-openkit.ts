@@ -224,7 +224,7 @@ class NoOpTelemetry implements Telemetry {
 }
 
 export function createTelemetry(): Telemetry {
-  let isEnabled = process.env.DT_MCP_DISABLE_TELEMETRY !== 'true';
+  const isEnabled = process.env.DT_MCP_DISABLE_TELEMETRY !== 'true';
   if (!isEnabled) {
     logger.info('Not initialising Dynatrace Telemetry, because DT_MCP_DISABLE_TELEMETRY not "true"');
     return new NoOpTelemetry();

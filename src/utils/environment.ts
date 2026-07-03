@@ -21,7 +21,7 @@ export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): Mana
   const httpProxy = environmentInfo.httpProxyUrl ? environmentInfo.httpProxyUrl.toString() : '';
   const httpsProxy = environmentInfo.httpsProxyUrl ? environmentInfo.httpsProxyUrl.toString() : '';
 
-  let environmentId = environmentIdRaw.replace(/\/$/, ''); // Remove trailing slash
+  const environmentId = environmentIdRaw.replace(/\/$/, ''); // Remove trailing slash
   let apiUrl = '';
   if (apiUrlRaw != '') {
     apiUrl = apiUrlRaw + (apiUrlRaw.endsWith('/') ? '' : '/') + 'e/' + environmentId;
@@ -54,7 +54,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
 
     try {
       const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
-      let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+      const parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
       for (const environmentConfig of environmentConfigurations) {
         parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
       }
@@ -83,7 +83,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
         throw e;
       }
     }
-    let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+    const parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
     for (const environmentConfig of environmentConfigurations) {
       parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
     }
@@ -119,8 +119,8 @@ export function validateEnvironments(
     alias: 'alias',
     apiToken: 'apiToken',
   };
-  let validConfigurations: ManagedEnvironmentConfig[] = [];
-  let errors: string[] = [];
+  const validConfigurations: ManagedEnvironmentConfig[] = [];
+  const errors: string[] = [];
 
   environmentConfigurations.forEach((configuration, index) => {
     const hasAllValues = requiredKeys.every((key) => {

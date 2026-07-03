@@ -103,7 +103,7 @@ export class EntitiesApiClient {
     environment_aliases: string,
   ): Promise<Map<string, GetEntityRelationshipsResponse>> {
     const entityDetailsResponse = await this.getEntityDetails(entityId, environment_aliases);
-    let cleanResponses = new Map<string, any>();
+    const cleanResponses = new Map<string, any>();
     for (const [alias, data] of entityDetailsResponse) {
       cleanResponses.set(alias, {
         entityId: data.entityId,
@@ -137,13 +137,13 @@ export class EntitiesApiClient {
     let result = '';
     let totalNumEntities = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numEntities = data.entities?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numEntities = data.entities?.length || 0;
       totalNumEntities += numEntities;
-      let isLimited = totalCount != 0 - 1 && totalCount > numEntities;
+      const isLimited = totalCount != 0 - 1 && totalCount > numEntities;
 
       result +=
         'Listing ' +
@@ -218,7 +218,7 @@ export class EntitiesApiClient {
   formatEntityTypeList(responses: Map<string, ListEntityTypesResponse>): string {
     let result = '';
     let totalNumTypes = 0;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     const commonTypes = [
       'SERVICE',
       'PROCESS_GROUP',
@@ -232,14 +232,14 @@ export class EntitiesApiClient {
 
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numTypes = data.types?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numTypes = data.types?.length || 0;
       totalNumTypes += numTypes;
-      let isLimited = totalCount != 0 - 1 && totalCount > numTypes;
+      const isLimited = totalCount != 0 - 1 && totalCount > numTypes;
 
-      let entityTypes = data.types as any[];
+      const entityTypes = data.types as any[];
       let conciseList = '';
-      let availableCommonTypes: string[] = [];
+      const availableCommonTypes: string[] = [];
 
       result +=
         'Listing ' +
@@ -298,7 +298,7 @@ export class EntitiesApiClient {
 
   formatEntityDetails(responses: Map<string, any>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result += 'Entity details from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';
@@ -316,7 +316,7 @@ export class EntitiesApiClient {
 
   formatEntityRelationships(responses: Map<string, GetEntityRelationshipsResponse>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       const from = data.fromRelationships;

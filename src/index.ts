@@ -359,7 +359,7 @@ Never run queries that could return very large amounts of data, or that could be
       async ({}) => {
         let resp = `Dynatrace Managed Cluster Information - Listing info for ${authClientManager.rawClients.length} environments:\n\n`;
 
-        for (let authClient of authClientManager.rawClients) {
+        for (const authClient of authClientManager.rawClients) {
           resp += `- Environment Alias: ${authClient.alias}\n`;
           resp += `- API URL: ${authClient.apiBaseUrl}\n`;
           resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;

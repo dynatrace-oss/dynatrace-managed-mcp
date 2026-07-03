@@ -51,12 +51,12 @@ export class LogsApiClient {
     let result = '';
     let totalNumLogs = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let numLogs = data.results?.length || 0;
+      const numLogs = data.results?.length || 0;
       totalNumLogs = totalNumLogs + numLogs;
-      let isLimited = data.nextSliceKey != undefined;
+      const isLimited = data.nextSliceKey != undefined;
 
       result += 'Listing ' + numLogs + ' log records from environment ' + alias + '.\n\n';
 
@@ -68,7 +68,7 @@ export class LogsApiClient {
       data.results?.forEach((log: any) => {
         const timestamp = formatTimestamp(log.timestamp);
         // Enhanced level detection for better error identification
-        let level = log.additionalColumns?.loglevel?.[0] || log.status || log.log_level || 'NONE';
+        const level = log.additionalColumns?.loglevel?.[0] || log.status || log.log_level || 'NONE';
 
         result += `**${timestamp}** [${level}]\n`;
         result += `${log.content}\n`;

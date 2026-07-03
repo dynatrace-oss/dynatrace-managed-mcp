@@ -66,14 +66,14 @@ export class EventsApiClient {
     let result = '';
     let totalNumEvents = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
 
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numEvents = data.events?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numEvents = data.events?.length || 0;
       totalNumEvents += numEvents;
-      let isLimited = totalCount != 0 - 1 && totalCount > numEvents;
+      const isLimited = totalCount != 0 - 1 && totalCount > numEvents;
 
       result +=
         'Listing ' +
@@ -151,7 +151,7 @@ export class EventsApiClient {
 
   formatDetails(responses: Map<string, any>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result += 'Event details from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';
