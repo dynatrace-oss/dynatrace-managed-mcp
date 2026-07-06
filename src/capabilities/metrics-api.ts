@@ -25,18 +25,22 @@ export interface ListMetricsResponse {
   nextPageKey?: string;
 }
 
+export interface MetricData {
+  timestamps?: number[];
+  values?: any[];
+  dimensionMap?: Record<string, string>;
+  dimensions?: string[];
+}
+
+export interface MetricDataResult {
+  data?: MetricData[];
+  dataPointCountRatio?: number;
+  dimensionCountRatio?: number;
+  metricId?: string;
+}
+
 export interface MetricDataResponse {
-  result?: Array<{
-    data?: Array<{
-      timestamps?: number[];
-      values?: any[];
-      dimensionMap?: Record<string, string>;
-      dimensions?: string[];
-    }>;
-    dataPointCountRatio?: number;
-    dimensionCountRatio?: number;
-    metricId?: string;
-  }>;
+  result?: MetricDataResult[];
   resolution?: string;
   totalCount?: number;
   nextPageKey?: string;

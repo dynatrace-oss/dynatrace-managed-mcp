@@ -16,7 +16,7 @@
  */
 import { ManagedAuthClientManager, buildManagedAuthClients } from '../../src/authentication/managed-auth-client';
 import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from '../../src/utils/environment';
-import { MetricsApiClient } from '../../src/capabilities/metrics-api';
+import { Metric, MetricDataResult, MetricsApiClient } from '../../src/capabilities/metrics-api';
 import { LogsApiClient } from '../../src/capabilities/logs-api';
 import { EventsApiClient } from '../../src/capabilities/events-api';
 import { EntitiesApiClient } from '../../src/capabilities/entities-api';
@@ -106,7 +106,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
 
-      expect(result).toContain('\"metricId\":\"builtin:host.cpu.usage\"');
+      expect(result).toContain('"metricId":"builtin:host.cpu.usage"');
     }, 30000);
 
     it('should respect pageSize', async () => {
@@ -149,8 +149,8 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       const result = results.get('testAlias');
 
       expect(result?.metrics?.length).toBeGreaterThan(0);
-      result?.metrics?.forEach((metric: any) => {
-        expect(metric.unit).toEqual('Percent');
+      result?.metrics?.forEach((metric: Metric | undefined) => {
+        expect(metric?.unit).toEqual('Percent');
       });
     }, 30000);
 
@@ -169,7 +169,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       const response = responses.get('testAlias');
 
       expect(response?.result?.length).toBeGreaterThan(0);
-      response?.result?.forEach((result: any) => {
+      response?.result?.forEach((result: MetricDataResult) => {
         expect(result.metricId).toEqual('builtin:host.cpu.usage');
 
         // Could also assert that entities are of type host, but too brittle.
@@ -195,7 +195,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       expect(responses).toBeDefined();
       expect(typeof result).toBe('string');
       expect(response?.results?.length).toBeGreaterThan(0);
-      expect(result).toMatch(/\[(ERROR|WARNING|INFO)\]/);
+      expect(result).toMatch(/\[(ERROR|WARNING|INFO)]/);
     }, 30000);
   });
 
@@ -232,7 +232,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
 
-      expect(result).toContain(`\"eventId\":\"${eventId}\"`);
+      expect(result).toContain(`"eventId":"${eventId}"`);
     }, 30000);
   });
 
@@ -253,9 +253,9 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
 
-      expect(result).toContain('\"type\":\"SERVICE\"');
-      expect(result).toContain('\"fromRelationships\":');
-      expect(result).toContain('\"toRelationships\":');
+      expect(result).toContain('"type":"SERVICE"');
+      expect(result).toContain('"fromRelationships":');
+      expect(result).toContain('"toRelationships":');
     }, 30000);
 
     it('should list entities by type', async () => {
@@ -310,7 +310,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
 
-      expect(result).toContain(`\"entityId\":\"${entityId}\"`);
+      expect(result).toContain(`"entityId":"${entityId}"`);
     }, 30000);
   });
 
@@ -350,7 +350,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       const result = problemsClient.formatDetails(response);
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
-      expect(result).toContain(`\"problemId\":\"${problemId}\"`);
+      expect(result).toContain(`"problemId":"${problemId}"`);
     }, 30000);
   });
 
@@ -449,7 +449,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
         );
 
         fail('Should have thrown an error for invalid parameters');
-      } catch (error: any) {
+      } catch (error) {
+        if (!(error instanceof Error)) {
+          fail(`Thrown error is not of Error type, received: ${typeof error}`);
+        }
         expect(error.message).toContain('Request failed with status code 404');
       }
     }, 30000);
@@ -459,7 +462,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
         await entitiesClient.queryEntities({ entitySelector: 'invalid-entity-selector' }, 'testAlias');
 
         fail('Should have thrown an error for invalid parameters');
-      } catch (error: any) {
+      } catch (error) {
+        if (!(error instanceof Error)) {
+          fail(`Thrown error is not of Error type, received: ${typeof error}`);
+        }
         expect(error.message).toContain('Request failed with status code 400');
       }
     }, 30000);
@@ -468,7 +474,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       try {
         await problemsClient.getProblemDetails('invalid-problem-id', 'testAlias');
         fail('Should have thrown an error for invalid parameters');
-      } catch (error: any) {
+      } catch (error) {
+        if (!(error instanceof Error)) {
+          fail(`Thrown error is not of Error type, received: ${typeof error}`);
+        }
         expect(error.message).toContain('Request failed with status code 400');
       }
     }, 30000);
@@ -478,7 +487,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       try {
         await metricsClient.listAvailableMetrics({}, 'invalidApiToken');
         fail('Should have thrown an error for invalid token');
-      } catch (error: any) {
+      } catch (error) {
+        if (!(error instanceof Error)) {
+          fail(`Thrown error is not of Error type, received: ${typeof error}`);
+        }
         expect(error.message).toContain('Request failed with status code 401');
       }
     }, 30000);

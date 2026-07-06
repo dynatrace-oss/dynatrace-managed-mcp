@@ -9,6 +9,6 @@ export function formatTimestamp(timestamp: number | string | Date): string {
     }
     return date.toISOString().replace('T', ' ').slice(0, 19);
   } catch (error) {
-    return `Invalid timestamp: ${timestamp}`;
+    return `Invalid timestamp: ${timestamp} ${error instanceof Error ? error.message : ''}`;
   }
 }

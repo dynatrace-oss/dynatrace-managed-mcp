@@ -19,7 +19,7 @@ export interface Telemetry {
  */
 class DynatraceMcpTelemetry implements Telemetry {
   private openKit: OpenKit | null = null;
-  private session: Session | null = null;
+  private session?: Session;
   private isEnabled: boolean;
   private initPromise: Promise<boolean>;
 
@@ -61,9 +61,12 @@ class DynatraceMcpTelemetry implements Telemetry {
 
       return new Promise<boolean>((resolve) => {
         const timeoutInMilliseconds = 10 * 1000; // 10 seconds timeout
-        this.openKit!.waitForInit((success) => {
+        if (this.openKit === null) {
+          throw new Error('OpenKit is null');
+        }
+        this.openKit.waitForInit((success) => {
           if (success) {
-            this.session = this.openKit!.createSession();
+            this.session = this.openKit?.createSession();
           } else {
             logger.error('Failed to initialize Dynatrace Telemetry: timeout or connection failed');
             this.isEnabled = false;
@@ -197,11 +200,13 @@ class DynatraceMcpTelemetry implements Telemetry {
       if (this.session) {
         this.session.end();
       }
-      if (this.openKit) {
-        await new Promise<void>((resolve) => {
-          this.openKit!.shutdown(() => resolve());
-        });
-      }
+      await new Promise<void>((resolve, reject) => {
+        if (this.openKit) {
+          this.openKit.shutdown(() => resolve());
+        } else {
+          reject('OpeKit is null');
+        }
+      });
     } catch (error) {
       if (error instanceof Error) {
         console.warn('Failed to shutdown usage tracking:', error.message);

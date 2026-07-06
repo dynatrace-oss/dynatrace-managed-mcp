@@ -61,8 +61,11 @@ export class ConfigFileLoader {
       } else {
         throw new Error(`Unsupported file format: ${ext}\n` + `Supported formats: .json, .yaml, .yml`);
       }
-    } catch (error: any) {
-      throw new Error(`Failed to parse ${ext} file: ${resolvedPath}\n` + `Error: ${error.message}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to parse ${ext} file: ${resolvedPath}\n` + `Error: ${message}`, {
+        cause: error,
+      });
     }
 
     // Validate structure
@@ -132,14 +135,18 @@ export class ConfigFileLoader {
   /**
    * Validate configuration structure and required fields
    */
-  private static validateAndReturnConfig(config: any[], filePath: string, requireToken = true): JSONObject[] {
+  private static validateAndReturnConfig(config: unknown[], filePath: string, requireToken = true): JSONObject[] {
     // Validate required fields
     const required = requireToken
       ? ['apiEndpointUrl', 'environmentId', 'alias', 'apiToken']
       : ['apiEndpointUrl', 'environmentId', 'alias'];
 
     config.forEach((env, index) => {
-      const missing = required.filter((field) => !env[field]);
+      if (typeof env !== 'object' || env === null) {
+        throw new Error(`Environment #${index + 1} in ${filePath} must be an object.`);
+      }
+      const fields = env as Record<string, unknown>;
+      const missing = required.filter((field) => !fields[field]);
       if (missing.length > 0) {
         throw new Error(
           `Environment #${index + 1} in ${filePath} is missing required fields: ${missing.join(', ')}\n` +

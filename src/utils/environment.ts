@@ -59,8 +59,12 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
         parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
       }
       return parsedManagedEnvironmentConfigs;
-    } catch (error: any) {
-      logger.error(`Failed to load configuration file: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Failed to load configuration file: ${error.message}`);
+      } else {
+        logger.error('Failed to load configuration file.');
+      }
       throw error;
     }
   }
@@ -78,7 +82,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
       environmentConfigurations = JSON.parse(environmentConfigs);
     } catch (e) {
       if (e instanceof SyntaxError) {
-        throw new Error(`JSON syntax error in environment file: ${e}`);
+        throw new Error('JSON syntax error in environment file', { cause: e });
       } else {
         throw e;
       }

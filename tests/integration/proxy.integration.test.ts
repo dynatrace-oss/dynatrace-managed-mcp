@@ -25,17 +25,17 @@ describe('ProxyConfig', () => {
       xfwd: true,
       headers: { Myproxyheader: 'myproxyval' },
     });
-    proxy.on('open', (proxySocket: any) => {
+    proxy.on('open', (proxySocket) => {
       console.log(`proxy.open: proxySocket=${JSON.stringify(proxySocket)}`);
     });
-    proxy.on('close', (res: any, socket: any, head: any) => {
+    proxy.on('close', (res) => {
       console.log(`proxy.close res=${JSON.stringify(res)}`);
     });
-    proxy.on('error', (err: any) => {
+    proxy.on('error', (err) => {
       logger.error('proxy.error: ', { data: err });
       console.log(err);
     });
-    proxy.on('proxyRes', (proxyRes: any, req: any, res: any) => {
+    proxy.on('proxyRes', (proxyRes, req, res) => {
       console.log(`proxy.proxyRes: req=${req}; proxyRes=${proxyRes}; res=${res}`);
     });
     proxy.listen(8123);

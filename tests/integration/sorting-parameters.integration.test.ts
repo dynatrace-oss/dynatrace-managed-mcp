@@ -10,8 +10,6 @@ import { LogsApiClient } from '../../src/capabilities/logs-api';
 import { ManagedAuthClientManager, buildManagedAuthClients } from '../../src/authentication/managed-auth-client';
 import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from '../../src/utils/environment';
 import { config } from 'dotenv';
-import { MetricsApiClient } from '../../src/capabilities/metrics-api';
-import { EventsApiClient } from '../../src/capabilities/events-api';
 
 // Load environment variables
 config();
@@ -23,9 +21,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 }
 
 (skip ? describe.skip : describe)('Sorting Parameters Integration Tests', () => {
-  let metricsClient: MetricsApiClient;
   let logsClient: LogsApiClient;
-  let eventsClient: EventsApiClient;
   let entitiesClient: EntitiesApiClient;
   let problemsClient: ProblemsApiClient;
   let securityClient: SecurityApiClient;
@@ -41,9 +37,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     const validAliases = ['ALL_ENVIRONMENTS', ...allClients.map((c) => c.alias)];
     const authManager = new ManagedAuthClientManager(allClients, allClients, validAliases, tokens);
 
-    metricsClient = new MetricsApiClient(authManager);
     logsClient = new LogsApiClient(authManager);
-    eventsClient = new EventsApiClient(authManager);
     entitiesClient = new EntitiesApiClient(authManager);
     problemsClient = new ProblemsApiClient(authManager);
     securityClient = new SecurityApiClient(authManager);
