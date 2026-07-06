@@ -94,11 +94,15 @@ function createTransports(): winston.transport[] {
   }
 }
 
-export const logger = winston.createLogger({
-  level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-  format: createFormat(),
-  transports: createTransports(),
-});
+export function createLogger(): winston.Logger {
+  return winston.createLogger({
+    level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
+    format: createFormat(),
+    transports: createTransports(),
+  });
+}
+
+export const logger = createLogger();
 
 export async function flushLogger() {
   logger.end();
