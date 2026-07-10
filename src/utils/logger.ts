@@ -1,4 +1,21 @@
 import winston from 'winston';
+import axios from 'axios';
+
+export const sanitizeErrors = winston.format((info) => {
+  // In case AxiosError is passed as sole message object
+  if (axios.isAxiosError(info)) {
+    delete info.config;
+    delete info.request;
+    delete info.response;
+    return info;
+  }
+  for (const key of Object.keys(info)) {
+    if (info[key] instanceof Error) {
+      info[key] = info[key].message;
+    }
+  }
+  return info;
+});
 
 function createFormat(): winston.Logform.Format {
   const logOutput = (process.env.LOG_OUTPUT || 'file').toLowerCase();
@@ -17,6 +34,7 @@ function createFormat(): winston.Logform.Format {
     return winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
       winston.format.errors({ stack: true }),
+      sanitizeErrors(),
       winston.format.printf(({ timestamp, level, message, ...meta }) => {
         const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : '';
         return `${timestamp} [${level}] ${message}${metaStr}`;
@@ -27,6 +45,7 @@ function createFormat(): winston.Logform.Format {
     return winston.format.combine(
       winston.format.timestamp(),
       winston.format.errors({ stack: true }),
+      sanitizeErrors(),
       winston.format.json(),
     );
   }

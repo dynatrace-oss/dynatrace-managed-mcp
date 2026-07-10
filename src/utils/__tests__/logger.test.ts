@@ -1,4 +1,69 @@
 import winston from 'winston';
+import axios, { AxiosError, AxiosHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { sanitizeErrors } from '../logger';
+import { TransformableInfo } from 'logform';
+
+function buildAxiosError(): AxiosError {
+  const requestConfig: InternalAxiosRequestConfig = {
+    method: 'get',
+    url: '/api/v2/metrics',
+    headers: new AxiosHeaders({ Authorization: 'Api-Token super-secret-value', Cookie: 'sso=abc123' }),
+  };
+  const response: AxiosResponse = {
+    status: 401,
+    statusText: 'Unauthorized',
+    headers: { 'set-cookie': ['session=leak-me'] },
+    data: {},
+    config: requestConfig,
+  };
+  return new axios.AxiosError('Request failed with status code 401', 'ERR_BAD_REQUEST', requestConfig, {}, response);
+}
+
+describe('sanitizeErrors', () => {
+  it('strips config/request/response when an AxiosError is logged directly', () => {
+    const axiosError = buildAxiosError();
+    expect(JSON.stringify(axiosError)).toContain('super-secret-value');
+    expect(JSON.stringify(axiosError)).toContain('abc123');
+    const info = sanitizeErrors().transform({ ...axiosError, level: 'error' }, {}) as TransformableInfo;
+
+    expect(JSON.stringify(info)).not.toContain('super-secret-value');
+    expect(JSON.stringify(info)).not.toContain('abc123');
+    expect(JSON.stringify(info)).not.toContain('leak-me');
+    expect(info.message).toBe('Request failed with status code 401');
+  });
+
+  it('reduces a nested AxiosError in metadata (e.g. { error: err }) down to its message', () => {
+    const axiosError = buildAxiosError();
+    expect(JSON.stringify(axiosError)).toContain('super-secret-value');
+    expect(JSON.stringify(axiosError)).toContain('abc123');
+    const info = sanitizeErrors().transform(
+      { level: 'error', message: 'Failed calling endpoint', error: axiosError },
+      {},
+    ) as TransformableInfo;
+
+    expect(info.error).toBe('Request failed with status code 401');
+    expect(JSON.stringify(info)).not.toContain('super-secret-value');
+    expect(JSON.stringify(info)).not.toContain('abc123');
+  });
+
+  it('reduces any nested Error instance in metadata to its message, not just AxiosError', () => {
+    const info = sanitizeErrors().transform(
+      { level: 'warn', message: 'Something failed', error: new Error('plain failure') },
+      {},
+    ) as Record<string, unknown>;
+
+    expect(info.error).toBe('plain failure');
+  });
+
+  it('leaves non-Error metadata untouched', () => {
+    const info = sanitizeErrors().transform(
+      { level: 'debug', message: 'queryLogs response', data: { rows: [1, 2, 3] } },
+      {},
+    ) as Record<string, unknown>;
+
+    expect(info.data).toEqual({ rows: [1, 2, 3] });
+  });
+});
 
 describe('Logger Configuration', () => {
   let originalEnv: NodeJS.ProcessEnv;

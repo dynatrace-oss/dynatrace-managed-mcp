@@ -112,7 +112,11 @@ class DynatraceMcpTelemetry implements Telemetry {
       action.reportValue('platform', process.platform);
       action.leaveAction();
     } catch (error) {
-      console.warn('Failed to track server start:', error);
+      if (error instanceof Error) {
+        console.warn('Failed to track server start:', error.message);
+      } else {
+        console.warn('Failed to track server start');
+      }
     }
   }
 
@@ -141,7 +145,11 @@ class DynatraceMcpTelemetry implements Telemetry {
 
       action.leaveAction();
     } catch (error) {
-      console.warn('Failed to track tool usage:', error);
+      if (error instanceof Error) {
+        console.warn('Failed to track tool usage:', error.message);
+      } else {
+        console.warn('Failed to track tool usage');
+      }
     }
   }
 
@@ -172,7 +180,11 @@ class DynatraceMcpTelemetry implements Telemetry {
       }
       action.leaveAction();
     } catch (trackingError) {
-      console.warn('Failed to track error:', trackingError);
+      if (trackingError instanceof Error) {
+        console.warn('Failed to track error:', trackingError.message);
+      } else {
+        console.warn('Failed to track error');
+      }
     }
   }
 
@@ -191,7 +203,11 @@ class DynatraceMcpTelemetry implements Telemetry {
         });
       }
     } catch (error) {
-      console.warn('Failed to shutdown usage tracking:', error);
+      if (error instanceof Error) {
+        console.warn('Failed to shutdown usage tracking:', error.message);
+      } else {
+        console.warn('Failed to shutdown usage tracking');
+      }
     }
   }
 }
