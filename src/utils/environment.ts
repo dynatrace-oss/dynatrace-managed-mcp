@@ -1,6 +1,6 @@
 import { JSONObject } from '@dynatrace/openkit-js';
-import { ConfigFileLoader } from './config-loader';
 import { logger } from './logger';
+import { loadFromFile } from './config-loader';
 
 export interface ManagedEnvironmentConfig {
   environmentId: string;
@@ -53,7 +53,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
     }
 
     try {
-      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
+      const environmentConfigurations = loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
       const parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
       for (const environmentConfig of environmentConfigurations) {
         parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));

@@ -82,7 +82,11 @@ export class MetricsApiClient {
       ...(params.nextPageKey && { nextPageKey: params.nextPageKey }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/metrics', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListMetricsResponse>(
+      '/api/v2/metrics',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug(`listAvailableMetrics responses from ${this.authManager.clients?.length} sources: `, {
       data: responses,
     });
@@ -90,7 +94,7 @@ export class MetricsApiClient {
   }
 
   async getMetricDetails(metricId: string, environment_aliases: string): Promise<Map<string, Metric>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<Metric>(
       `/api/v2/metrics/${encodeURIComponent(metricId)}`,
       {},
       environment_aliases,
@@ -108,7 +112,11 @@ export class MetricsApiClient {
       ...(params.entitySelector && { entitySelector: params.entitySelector }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/metrics/query', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<MetricDataResponse>(
+      '/api/v2/metrics/query',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug(`queryMetrics response, params=${JSON.stringify(params)}`, { data: responses });
     return responses;
   }

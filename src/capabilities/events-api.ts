@@ -60,13 +60,17 @@ export class EventsApiClient {
       ...(params.entitySelector && { entitySelector: params.entitySelector }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/events', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListEventsResponse>(
+      '/api/v2/events',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('queryEvents response: ', { data: responses });
     return responses;
   }
 
   async getEventDetails(eventId: string, environment_aliases: string): Promise<Map<string, Event>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<Event>(
       `/api/v2/events/${encodeURIComponent(eventId)}`,
       {},
       environment_aliases,

@@ -107,13 +107,15 @@ export class ManagedAuthClient {
         headers: this.authHeader(token),
       });
       return response.data;
-    } catch (error: any) {
-      const status = error?.response?.status;
-      if (status === 401 || status === 403) {
-        logger.warn(
-          `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; using minimum version ${this.MINIMUM_VERSION}`,
-        );
-        return { version: this.MINIMUM_VERSION };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error?.response?.status;
+        if (status === 401 || status === 403) {
+          logger.warn(
+            `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; using minimum version ${this.MINIMUM_VERSION}`,
+          );
+          return { version: this.MINIMUM_VERSION };
+        }
       }
       throw error;
     }
@@ -143,11 +145,15 @@ export class ManagedAuthClient {
       this.httpClient.interceptors.request.clear();
       this.httpClient.interceptors.response.clear();
       this.httpClient.defaults.timeout = 1;
-      (this.httpClient as any) = null;
+      // (this.httpClient as any) = null;
     }
   }
 
-  async makeRequest(endpoint: string, token: string, params: Record<string, any> = {}): Promise<any> {
+  async makeRequest<T>(
+    endpoint: string,
+    token: string,
+    params: Record<string, string | number | boolean | undefined> = {},
+  ): Promise<T> {
     const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const response = await this.httpClient.get(url, {
       proxy: this.proxy ?? undefined,
@@ -177,15 +183,21 @@ export class ManagedAuthClient {
         return false;
       }
       return true;
-    } catch (error: any) {
-      logger.error(
-        `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}.`,
-      );
-      logger.error('Please verify:');
-      logger.error('1. The environment configuration (apiEndpointUrl, environmentId) is correct');
-      logger.error(`2. API Token has required scopes: ${MANAGED_API_SCOPES.join(', ')}`);
-      logger.error('3. Network connectivity to the Managed environment');
-      this.validationError = `Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}. Please verify connection details are correct.`;
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(
+          `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}.`,
+        );
+        logger.error('Please verify:');
+        logger.error('1. The environment configuration (apiEndpointUrl, environmentId) is correct');
+        logger.error(`2. API Token has required scopes: ${MANAGED_API_SCOPES.join(', ')}`);
+        logger.error('3. Network connectivity to the Managed environment');
+        this.validationError = `Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}. Please verify connection details are correct.`;
+      } else {
+        logger.error(
+          `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: UNKNOWN ERROR.`,
+        );
+      }
       return false;
     }
   }
@@ -248,20 +260,24 @@ export class ManagedAuthClientManager {
     return this.tokens.get(alias);
   }
 
-  async makeRequests(endpoint: string, params: Record<string, any>, environments: string): Promise<Map<string, any>> {
+  async makeRequests<T>(
+    endpoint: string,
+    params: Record<string, string | number | boolean | undefined>,
+    environments: string,
+  ): Promise<Map<string, T>> {
     const selectedAliases =
       environments === 'ALL_ENVIRONMENTS'
         ? this.clients.map((c) => c.alias).filter((alias) => this.tokens.has(alias))
         : environments.split(';');
 
-    const responses = new Map<string, any>();
+    const responses = new Map<string, T>();
     for (const client of this.clients) {
       if (selectedAliases.indexOf(client.alias) > -1) {
         const token = this.tokens.get(client.alias);
         if (!token) {
           throw new MissingTokenError(client.alias);
         }
-        const response = await client.makeRequest(endpoint, token, params);
+        const response = await client.makeRequest<T>(endpoint, token, params);
         responses.set(client.alias, response);
       }
     }
@@ -315,8 +331,12 @@ export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig
         ? { username: decodeURIComponent(url.username), password: decodeURIComponent(url.password) }
         : undefined,
     };
-  } catch (err: any) {
-    logger.error(`Failed to configure HTTP Proxy for Axios client: ${err.message}`);
+  } catch (err) {
+    if (err instanceof Error) {
+      logger.error(`Failed to configure HTTP Proxy for Axios client: ${err.message}`);
+    } else {
+      logger.error('Failed to configure HTTP Proxy for Axios client: UNKNOWN ERROR');
+    }
     throw Error('Failed to parse and configure http(s) proxy', { cause: err });
   }
 }

@@ -77,7 +77,11 @@ export class SecurityApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/securityProblems', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListSecurityProblemsResponse>(
+      '/api/v2/securityProblems',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('listSecurityProblems response', { data: responses });
     return responses;
   }
@@ -86,7 +90,7 @@ export class SecurityApiClient {
     problemId: string,
     environment_aliases: string,
   ): Promise<Map<string, SecurityProblem>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<SecurityProblem>(
       `/api/v2/securityProblems/${encodeURIComponent(problemId)}`,
       {},
       environment_aliases,

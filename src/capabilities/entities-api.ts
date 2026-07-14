@@ -86,13 +86,17 @@ export class EntitiesApiClient {
     const params: EntityTypesParameters = {
       pageSize: 500,
     };
-    const responses = await this.authManager.makeRequests('/api/v2/entityTypes', params, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListEntityTypesResponse>(
+      '/api/v2/entityTypes',
+      { ...params },
+      environment_aliases,
+    );
     logger.debug('listEntityTypes response', { data: responses });
     return responses;
   }
 
   async getEntityTypeDetails(entityType: string, environment_aliases: string): Promise<Map<string, EntityType>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<EntityType>(
       `/api/v2/entityTypes/${encodeURIComponent(entityType)}`,
       {},
       environment_aliases,
@@ -102,7 +106,7 @@ export class EntitiesApiClient {
   }
 
   async getEntityDetails(entityId: string, environment_aliases: string): Promise<Map<string, Entity>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<Entity>(
       `/api/v2/entities/${encodeURIComponent(entityId)}`,
       {},
       environment_aliases,
@@ -141,7 +145,11 @@ export class EntitiesApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/entities', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListEntitiesResponse>(
+      '/api/v2/entities',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('queryEntities response: ', { queryParams: queryParams, data: responses });
     return responses;
   }

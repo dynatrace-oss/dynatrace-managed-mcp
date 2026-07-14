@@ -40,7 +40,11 @@ export class LogsApiClient {
       sort: params.sort || '-timestamp',
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/logs/search', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListLogsResponse>(
+      '/api/v2/logs/search',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('queryLogs response: ', { data: responses });
     return responses;
   }

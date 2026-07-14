@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { ConfigFileLoader } from '../config-loader';
+import { loadFromFile } from '../config-loader';
 
 // Mock logger to avoid console output during tests
 jest.mock('../logger', () => ({
@@ -46,7 +46,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -76,7 +76,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result).toHaveLength(2);
       expect(result[0].alias).toBe('production');
@@ -87,7 +87,7 @@ describe('ConfigFileLoader', () => {
       const configPath = path.join(testDir, 'invalid.json');
       fs.writeFileSync(configPath, '{ invalid json }');
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Failed to parse \.json file/);
+      expect(() => loadFromFile(configPath)).toThrow(/Failed to parse \.json file/);
     });
   });
 
@@ -103,7 +103,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, yamlContent);
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -125,7 +125,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, yamlContent);
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result).toHaveLength(1);
       expect(result[0].alias).toBe('production');
@@ -143,7 +143,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, yamlContent);
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result).toHaveLength(1);
       expect(result[0].alias).toBe('production');
@@ -153,7 +153,7 @@ describe('ConfigFileLoader', () => {
       const configPath = path.join(testDir, 'invalid.yaml');
       fs.writeFileSync(configPath, 'key: value:\n  invalid: yaml:');
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Failed to parse \.yaml file/);
+      expect(() => loadFromFile(configPath)).toThrow(/Failed to parse \.yaml file/);
     });
   });
 
@@ -173,7 +173,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result[0].apiToken).toBe('my-secret-token');
     });
@@ -192,7 +192,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, yamlContent);
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result[0].apiToken).toBe('my-secret-token');
       expect(result[0].apiEndpointUrl).toBe('https://api.example.com/');
@@ -220,7 +220,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result[0].apiToken).toBe('prod-token');
       expect(result[1].apiToken).toBe('staging-token');
@@ -239,9 +239,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(
-        /Environment variable not found: NONEXISTENT_TOKEN/,
-      );
+      expect(() => loadFromFile(configPath)).toThrow(/Environment variable not found: NONEXISTENT_TOKEN/);
     });
   });
 
@@ -261,7 +259,7 @@ describe('ConfigFileLoader', () => {
       fs.writeFileSync(absolutePath, JSON.stringify(config, null, 2));
 
       try {
-        const result = ConfigFileLoader.loadFromFile(configPath);
+        const result = loadFromFile(configPath);
         expect(result).toHaveLength(1);
       } finally {
         fs.unlinkSync(absolutePath);
@@ -281,7 +279,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
       expect(result).toHaveLength(1);
     });
 
@@ -306,7 +304,7 @@ describe('ConfigFileLoader', () => {
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
       try {
-        const result = ConfigFileLoader.loadFromFile(`~/${configFileName}`);
+        const result = loadFromFile(`~/${configFileName}`);
         expect(result).toHaveLength(1);
       } finally {
         fs.unlinkSync(configPath);
@@ -316,7 +314,7 @@ describe('ConfigFileLoader', () => {
     it('should throw error for non-existent file', () => {
       const configPath = path.join(testDir, 'nonexistent.json');
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Configuration file not found/);
+      expect(() => loadFromFile(configPath)).toThrow(/Configuration file not found/);
     });
   });
 
@@ -332,7 +330,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Configuration must be an array/);
+      expect(() => loadFromFile(configPath)).toThrow(/Configuration must be an array/);
     });
 
     it('should throw error for missing apiEndpointUrl', () => {
@@ -347,9 +345,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(
-        /Environment #1.*missing required fields.*apiEndpointUrl/,
-      );
+      expect(() => loadFromFile(configPath)).toThrow(/Environment #1.*missing required fields.*apiEndpointUrl/);
     });
 
     it('should throw error for missing environmentId', () => {
@@ -364,9 +360,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(
-        /Environment #1.*missing required fields.*environmentId/,
-      );
+      expect(() => loadFromFile(configPath)).toThrow(/Environment #1.*missing required fields.*environmentId/);
     });
 
     it('should throw error for missing alias', () => {
@@ -381,7 +375,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Environment #1.*missing required fields.*alias/);
+      expect(() => loadFromFile(configPath)).toThrow(/Environment #1.*missing required fields.*alias/);
     });
 
     it('should throw error for missing apiToken', () => {
@@ -396,9 +390,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(
-        /Environment #1.*missing required fields.*apiToken/,
-      );
+      expect(() => loadFromFile(configPath)).toThrow(/Environment #1.*missing required fields.*apiToken/);
     });
 
     it('should accept optional fields', () => {
@@ -416,7 +408,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath);
+      const result = loadFromFile(configPath);
 
       expect(result[0]).toMatchObject({
         dynatraceUrl: 'https://dashboard.example.com/',
@@ -436,7 +428,7 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-      const result = ConfigFileLoader.loadFromFile(configPath, false);
+      const result = loadFromFile(configPath, false);
       expect(result).toHaveLength(1);
       expect(result[0].alias).toBe('production');
     });
@@ -447,7 +439,7 @@ describe('ConfigFileLoader', () => {
       const configPath = path.join(testDir, 'config.txt');
       fs.writeFileSync(configPath, 'some content');
 
-      expect(() => ConfigFileLoader.loadFromFile(configPath)).toThrow(/Unsupported file format: \.txt/);
+      expect(() => loadFromFile(configPath)).toThrow(/Unsupported file format: \.txt/);
     });
   });
 });

@@ -86,7 +86,11 @@ export class SloApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/slo', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListSlosResponse>(
+      '/api/v2/slo',
+      { ...queryParams },
+      environment_aliases,
+    );
     logger.debug('listSLOs response', { data: responses });
     return responses;
   }
@@ -101,9 +105,9 @@ export class SloApiClient {
       queryParams.timeFrame = 'GTF';
     }
 
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<SLO>(
       `/api/v2/slo/${encodeURIComponent(params.id)}`,
-      queryParams,
+      { ...queryParams },
       environment_aliases,
     );
     logger.debug('getSLODetails response', { data: responses });

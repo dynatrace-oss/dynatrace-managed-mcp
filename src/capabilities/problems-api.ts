@@ -85,14 +85,18 @@ export class ProblemsApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/problems', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListProblemResponse>(
+      '/api/v2/problems',
+      queryParams,
+      environment_aliases,
+    );
 
     logger.debug('listProblems response', { data: responses });
     return responses;
   }
 
   async getProblemDetails(problemId: string, environment_aliases: string): Promise<Map<string, Problem>> {
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<Problem>(
       `/api/v2/problems/${encodeURIComponent(problemId)}`,
       {},
       environment_aliases,

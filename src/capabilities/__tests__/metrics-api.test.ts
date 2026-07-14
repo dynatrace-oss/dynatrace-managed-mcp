@@ -1,4 +1,4 @@
-import { MetricsApiClient, Metric } from '../metrics-api';
+import { MetricsApiClient, Metric, ListMetricsResponse, MetricDataResponse } from '../metrics-api';
 import { ManagedAuthClientManager } from '../../authentication/managed-auth-client';
 import { readFileSync } from 'fs';
 
@@ -14,7 +14,7 @@ describe('MetricsApiClient', () => {
       getBaseUrl: jest.fn(() => {
         return 'http://dashboardbaseurl.com/e/environment_id';
       }),
-    } as any;
+    } as unknown as jest.Mocked<ManagedAuthClientManager>;
     client = new MetricsApiClient(mockAuthManager);
   });
 
@@ -24,7 +24,7 @@ describe('MetricsApiClient', () => {
 
   describe('queryMetrics', () => {
     it('should query metric data with all parameters', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, MetricDataResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.queryMetrics(
@@ -55,7 +55,7 @@ describe('MetricsApiClient', () => {
 
   describe('listAvailableMetrics', () => {
     it('should pass all params', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.listAvailableMetrics(
@@ -88,7 +88,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should pass default params', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.listAvailableMetrics({}, 'testAlias');
@@ -106,7 +106,7 @@ describe('MetricsApiClient', () => {
 
   describe('formatList', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListMetricsResponse>([
         [
           'testAlias',
           JSON.parse(readFileSync('src/capabilities/__tests__/resources/listAvailableMetrics.json', 'utf8')),
@@ -131,7 +131,7 @@ describe('MetricsApiClient', () => {
         displayName: `Metric ${i}`,
       }));
 
-      const response = new Map<string, any>([
+      const response = new Map<string, ListMetricsResponse>([
         [
           'testAlias',
           {
@@ -149,7 +149,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should format list when sparse metric', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListMetricsResponse>([
         [
           'testAlias',
           {
@@ -169,7 +169,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should format list when empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.listAvailableMetrics({}, 'testAlias');
@@ -180,7 +180,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should handle empty list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListMetricsResponse>([
         [
           'testAlias',
           {
@@ -201,7 +201,7 @@ describe('MetricsApiClient', () => {
 
   describe('formatMetricDetails', () => {
     it('should format details', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, Metric>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/getMetricDetails.json', 'utf8'))],
       ]);
 
@@ -212,12 +212,12 @@ describe('MetricsApiClient', () => {
 
       expect(response).toEqual(mockResponse);
       expect(result).toContain('Details of metric from environment testAlias in the following json');
-      expect(result).toContain('\"displayName\":\"CPU usage %\"');
-      expect(result).toContain('\"metricId\":\"builtin:host.cpu.usage\"');
+      expect(result).toContain('"displayName":"CPU usage %"');
+      expect(result).toContain('"metricId":"builtin:host.cpu.usage"');
     });
 
     it('should format details when sparse data', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, Metric>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.getMetricDetails('my-id', 'testAlias');
@@ -231,7 +231,7 @@ describe('MetricsApiClient', () => {
 
   describe('formatMetricData', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, MetricDataResponse>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/queryMetrics.json', 'utf8'))],
       ]);
 
@@ -247,13 +247,13 @@ describe('MetricsApiClient', () => {
       expect(result).toContain('Listing data series from environment testAlias, each with timestamped datapoints');
       expect(result).toContain('resolution: 1h');
       expect(result).toContain('metricId: builtin:host.cpu.usage');
-      expect(result).toContain('dimensionData: {\"dt.entity.host\":\"HOST-1D1EA84AB7DF62B4\"}');
-      expect(result).toContain('dimensions: [\"HOST-1D1EA84AB7DF62B4\"]');
+      expect(result).toContain('dimensionData: {"dt.entity.host":"HOST-1D1EA84AB7DF62B4"}');
+      expect(result).toContain('dimensions: ["HOST-1D1EA84AB7DF62B4"]');
       expect(result).toContain('timestamped datapoints: 1763935200000: 4.1, 1763938800000: null, 1763942400000: 5.2');
     });
 
     it('should format list when sparse data series', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, MetricDataResponse>([
         [
           'testAlias',
           {
@@ -282,7 +282,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should format list when empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, MetricDataResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.queryMetrics(
@@ -296,7 +296,7 @@ describe('MetricsApiClient', () => {
     });
 
     it('should handle empty list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, MetricDataResponse>([
         [
           'testAlias',
           {
