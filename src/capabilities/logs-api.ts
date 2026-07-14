@@ -65,7 +65,7 @@ export class LogsApiClient {
         anyLimited = true;
       }
 
-      data.results?.forEach((log: any) => {
+      data.results?.forEach((log: LogEntry) => {
         const timestamp = formatTimestamp(log.timestamp);
         // Enhanced level detection for better error identification
         const level = log.additionalColumns?.loglevel?.[0] || log.status || log.log_level || 'NONE';

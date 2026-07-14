@@ -84,7 +84,10 @@ export class SecurityApiClient {
     return responses;
   }
 
-  async getSecurityProblemDetails(problemId: string, environment_aliases: string): Promise<Map<string, any>> {
+  async getSecurityProblemDetails(
+    problemId: string,
+    environment_aliases: string,
+  ): Promise<Map<string, SecurityProblem>> {
     const responses = await this.authManager.makeRequests(
       `/api/v2/securityProblems/${encodeURIComponent(problemId)}`,
       {},
@@ -120,7 +123,7 @@ export class SecurityApiClient {
         anyLimited = true;
       }
 
-      data.securityProblems?.forEach((problem: any) => {
+      data.securityProblems?.forEach((problem: SecurityProblem) => {
         result += `securityProblemId: ${problem.securityProblemId}\n`;
         result += `  displayId: ${problem.displayId}\n`;
         result += `  title: ${problem.title}\n`;
@@ -166,7 +169,7 @@ export class SecurityApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, SecurityProblem>): string {
     let result = '';
     const aliases: string[] = [];
     for (const [alias, data] of responses) {

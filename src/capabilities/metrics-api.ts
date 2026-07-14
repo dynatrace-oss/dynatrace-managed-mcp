@@ -89,7 +89,7 @@ export class MetricsApiClient {
     return responses;
   }
 
-  async getMetricDetails(metricId: string, environment_aliases: string): Promise<Map<string, any>> {
+  async getMetricDetails(metricId: string, environment_aliases: string): Promise<Map<string, Metric>> {
     const responses = await this.authManager.makeRequests(
       `/api/v2/metrics/${encodeURIComponent(metricId)}`,
       {},
@@ -138,7 +138,7 @@ export class MetricsApiClient {
         anyLimited = true;
       }
 
-      data.metrics?.forEach((metric: any) => {
+      data.metrics?.forEach((metric: Metric) => {
         result += `metricId: ${metric.metricId}\n`;
         if (metric.displayName) result += `  displayName: ${metric.displayName}\n`;
         if (metric.description) result += `  description: ${metric.description}\n`;
@@ -153,7 +153,7 @@ export class MetricsApiClient {
         if (metric.dimensionDefinitions && metric.dimensionDefinitions.length > 0) {
           const dims = metric.dimensionDefinitions
             .slice(0, MetricsApiClient.MAX_DIMENSIONS_DISPLAY)
-            .map((dim: any) => dim.name)
+            .map((dim: DimensionDefinition) => dim.name)
             .join(', ');
           result += `  dimensions: ${dims}${metric.dimensionDefinitions.length > MetricsApiClient.MAX_DIMENSIONS_DISPLAY ? ` (+${metric.dimensionDefinitions.length - MetricsApiClient.MAX_DIMENSIONS_DISPLAY} more)` : ''}\n`;
         }
@@ -182,7 +182,7 @@ export class MetricsApiClient {
     return result;
   }
 
-  formatMetricDetails(responses: Map<string, any>): string {
+  formatMetricDetails(responses: Map<string, Metric>): string {
     let result = '';
     const aliases: string[] = [];
     for (const [alias, data] of responses) {
@@ -217,13 +217,13 @@ export class MetricsApiClient {
         result += `resolution: ${resolution}\n`;
       }
 
-      data.result?.forEach((metric: any) => {
+      data.result?.forEach((metric: MetricDataResult) => {
         const numDataseries = metric.data?.length || 0;
 
         result += 'Listing ' + numDataseries + ' data series\n';
         result += `metricId: ${metric.metricId}\n`;
 
-        metric.data?.forEach((series: any) => {
+        metric.data?.forEach((series: MetricData) => {
           const timestamps = series.timestamps || [];
           const values = series.values || [];
 

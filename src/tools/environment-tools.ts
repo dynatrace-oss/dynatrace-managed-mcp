@@ -80,9 +80,13 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
           resp += `- Version: ${clusterVersion.version}\n`;
           resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
           resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-        } catch (error: any) {
+        } catch (error) {
           resp += `- Valid Environment: No\n`;
-          resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
+          if (error instanceof Error) {
+            resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
+          } else {
+            resp += 'Unknown error\n\n';
+          }
         }
       }
 

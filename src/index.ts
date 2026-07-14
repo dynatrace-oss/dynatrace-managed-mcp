@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolResult, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { Command } from 'commander';
@@ -183,13 +183,20 @@ const main = async () => {
           return {
             content: [{ type: 'text', text: response }],
           };
-        } catch (error: any) {
-          telemetry
-            .trackError(error, `tool_${name}`)
-            .catch((e) => logger.warn(`Failed to track error: ${e.message}`, { error: e }));
-          logger.error(`Failed to run tool ${name}: ${error.message}`, { error: error });
+        } catch (error) {
+          if (error instanceof Error) {
+            telemetry
+              .trackError(error, `tool_${name}`)
+              .catch((e) => logger.warn(`Failed to track error: ${e.message}`, { error: e }));
+            logger.error(`Failed to run tool ${name}: ${error.message}`, { error: error });
+            return {
+              content: [{ type: 'text', text: `Error: ${error.message}` }],
+              isError: true,
+            };
+          }
+          logger.error(`Failed to run tool ${name}: Unknown error`, { error });
           return {
-            content: [{ type: 'text', text: `Error: ${error.message}` }],
+            content: [{ type: 'text', text: 'Error: Unknown error' }],
             isError: true,
           };
         } finally {
@@ -200,14 +207,14 @@ const main = async () => {
         }
       };
 
-      (server.registerTool as any)(
+      server.registerTool(
         name,
         {
           description,
           inputSchema: paramsSchema,
           annotations,
         },
-        wrappedCb,
+        wrappedCb as ToolCallback<ZodRawShape>,
       );
     };
 
@@ -303,7 +310,7 @@ const main = async () => {
         const rawBody = Buffer.concat(chunks).toString();
         try {
           body = JSON.parse(rawBody);
-        } catch (error) {
+        } catch {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           // Respond with a JSON-RPC Parse error
           res.end(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }));
@@ -387,8 +394,12 @@ main().catch(async (error) => {
     const telemetry = createTelemetry();
     await telemetry.trackError(error, 'main_error');
     await telemetry.shutdown();
-  } catch (e: any) {
-    logger.error(`Failed to track fatal error: ${e.message}`, { error: e });
+  } catch (e) {
+    if (e instanceof Error) {
+      logger.error(`Failed to track fatal error: ${e.message}`, { error: e });
+    } else {
+      logger.error('Failed to track, unknown error');
+    }
   }
   await flushLogger();
   process.exit(1);

@@ -52,7 +52,12 @@ export interface SLO {
   metricRate?: string;
   metricNumerator?: string;
   metricDenominator?: string;
-  managementZones?: any[];
+  managementZones?: ManagementZone[];
+}
+
+interface ManagementZone {
+  id: string;
+  name: string;
 }
 
 export interface ErrorBudgetBurnRate {
@@ -72,7 +77,7 @@ export class SloApiClient {
   constructor(private authManager: ManagedAuthClientManager) {}
 
   async listSlos(params: SloQueryParams = {}, environment_aliases: string): Promise<Map<string, ListSlosResponse>> {
-    const queryParams: Record<string, any> = {
+    const queryParams: SloQueryParams = {
       pageSize: params.pageSize || SloApiClient.API_PAGE_SIZE,
       ...(params.sloSelector && { sloSelector: params.sloSelector }),
       ...(params.timeFrame && { timeFrame: params.timeFrame }),
@@ -90,8 +95,8 @@ export class SloApiClient {
     return responses;
   }
 
-  async getSloDetails(params: GetSloQueryParams, environment_aliases: string): Promise<Map<string, any>> {
-    const queryParams: Record<string, any> = {
+  async getSloDetails(params: GetSloQueryParams, environment_aliases: string): Promise<Map<string, SLO>> {
+    const queryParams: SloQueryParams = {
       ...(params.from && { from: params.from }),
       ...(params.to && { to: params.to }),
       ...(params.timeFrame && { timeFrame: params.timeFrame }),
@@ -135,7 +140,7 @@ export class SloApiClient {
         anyLimited = true;
       }
 
-      data.slo?.forEach((slo: any) => {
+      data.slo?.forEach((slo: SLO) => {
         result += `id: ${slo.id}\n`;
         result += `  name: ${slo.name}\n`;
         if (slo.description) {
@@ -157,7 +162,7 @@ export class SloApiClient {
         if (slo.managementZones && slo.managementZones.length > 0) {
           const zones = slo.managementZones
             .slice(0, SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
-            .map((zone: any) => zone.name || zone.id || zone)
+            .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
           result += `  management zones: ${zones}${slo.managementZones.length > SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${slo.managementZones.length - SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
         }
@@ -181,7 +186,7 @@ export class SloApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, SLO>): string {
     let result = '';
     for (const [alias, data] of responses) {
       result += 'Details of SLO from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';
