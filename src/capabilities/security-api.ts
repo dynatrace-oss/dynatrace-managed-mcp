@@ -2,6 +2,7 @@ import { ManagedAuthClientManager } from '../authentication/managed-auth-client'
 
 import { formatTimestamp } from '../utils/date-formatter';
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface SecurityProblemQueryParams {
   riskLevel?: string; // 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -39,10 +40,7 @@ export interface SecurityProblem {
     dataAssets?: 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'NOT_AVAILABLE';
     publicExploit?: 'AVAILABLE' | 'NOT_AVAILABLE';
   };
-  managementZones?: Array<{
-    id: string;
-    name: string;
-  }>;
+  managementZones?: ManagementZone[];
   affectedEntities?: Array<{
     entityId?: string;
     displayName?: string;

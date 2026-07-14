@@ -2,6 +2,7 @@ import { ManagedAuthClientManager } from '../authentication/managed-auth-client.
 
 import { formatTimestamp } from '../utils/date-formatter';
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface EventQueryParams {
   from: string;
@@ -36,11 +37,6 @@ export interface Event {
 export interface EventProperty {
   key: string;
   value: string;
-}
-
-interface ManagementZone {
-  id: string;
-  name: string;
 }
 
 export enum EventStatus {

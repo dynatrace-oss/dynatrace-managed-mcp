@@ -33,8 +33,6 @@ export interface Problem {
   rootCauseEntity?: ProblemEntity;
   evidenceDetails?: EvidenceDetails;
   commentCount?: number;
-  managementZones?: any[];
-  recentComments?: any;
 }
 
 export interface Tag {

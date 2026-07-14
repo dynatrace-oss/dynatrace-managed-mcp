@@ -1,6 +1,7 @@
 import { ManagedAuthClientManager } from '../authentication/managed-auth-client.js';
 
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface EntityQueryParams {
   entitySelector: string;
@@ -9,6 +10,11 @@ export interface EntityQueryParams {
   from?: string;
   to?: string;
   sort?: string;
+}
+
+interface EntityTypesParameters {
+  nextPageKey?: number;
+  pageSize?: number;
 }
 
 export interface ListEntityTypesResponse {
@@ -29,8 +35,8 @@ export interface ListEntitiesResponse {
 // e.g. see example response body at https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/entity-v2/get-entity
 export interface GetEntityRelationshipsResponse {
   entityId?: string;
-  fromRelationships?: any;
-  toRelationships?: any;
+  fromRelationships?: Relationships;
+  toRelationships?: Relationships;
 }
 
 export interface Entity {
@@ -41,10 +47,17 @@ export interface Entity {
   firstSeenTms?: number;
   lastSeenTms?: number;
   tags?: Tag[];
-  properties?: Record<string, any>;
-  fromRelationships?: any; // Could be a list or a map; hence using 'any'
-  toRelationships?: any; // Could be a list or a map; hence using 'any'
-  managementZones?: any[];
+  properties?: Record<string, number | string>;
+  fromRelationships?: Relationships; // Could be a list or a map; hence using 'any'
+  toRelationships?: Relationships; // Could be a list or a map; hence using 'any'
+  managementZones?: ManagementZone[];
+}
+
+type Relationships = Record<string, EntityId[]>;
+
+interface EntityId {
+  id: string;
+  type: string;
 }
 
 export interface Tag {
@@ -70,7 +83,7 @@ export class EntitiesApiClient {
   async listEntityTypes(environment_aliases: string): Promise<Map<string, ListEntityTypesResponse>> {
     // Deliberately large page size; will format this concisely rather than returning all json in tool response.
     // Want to get all of them (with reason), otherwise trying to pull out common types won't work.
-    const params: Record<string, any> = {
+    const params: EntityTypesParameters = {
       pageSize: 500,
     };
     const responses = await this.authManager.makeRequests('/api/v2/entityTypes', params, environment_aliases);
@@ -78,7 +91,7 @@ export class EntitiesApiClient {
     return responses;
   }
 
-  async getEntityTypeDetails(entityType: string, environment_aliases: string): Promise<Map<string, any>> {
+  async getEntityTypeDetails(entityType: string, environment_aliases: string): Promise<Map<string, EntityType>> {
     const responses = await this.authManager.makeRequests(
       `/api/v2/entityTypes/${encodeURIComponent(entityType)}`,
       {},
@@ -88,7 +101,7 @@ export class EntitiesApiClient {
     return responses;
   }
 
-  async getEntityDetails(entityId: string, environment_aliases: string): Promise<Map<string, any>> {
+  async getEntityDetails(entityId: string, environment_aliases: string): Promise<Map<string, Entity>> {
     const responses = await this.authManager.makeRequests(
       `/api/v2/entities/${encodeURIComponent(entityId)}`,
       {},
@@ -103,7 +116,7 @@ export class EntitiesApiClient {
     environment_aliases: string,
   ): Promise<Map<string, GetEntityRelationshipsResponse>> {
     const entityDetailsResponse = await this.getEntityDetails(entityId, environment_aliases);
-    const cleanResponses = new Map<string, any>();
+    const cleanResponses = new Map<string, Entity>();
     for (const [alias, data] of entityDetailsResponse) {
       cleanResponses.set(alias, {
         entityId: data.entityId,
@@ -158,9 +171,9 @@ export class EntitiesApiClient {
         anyLimited = true;
       }
 
-      data.entities?.forEach((entity: any) => {
+      data.entities?.forEach((entity: Entity) => {
         // Truncate very long names for readability
-        let displayName = entity.displayName;
+        let displayName = entity.displayName ?? '';
         if (displayName.length > 60) {
           displayName = displayName.substring(0, 57) + '...';
         }
@@ -172,7 +185,7 @@ export class EntitiesApiClient {
         if (entity.tags && entity.tags.length > 0) {
           const tags = entity.tags
             .slice(0, EntitiesApiClient.MAX_TAGS_DISPLAY)
-            .map((tag: any) => (tag.value ? `${tag.key}:${tag.value}` : tag.key))
+            .map((tag: Tag) => (tag.value ? `${tag.key}:${tag.value}` : tag.key))
             .join(', ');
           result += `  tags: ${tags}${entity.tags.length > EntitiesApiClient.MAX_TAGS_DISPLAY ? ` (+${entity.tags.length - EntitiesApiClient.MAX_TAGS_DISPLAY} more)` : ''}\n`;
         }
@@ -188,7 +201,7 @@ export class EntitiesApiClient {
         if (entity.managementZones && entity.managementZones.length > 0) {
           const zones = entity.managementZones
             .slice(0, EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
-            .map((zone: any) => zone.name || zone.id || zone)
+            .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
           result += `  Management Zones: ${zones}${entity.managementZones.length > EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${entity.managementZones.length - EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
         }
@@ -217,7 +230,6 @@ export class EntitiesApiClient {
 
   formatEntityTypeList(responses: Map<string, ListEntityTypesResponse>): string {
     let result = '';
-    let totalNumTypes = 0;
     const aliases: string[] = [];
     const commonTypes = [
       'SERVICE',
@@ -234,10 +246,9 @@ export class EntitiesApiClient {
       aliases.push(alias);
       const totalCount = data.totalCount || -1;
       const numTypes = data.types?.length || 0;
-      totalNumTypes += numTypes;
       const isLimited = totalCount != 0 - 1 && totalCount > numTypes;
 
-      const entityTypes = data.types as any[];
+      const entityTypes = data.types;
       let conciseList = '';
       const availableCommonTypes: string[] = [];
 
@@ -255,15 +266,15 @@ export class EntitiesApiClient {
       if (availableCommonTypes.length > 0) {
         result += '\n' + `Common entity types include: ${availableCommonTypes}\n`;
       }
-      entityTypes?.forEach((entityType: any) => {
+      entityTypes?.forEach((entityType: EntityType) => {
         conciseList += `${entityType?.type}`;
         if (entityType.displayName && entityType.displayName !== entityType.type) {
           conciseList += ` - ${entityType.displayName}`;
         }
         conciseList += '\n';
 
-        if (commonTypes.includes(entityType)) {
-          availableCommonTypes.push(entityType);
+        if (commonTypes.includes(entityType.type ?? '')) {
+          availableCommonTypes.push(entityType.type ?? '');
         }
       });
       result += '\n' + conciseList;
@@ -284,7 +295,7 @@ export class EntitiesApiClient {
     return result;
   }
 
-  formatEntityTypeDetails(responses: Map<string, any>): string {
+  formatEntityTypeDetails(responses: Map<string, EntityType>): string {
     let result = '';
     for (const [alias, data] of responses) {
       result +=
@@ -296,7 +307,7 @@ export class EntitiesApiClient {
     return result;
   }
 
-  formatEntityDetails(responses: Map<string, any>): string {
+  formatEntityDetails(responses: Map<string, Entity>): string {
     let result = '';
     const aliases: string[] = [];
     for (const [alias, data] of responses) {
@@ -354,7 +365,7 @@ export class EntitiesApiClient {
     return result;
   }
 
-  private countRelationships(val: any): number {
+  private countRelationships(val: Relationships | undefined): number {
     if (!val) return 0;
     if (Array.isArray(val)) return val.length;
     if (typeof val === 'object') return Object.keys(val).length;

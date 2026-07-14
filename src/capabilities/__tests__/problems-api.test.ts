@@ -1,4 +1,4 @@
-import { ProblemsApiClient, Problem } from '../problems-api';
+import { ProblemsApiClient, Problem, ListProblemResponse } from '../problems-api';
 import { ManagedAuthClientManager } from '../../authentication/managed-auth-client';
 import { readFileSync } from 'fs';
 
@@ -14,7 +14,7 @@ describe('ProblemsApiClient', () => {
       getBaseUrl: jest.fn(() => {
         return 'http://dashboardbaseurl.com/e/environment_id';
       }),
-    } as any;
+    } as unknown as jest.Mocked<ManagedAuthClientManager>;
     client = new ProblemsApiClient(mockAuthManager);
   });
 
@@ -24,7 +24,7 @@ describe('ProblemsApiClient', () => {
 
   describe('listProblems', () => {
     it('should list problems with all parameters', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.listProblems(
@@ -55,7 +55,7 @@ describe('ProblemsApiClient', () => {
     });
 
     it('should use default parameters when none provided', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.listProblems({}, 'testAlias');
@@ -73,7 +73,7 @@ describe('ProblemsApiClient', () => {
 
   describe('getProblemDetails', () => {
     it('should get problem details by ID', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, Problem>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.getProblemDetails('PROBLEM-123', 'testAlias');
@@ -85,7 +85,7 @@ describe('ProblemsApiClient', () => {
 
   describe('formatList', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListProblemResponse>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/listProblems.json', 'utf8'))],
       ]);
 
@@ -106,7 +106,7 @@ describe('ProblemsApiClient', () => {
     });
 
     it('should format list when sparse problem', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', { problems: [{}] }]]);
+      const mockResponse = new Map<string, ListProblemResponse>([['testAlias', { problems: [{}] }]]);
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
@@ -125,7 +125,7 @@ describe('ProblemsApiClient', () => {
     });
 
     it('should format list when empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.listProblems({}, 'ALL_ENVIRONMENTS');
@@ -147,7 +147,7 @@ describe('ProblemsApiClient', () => {
         startTime: 1640995200000 + i * 1000,
       }));
 
-      const response = new Map<string, any>([
+      const response = new Map<string, ListProblemResponse>([
         [
           'testAlias',
           {
@@ -166,7 +166,7 @@ describe('ProblemsApiClient', () => {
     });
 
     it('should handle empty list', () => {
-      const response = new Map<string, any>([
+      const response = new Map<string, ListProblemResponse>([
         [
           'testAlias',
           {
@@ -182,7 +182,7 @@ describe('ProblemsApiClient', () => {
 
   describe('formatProblemDetails', () => {
     it('should format details', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, Problem>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/getProblemDetails.json', 'utf8'))],
       ]);
 
@@ -198,7 +198,7 @@ describe('ProblemsApiClient', () => {
     });
 
     it('should format details when sparse problem', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, Problem>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.getProblemDetails('my-id', 'ALL_ENVIRONMENTS');

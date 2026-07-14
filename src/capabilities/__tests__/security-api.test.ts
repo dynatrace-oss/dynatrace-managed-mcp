@@ -1,6 +1,7 @@
-import { SecurityApiClient, SecurityProblem } from '../security-api';
+import { SecurityApiClient, SecurityProblem, ListSecurityProblemsResponse } from '../security-api';
 import { ManagedAuthClientManager } from '../../authentication/managed-auth-client';
 import { readFileSync } from 'fs';
+import { AxiosError } from 'axios';
 
 jest.mock('../../authentication/managed-auth-client');
 
@@ -14,7 +15,7 @@ describe('SecurityApiClient', () => {
       getBaseUrl: jest.fn(() => {
         return 'http://dashboardbaseurl.com/e/environment_id';
       }),
-    } as any;
+    } as unknown as jest.Mocked<ManagedAuthClientManager>;
     client = new SecurityApiClient(mockAuthManager);
   });
 
@@ -24,7 +25,7 @@ describe('SecurityApiClient', () => {
 
   describe('listSecurityProblems', () => {
     it('should list security problems with default parameters', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.listSecurityProblems({}, 'testAlias');
@@ -40,7 +41,7 @@ describe('SecurityApiClient', () => {
     });
 
     it('should list security problems with all parameters', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', { securityProblems: [] }]]);
+      const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', { securityProblems: [] }]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       await client.listSecurityProblems(
@@ -79,16 +80,17 @@ describe('SecurityApiClient', () => {
       try {
         await client.listSecurityProblems({}, 'testAlias');
         fail('Should have propagated exception');
-      } catch (error: any) {
+      } catch (error) {
         console.log(error);
-        expect(error.response?.data?.message).toEqual('Request failed with status code 404');
+        const axiosError = error as AxiosError<{ message: string }>;
+        expect(axiosError.response?.data?.message).toEqual('Request failed with status code 404');
       }
     });
   });
 
   describe('getSecurityProblemDetails', () => {
     it('should get security problem details', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', { securityProblemId: 'SP-123' }]]);
+      const mockResponse = new Map<string, SecurityProblem>([['testAlias', { securityProblemId: 'SP-123' }]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.getSecurityProblemDetails('SP-123', 'testAlias');
@@ -105,16 +107,17 @@ describe('SecurityApiClient', () => {
       try {
         await client.getSecurityProblemDetails('SP-999', 'testAlias');
         fail('Should have propagated exception');
-      } catch (error: any) {
+      } catch (error) {
         console.log(error);
-        expect(error.response?.data?.message).toEqual('Request failed with status code 404');
+        const axiosError = error as AxiosError<{ message: string }>;
+        expect(axiosError.response?.data?.message).toEqual('Request failed with status code 404');
       }
     });
   });
 
   describe('formatList', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListSecurityProblemsResponse>([
         [
           'testAlias',
           JSON.parse(readFileSync('src/capabilities/__tests__/resources/listSecurityProblems.json', 'utf8')),
@@ -144,7 +147,7 @@ describe('SecurityApiClient', () => {
         title: `Security Problem ${i}`,
       }));
 
-      const response = new Map<string, any>([
+      const response = new Map<string, ListSecurityProblemsResponse>([
         [
           'testAlias',
           {
@@ -163,7 +166,7 @@ describe('SecurityApiClient', () => {
     });
 
     it('should format list when sparse problem', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', { securityProblems: [{}] }]]);
+      const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', { securityProblems: [{}] }]]);
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
@@ -179,7 +182,7 @@ describe('SecurityApiClient', () => {
     });
 
     it('should format list when empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.listSecurityProblems({}, 'testAlias');
@@ -190,7 +193,7 @@ describe('SecurityApiClient', () => {
     });
 
     it('should handle empty list', () => {
-      const response = new Map<string, any>([
+      const response = new Map<string, ListSecurityProblemsResponse>([
         [
           'testAlias',
           {
@@ -207,7 +210,7 @@ describe('SecurityApiClient', () => {
 
   describe('formatProblemDetails', () => {
     it('should format details', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, SecurityProblem>([
         [
           'testAlias',
           JSON.parse(readFileSync('src/capabilities/__tests__/resources/getSecurityProblemDetails.json', 'utf8')),
@@ -224,7 +227,7 @@ describe('SecurityApiClient', () => {
     });
 
     it('should format details when sparse problem', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, SecurityProblem>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.getSecurityProblemDetails('my-id', 'testAlias');

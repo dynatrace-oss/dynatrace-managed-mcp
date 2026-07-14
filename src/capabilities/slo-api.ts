@@ -1,6 +1,7 @@
 import { ManagedAuthClientManager } from '../authentication/managed-auth-client.js';
 
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface SloQueryParams {
   sloSelector?: string;
@@ -53,11 +54,6 @@ export interface SLO {
   metricNumerator?: string;
   metricDenominator?: string;
   managementZones?: ManagementZone[];
-}
-
-interface ManagementZone {
-  id: string;
-  name: string;
 }
 
 export interface ErrorBudgetBurnRate {

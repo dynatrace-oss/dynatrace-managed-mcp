@@ -27,7 +27,7 @@ export interface ListMetricsResponse {
 
 export interface MetricData {
   timestamps?: number[];
-  values?: any[];
+  values?: Array<number | null>;
   dimensionMap?: Record<string, string>;
   dimensions?: string[];
 }

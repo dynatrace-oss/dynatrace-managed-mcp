@@ -22,10 +22,8 @@ export interface LogEntry {
   status?: string; // API returns status (ERROR, WARN, etc.)
   eventType?: string; // API returns event.type
   additionalColumns?: {
-    loglevel?: string[];
-    [key: string]: any;
+    [key: string]: string[];
   };
-  [key: string]: any;
 }
 
 export class LogsApiClient {
@@ -68,7 +66,7 @@ export class LogsApiClient {
       data.results?.forEach((log: LogEntry) => {
         const timestamp = formatTimestamp(log.timestamp);
         // Enhanced level detection for better error identification
-        const level = log.additionalColumns?.loglevel?.[0] || log.status || log.log_level || 'NONE';
+        const level = log.additionalColumns?.loglevel?.[0] || log.status || log.additionalColumns?.logLevel || 'NONE';
 
         result += `**${timestamp}** [${level}]\n`;
         result += `${log.content}\n`;
