@@ -31,7 +31,7 @@ import { patchToolsListSchema } from './utils/mcp-compat';
 import { registerAllTools, ToolContext } from './tools';
 
 // Import logger after environment is loaded
-import { logger, flushLogger } from './utils/logger';
+import { logger, flushLogger, logErrorObject } from './utils/logger';
 
 logger.info('Starting Dynatrace Managed MCP');
 
@@ -184,17 +184,14 @@ const main = async () => {
             content: [{ type: 'text', text: response }],
           };
         } catch (error) {
+          logErrorObject(error, `Failed to run tool ${name}`);
           if (error instanceof Error) {
-            telemetry
-              .trackError(error, `tool_${name}`)
-              .catch((e) => logger.warn(`Failed to track error: ${e.message}`, { error: e }));
-            logger.error(`Failed to run tool ${name}: ${error.message}`, { error: error });
+            telemetry.trackError(error, `tool_${name}`).catch((e) => logErrorObject(e, 'Failed to track error'));
             return {
               content: [{ type: 'text', text: `Error: ${error.message}` }],
               isError: true,
             };
           }
-          logger.error(`Failed to run tool ${name}: Unknown error`, { error });
           return {
             content: [{ type: 'text', text: 'Error: Unknown error' }],
             isError: true,
@@ -388,18 +385,14 @@ const main = async () => {
 };
 
 main().catch(async (error) => {
-  logger.error(`Fatal error in main(): ${error.message}`, { error: error });
+  logErrorObject(error, 'Fatal error in main()');
   try {
     // report error in main
     const telemetry = createTelemetry();
     await telemetry.trackError(error, 'main_error');
     await telemetry.shutdown();
   } catch (e) {
-    if (e instanceof Error) {
-      logger.error(`Failed to track fatal error: ${e.message}`, { error: e });
-    } else {
-      logger.error('Failed to track, unknown error');
-    }
+    logErrorObject(e, 'Failed to track');
   }
   await flushLogger();
   process.exit(1);

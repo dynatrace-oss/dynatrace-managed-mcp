@@ -1,5 +1,5 @@
 import { JSONObject } from '@dynatrace/openkit-js';
-import { logger } from './logger';
+import { logErrorObject, logger } from './logger';
 import { loadFromFile } from './config-loader';
 
 export interface ManagedEnvironmentConfig {
@@ -60,11 +60,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
       }
       return parsedManagedEnvironmentConfigs;
     } catch (error) {
-      if (error instanceof Error) {
-        logger.error(`Failed to load configuration file: ${error.message}`);
-      } else {
-        logger.error('Failed to load configuration file.');
-      }
+      logErrorObject(error, 'Failed to load configuration file');
       throw error;
     }
   }

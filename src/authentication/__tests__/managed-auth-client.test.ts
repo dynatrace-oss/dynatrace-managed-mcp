@@ -180,26 +180,25 @@ describe('ManagedAuthClientManager', () => {
     } as unknown as ManagedAuthClient;
   }
 
-  // TODO: adjust the test
-  // it('routes a request to the matching client with that alias token', async () => {
-  //   const prod = fakeClient('prod');
-  //   const staging = fakeClient('staging');
-  //   const mgr = new ManagedAuthClientManager(
-  //     [prod, staging],
-  //     [prod, staging],
-  //     ['ALL_ENVIRONMENTS', 'prod', 'staging'],
-  //     new Map([
-  //       ['prod', 'tok-prod'],
-  //       ['staging', 'tok-staging'],
-  //     ]),
-  //   );
-  //
-  //   const res = await mgr.makeRequests('/api/x', { a: 1 }, 'prod');
-  //
-  //   expect(prod.makeRequest).toHaveBeenCalledWith('/api/x', 'tok-prod', { a: 1 });
-  //   expect(staging.makeRequest).not.toHaveBeenCalled();
-  //   expect(res.get('prod')).toEqual({ ok: 'prod' });
-  // });
+  it('routes a request to the matching client with that alias token', async () => {
+    const prod = fakeClient('prod');
+    const staging = fakeClient('staging');
+    const mgr = new ManagedAuthClientManager(
+      [prod, staging],
+      [prod, staging],
+      ['ALL_ENVIRONMENTS', 'prod', 'staging'],
+      new Map([
+        ['prod', 'tok-prod'],
+        ['staging', 'tok-staging'],
+      ]),
+    );
+
+    const res = await mgr.makeRequests('/api/x', { a: 1 }, 'prod');
+
+    expect(prod.makeRequest).toHaveBeenCalledWith('/api/x', 'tok-prod', { a: 1 });
+    expect(staging.makeRequest).not.toHaveBeenCalled();
+    expect(res.get('prod')).toEqual({ ok: 'prod' });
+  });
 
   it('throws MissingTokenError when no token is supplied for the requested alias', async () => {
     const prod = fakeClient('prod');

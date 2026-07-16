@@ -71,8 +71,9 @@ export function loadFromFile(filePath: string, requireToken = true): JSONObject[
   if (!Array.isArray(config)) {
     throw new Error(`Configuration must be an array of environments.\n` + `File: ${resolvedPath}`);
   }
+  const environmentsNumber: number = Number.isFinite(config.length) ? config.length : 0;
 
-  logger.info(`Successfully loaded ${config.length} environment(s) from ${resolvedPath}`);
+  logger.info(`Successfully loaded ${environmentsNumber} environment(s) from ${resolvedPath}`);
 
   // Validate each environment config
   return validateAndReturnConfig(config, resolvedPath, requireToken);

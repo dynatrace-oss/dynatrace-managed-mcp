@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
-import { logger } from '../utils/logger';
+import { logErrorObject, logger } from '../utils/logger';
 import { ManagedEnvironmentConfig } from '../utils/environment';
 
 export const MINIMUM_VERSION = '1.328.0';
@@ -83,9 +83,9 @@ export class ManagedAuthClient {
       });
       return response.status === 200;
     } catch (error) {
-      logger.error(
+      logErrorObject(
+        error,
         `[Alias: ${this.alias}] Failed calling /api/v1/config/clusterversion; falling back to /api/v2/metrics`,
-        { error: error },
       );
       // Fallback: try a basic API endpoint that exists in both SaaS and Managed
       try {
@@ -95,7 +95,7 @@ export class ManagedAuthClient {
         });
         return response.status === 200;
       } catch (fallbackError) {
-        logger.error(`[Alias: ${this.alias}] Failed calling /api/v2/metrics`, { error: fallbackError });
+        logErrorObject(fallbackError, `[Alias: ${this.alias}] Failed calling /api/v2/metrics`);
         return false;
       }
     }
@@ -184,20 +184,15 @@ export class ManagedAuthClient {
       }
       return true;
     } catch (error) {
-      if (error instanceof Error) {
-        logger.error(
-          `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}.`,
-        );
-        logger.error('Please verify:');
-        logger.error('1. The environment configuration (apiEndpointUrl, environmentId) is correct');
-        logger.error(`2. API Token has required scopes: ${MANAGED_API_SCOPES.join(', ')}`);
-        logger.error('3. Network connectivity to the Managed environment');
-        this.validationError = `Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error.message}. Please verify connection details are correct.`;
-      } else {
-        logger.error(
-          `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: UNKNOWN ERROR.`,
-        );
-      }
+      logErrorObject(
+        error,
+        `[CONNECTION ERROR] Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}`,
+      );
+      logger.error('Please verify:');
+      logger.error('1. The environment configuration (apiEndpointUrl, environmentId) is correct');
+      logger.error(`2. API Token has required scopes: ${MANAGED_API_SCOPES.join(', ')}`);
+      logger.error('3. Network connectivity to the Managed environment');
+      this.validationError = `Failed to connect to Managed environment "${this.alias}": ${this.apiBaseUrl}: ${error instanceof Error ? error.message : 'unknown error'}. Please verify connection details are correct.`;
       return false;
     }
   }
@@ -332,11 +327,7 @@ export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig
         : undefined,
     };
   } catch (err) {
-    if (err instanceof Error) {
-      logger.error(`Failed to configure HTTP Proxy for Axios client: ${err.message}`);
-    } else {
-      logger.error('Failed to configure HTTP Proxy for Axios client: UNKNOWN ERROR');
-    }
+    logErrorObject(err, 'Failed to configure HTTP Proxy for Axios client');
     throw Error('Failed to parse and configure http(s) proxy', { cause: err });
   }
 }

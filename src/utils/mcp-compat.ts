@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { logger } from './logger';
 
 type ToolsListHandler = (req: unknown) => Promise<{ tools: Array<Record<string, unknown>> }>;
 
@@ -14,7 +15,7 @@ type ToolsListHandler = (req: unknown) => Promise<{ tools: Array<Record<string, 
  */
 export function patchToolsListSchema(server: McpServer): void {
   const innerServer = (server as unknown as { server: { _requestHandlers: Map<string, ToolsListHandler> } }).server;
-  const originalToolsListHandler = innerServer._requestHandlers.get('tools/list');
+  const originalToolsListHandler = innerServer._requestHandlers?.get('tools/list');
   if (originalToolsListHandler) {
     innerServer._requestHandlers.set('tools/list', async (req: unknown) => {
       const result = await originalToolsListHandler(req);
@@ -27,5 +28,7 @@ export function patchToolsListSchema(server: McpServer): void {
       }
       return result;
     });
+  } else {
+    logger.error('Original tools list handler is undefined');
   }
 }

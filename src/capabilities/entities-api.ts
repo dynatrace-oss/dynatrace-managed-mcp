@@ -48,8 +48,8 @@ export interface Entity {
   lastSeenTms?: number;
   tags?: Tag[];
   properties?: Record<string, number | string>;
-  fromRelationships?: Relationships; // Could be a list or a map; hence using 'any'
-  toRelationships?: Relationships; // Could be a list or a map; hence using 'any'
+  fromRelationships?: Relationships;
+  toRelationships?: Relationships;
   managementZones?: ManagementZone[];
 }
 
@@ -271,9 +271,6 @@ export class EntitiesApiClient {
         result += 'Not showing all matching entity types as there are too many.\n';
       }
 
-      if (availableCommonTypes.length > 0) {
-        result += '\n' + `Common entity types include: ${availableCommonTypes}\n`;
-      }
       entityTypes?.forEach((entityType: EntityType) => {
         conciseList += `${entityType?.type}`;
         if (entityType.displayName && entityType.displayName !== entityType.type) {
@@ -285,6 +282,9 @@ export class EntitiesApiClient {
           availableCommonTypes.push(entityType.type ?? '');
         }
       });
+      if (availableCommonTypes.length > 0) {
+        result += '\n' + `Common entity types include: ${availableCommonTypes}\n`;
+      }
       result += '\n' + conciseList;
     }
     const baseUrl = aliases.length == 1 ? this.authManager.getBaseUrl(aliases[0]) : '';

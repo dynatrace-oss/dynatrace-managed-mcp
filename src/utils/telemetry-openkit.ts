@@ -2,7 +2,7 @@ import { OpenKitBuilder, OpenKit, Session } from '@dynatrace/openkit-js';
 import * as os from 'os';
 import * as crypto from 'crypto';
 import { getPackageJsonVersion } from './version';
-import { logger } from '../utils/logger';
+import { logErrorObject, logger } from '../utils/logger';
 
 export interface Telemetry {
   trackMcpServerStart(): Promise<void>;
@@ -62,11 +62,17 @@ class DynatraceMcpTelemetry implements Telemetry {
       return new Promise<boolean>((resolve) => {
         const timeoutInMilliseconds = 10 * 1000; // 10 seconds timeout
         if (this.openKit === null) {
-          throw new Error('OpenKit is null');
+          logger.error('Failed to initialize Dynatrace Telemetry: OpenKit is null');
+          this.isEnabled = false;
+          resolve(false);
+          return;
         }
         this.openKit.waitForInit((success) => {
           if (success) {
             this.session = this.openKit?.createSession();
+            if (this.session === undefined) {
+              logger.error('Failed to initialize session: OpenKit is null');
+            }
           } else {
             logger.error('Failed to initialize Dynatrace Telemetry: timeout or connection failed');
             this.isEnabled = false;
@@ -75,7 +81,7 @@ class DynatraceMcpTelemetry implements Telemetry {
         }, timeoutInMilliseconds);
       });
     } catch (error) {
-      logger.error('Failed to initialize Dynatrace Telemetry:', { error: error });
+      logErrorObject(error, 'Failed to initialize Dynatrace Telemetry');
       console.error(
         'If the error persists, please consider disabling telemetry by setting DT_MCP_DISABLE_TELEMETRY=true.',
       );
@@ -115,11 +121,7 @@ class DynatraceMcpTelemetry implements Telemetry {
       action.reportValue('platform', process.platform);
       action.leaveAction();
     } catch (error) {
-      if (error instanceof Error) {
-        console.warn('Failed to track server start:', error.message);
-      } else {
-        console.warn('Failed to track server start');
-      }
+      logErrorObject(error, 'Failed to track server start');
     }
   }
 
@@ -148,11 +150,7 @@ class DynatraceMcpTelemetry implements Telemetry {
 
       action.leaveAction();
     } catch (error) {
-      if (error instanceof Error) {
-        console.warn('Failed to track tool usage:', error.message);
-      } else {
-        console.warn('Failed to track tool usage');
-      }
+      logErrorObject(error, 'Failed to track tool usage');
     }
   }
 
@@ -183,11 +181,7 @@ class DynatraceMcpTelemetry implements Telemetry {
       }
       action.leaveAction();
     } catch (trackingError) {
-      if (trackingError instanceof Error) {
-        console.warn('Failed to track error:', trackingError.message);
-      } else {
-        console.warn('Failed to track error');
-      }
+      logErrorObject(trackingError, 'Failed to track error');
     }
   }
 
@@ -200,19 +194,16 @@ class DynatraceMcpTelemetry implements Telemetry {
       if (this.session) {
         this.session.end();
       }
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve) => {
         if (this.openKit) {
           this.openKit.shutdown(() => resolve());
         } else {
-          reject('OpeKit is null');
+          logger.warn('Could not shutdown OpenKit, value is null');
+          resolve();
         }
       });
     } catch (error) {
-      if (error instanceof Error) {
-        console.warn('Failed to shutdown usage tracking:', error.message);
-      } else {
-        console.warn('Failed to shutdown usage tracking');
-      }
+      logErrorObject(error, 'Failed to shutdown usage tracking');
     }
   }
 }
@@ -229,8 +220,7 @@ class NoOpTelemetry implements Telemetry {
 }
 
 export function createTelemetry(): Telemetry {
-  const isEnabled = process.env.DT_MCP_DISABLE_TELEMETRY !== 'true';
-  if (!isEnabled) {
+  if (process.env.DT_MCP_DISABLE_TELEMETRY === 'true') {
     logger.info('Not initialising Dynatrace Telemetry, because DT_MCP_DISABLE_TELEMETRY not "true"');
     return new NoOpTelemetry();
   }

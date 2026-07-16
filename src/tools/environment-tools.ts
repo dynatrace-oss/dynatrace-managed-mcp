@@ -23,7 +23,7 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
     async () => {
       let resp = `Dynatrace Managed Environments Information - Listing configuration errors found during initialization:\n\n`;
       if (ctx.initErrors.length > 0) {
-        resp += `Issues where found in environment configurations during start up: \n`;
+        resp += `Issues were found in environment configurations during start up: \n`;
         for (const errorMessage of ctx.initErrors) {
           resp += `- ${errorMessage}\n`;
         }

@@ -5,7 +5,7 @@
  */
 export function buildServerInstructions(minimumVersion: string): string {
   return `
-This MCP server connects to Dynatrace Managed (self-hosted) environments for Observabilitiy. This can include metrics, logs and traces,
+This MCP server connects to Dynatrace Managed (self-hosted) environments for observability. This can include metrics, logs and traces,
 and detection of problems and security vulnerabilities relating to these.
 
 Some users may configure two MCPs at the same time: this MCP to connect to their Dynatrace Managed instances, and a second MCP to connect to their SaaS environment.
@@ -16,8 +16,8 @@ Be careful of which MCP to use. If it is unclear, ask the user which they want t
 - This MCP server can be used to interact with multiple Dynatrace Managed environments
 - Minimum supported cluster version: ${minimumVersion}
 - Two different ways that Dynatrace Managed may be being used:
-   1. Dynatrace Managed may be the primary Observability system, containing all live data.
-   2. Or alternatively the customer may have migrated to Dynatrace SaaS, leavng historical observability data in Dynatrace Managed from before the migration, in which case this MCP Server would only be used to access historical data.
+   1. Dynatrace Managed may be the primary observability system, containing all live data.
+   2. Or alternatively the customer may have migrated to Dynatrace SaaS, leaving historical observability data in Dynatrace Managed from before the migration, in which case this MCP Server would only be used to access historical data.
 
 **Core Capabilities:**
 - **Problem Analysis**: Investigate problems with root cause identification
@@ -59,7 +59,7 @@ Be careful of which MCP to use. If it is unclear, ask the user which they want t
 - **Key Rule**: Dynatrace Managed requires type() specification unless using entityId() with full IDs
 - **For multiple specific entity ids**: Use entityId("ID1","ID2","ID3") with comma-separated IDs (all entities must be same type); must never combine multiple entityId selectors with OR
 - **For name-based filtering**: Use type("SERVICE"),entityName("exact-name") or type("SERVICE"),entityName.contains("partial")
-- **To set several criteria, separate them with a comma. For example, type("HOST"),healthState("HEALTHY"). Only results matching all criteria are included in the response.
+- To set several criteria, separate them with a comma. For example, type("HOST"),healthState("HEALTHY"). Only results matching all criteria are included in the response.
 - Example Valid Entity Selectors:
    - type("SERVICE"),entityName.contains("bookstore")
    - entityId("SERVICE-123","SERVICE-456","SERVICE-789")
@@ -67,7 +67,7 @@ Be careful of which MCP to use. If it is unclear, ask the user which they want t
    - type("AWS_LAMBDA_FUNCTION"),tag("AWS_REGION:us-west-2")
    - type("SERVICE"),tag("environment:production"),entityName.contains("api")
    - type("HOST"),mzName("Production")
-- Example INVALID Entity Selectors (NEVER USE THESE):**
+- Example INVALID Entity Selectors **(NEVER USE THESE):**
    - type(SERVICE),type(PROCESS_GROUP) - Invalid because supports only one type per query
    - entityName("my-service") - Invalid because type must be defined if an explicit entityId is not specified
    - entityId("ID1") or entityId("ID2") - OR operator not supported for entityId criteria, instead use a single criteria with entityId("ID1","ID2")
@@ -75,7 +75,7 @@ Be careful of which MCP to use. If it is unclear, ask the user which they want t
 **Log Search Guidelines:**
 - Simple query: specify the text to search for, such as "error". This search is case-insensitive.
 - More complex queries: you can specify that the text should be part of the content of the log message, with: content="error"
-  This critiera can be combined with more other search criteria, such as: content="error" AND dt.entity.host="HOST-94A1B472D04D89D9"
+  This criteria can be combined with more other search criteria, such as: content="error" AND dt.entity.host="HOST-94A1B472D04D89D9"
 
 **Common Workflows:**
 

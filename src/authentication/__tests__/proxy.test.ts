@@ -77,7 +77,7 @@ describe('proxy-config', () => {
         if (err instanceof Error) {
           expect(err.message).toContain('Failed to parse and configure http(s) proxy');
         } else {
-          fail('Error is not instace of Error type');
+          fail('Error is not instance of Error type');
         }
       }
     });
