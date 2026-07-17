@@ -1,4 +1,4 @@
-FROM node:26.3.0-alpine3.22 AS build
+FROM node:26.3.1-alpine3.23 AS build
 
 # Set working directory
 WORKDIR /app
@@ -7,13 +7,13 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Build the application
 RUN npm run build
 
 # RUNTIME STAGE
-FROM node:26.3.0-alpine3.22
+FROM node:26.3.1-alpine3.23
 
 # Set working directory
 WORKDIR /app
