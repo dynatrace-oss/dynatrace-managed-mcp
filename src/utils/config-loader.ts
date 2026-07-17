@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as yaml from 'js-yaml';
 import { JSONObject } from '@dynatrace/openkit-js';
 import { logger } from './logger';
@@ -69,12 +69,8 @@ export function loadFromFile(filePath: string, requireToken = true): JSONObject[
 
   // Validate structure
   if (!Array.isArray(config)) {
-    throw new Error(`Configuration must be an array of environments.\n` + `File: ${resolvedPath}`);
+    throw new TypeError(`Configuration must be an array of environments.\n` + `File: ${resolvedPath}`);
   }
-  const environmentsNumber: number = Number.isFinite(config.length) ? config.length : 0;
-
-  logger.info(`Successfully loaded ${environmentsNumber} environment(s) from ${resolvedPath}`);
-
   // Validate each environment config
   return validateAndReturnConfig(config, resolvedPath, requireToken);
 }
@@ -85,7 +81,7 @@ export function loadFromFile(filePath: string, requireToken = true): JSONObject[
  */
 function interpolateEnvVars(content: string): string {
   // Replace ${VAR_NAME} with env var value
-  return content.replace(/\$\{([A-Z_][A-Z0-9_]*)\}/g, (match, varName) => {
+  return content.replace(/\$\{([A-Z_][A-Z0-9_]*)}/g, (match, varName) => {
     const value = process.env[varName];
 
     if (value === undefined) {
@@ -106,7 +102,7 @@ function interpolateEnvVars(content: string): string {
  */
 function resolvePath(filePath: string): string {
   // Expand environment variables in path (e.g., ${HOME}/config.json)
-  let resolved = filePath.replace(/\$\{(\w+)\}/g, (_, varName) => {
+  let resolved = filePath.replace(/\$\{(\w+)}/g, (_, varName) => {
     const value = process.env[varName];
     if (!value) {
       logger.warn(`Environment variable ${varName} not found in path, using empty string`);
@@ -136,6 +132,8 @@ function resolvePath(filePath: string): string {
  * Validate configuration structure and required fields
  */
 function validateAndReturnConfig(config: unknown[], filePath: string, requireToken = true): JSONObject[] {
+  logger.info(`Successfully loaded ${config.length} environment(s) from ${filePath}`);
+
   // Validate required fields
   const required = requireToken
     ? ['apiEndpointUrl', 'environmentId', 'alias', 'apiToken']
