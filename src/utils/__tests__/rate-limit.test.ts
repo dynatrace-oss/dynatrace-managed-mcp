@@ -50,7 +50,7 @@ describe('RateLimiter', () => {
   });
 
   it('allows up to maxCalls then blocks within the window', () => {
-    let now = 1000;
+    const now = 1000;
     const rl = new RateLimiter({ maxCalls: 2, windowMs: 100, now: () => now });
     expect(rl.tryAcquire('user-a')).toBe(true);
     expect(rl.tryAcquire('user-a')).toBe(true);
@@ -58,7 +58,7 @@ describe('RateLimiter', () => {
   });
 
   it('tracks each user key independently', () => {
-    let now = 1000;
+    const now = 1000;
     const rl = new RateLimiter({ maxCalls: 1, windowMs: 100, now: () => now });
     expect(rl.tryAcquire('user-a')).toBe(true);
     expect(rl.tryAcquire('user-a')).toBe(false);

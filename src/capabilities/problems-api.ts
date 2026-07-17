@@ -33,8 +33,6 @@ export interface Problem {
   rootCauseEntity?: ProblemEntity;
   evidenceDetails?: EvidenceDetails;
   commentCount?: number;
-  managementZones?: any[];
-  recentComments?: any;
 }
 
 export interface Tag {
@@ -87,14 +85,18 @@ export class ProblemsApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/problems', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListProblemResponse>(
+      '/api/v2/problems',
+      queryParams,
+      environment_aliases,
+    );
 
     logger.debug('listProblems response', { data: responses });
     return responses;
   }
 
-  async getProblemDetails(problemId: string, environment_aliases: string): Promise<Map<string, any>> {
-    const responses = await this.authManager.makeRequests(
+  async getProblemDetails(problemId: string, environment_aliases: string): Promise<Map<string, Problem>> {
+    const responses = await this.authManager.makeRequests<Problem>(
       `/api/v2/problems/${encodeURIComponent(problemId)}`,
       {},
       environment_aliases,
@@ -108,13 +110,13 @@ export class ProblemsApiClient {
     let result = '';
     let totalNumProblems = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numProblems = data.problems?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numProblems = data.problems?.length || 0;
       totalNumProblems += numProblems;
-      let isLimited = totalCount != 0 - 1 && totalCount > numProblems;
+      const isLimited = totalCount != 0 - 1 && totalCount > numProblems;
 
       result +=
         'Listing ' +
@@ -130,7 +132,7 @@ export class ProblemsApiClient {
         anyLimited = true;
       }
 
-      data.problems?.forEach((problem: any) => {
+      data.problems?.forEach((problem: Problem) => {
         result += `problemId: ${problem.problemId}\n`;
         result += `  displayId: ${problem.displayId}\n`;
         result += `  title: ${problem.title}\n`;
@@ -168,9 +170,9 @@ export class ProblemsApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, Problem>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result +=

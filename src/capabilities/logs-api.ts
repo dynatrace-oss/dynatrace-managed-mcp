@@ -22,10 +22,8 @@ export interface LogEntry {
   status?: string; // API returns status (ERROR, WARN, etc.)
   eventType?: string; // API returns event.type
   additionalColumns?: {
-    loglevel?: string[];
-    [key: string]: any;
+    [key: string]: string[];
   };
-  [key: string]: any;
 }
 
 export class LogsApiClient {
@@ -42,7 +40,11 @@ export class LogsApiClient {
       sort: params.sort || '-timestamp',
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/logs/search', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListLogsResponse>(
+      '/api/v2/logs/search',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('queryLogs response: ', { data: responses });
     return responses;
   }
@@ -51,12 +53,12 @@ export class LogsApiClient {
     let result = '';
     let totalNumLogs = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let numLogs = data.results?.length || 0;
+      const numLogs = data.results?.length || 0;
       totalNumLogs = totalNumLogs + numLogs;
-      let isLimited = data.nextSliceKey != undefined;
+      const isLimited = data.nextSliceKey != undefined;
 
       result += 'Listing ' + numLogs + ' log records from environment ' + alias + '.\n\n';
 
@@ -65,10 +67,10 @@ export class LogsApiClient {
         anyLimited = true;
       }
 
-      data.results?.forEach((log: any) => {
+      data.results?.forEach((log: LogEntry) => {
         const timestamp = formatTimestamp(log.timestamp);
         // Enhanced level detection for better error identification
-        let level = log.additionalColumns?.loglevel?.[0] || log.status || log.log_level || 'NONE';
+        const level = log.additionalColumns?.loglevel?.[0] || log.status || log.additionalColumns?.logLevel || 'NONE';
 
         result += `**${timestamp}** [${level}]\n`;
         result += `${log.content}\n`;

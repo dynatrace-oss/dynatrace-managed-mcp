@@ -73,8 +73,12 @@ describe('proxy-config', () => {
       try {
         const response = setAxiosProxy(process.env.HTTP_PROXY);
         fail(`Should have failed, but returned response=${response}`);
-      } catch (err: any) {
-        expect(err.message).toContain('Failed to parse and configure http(s) proxy');
+      } catch (err) {
+        if (err instanceof Error) {
+          expect(err.message).toContain('Failed to parse and configure http(s) proxy');
+        } else {
+          fail('Error is not instance of Error type');
+        }
       }
     });
   });

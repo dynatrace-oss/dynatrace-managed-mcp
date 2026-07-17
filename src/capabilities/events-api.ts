@@ -2,6 +2,7 @@ import { ManagedAuthClientManager } from '../authentication/managed-auth-client.
 
 import { formatTimestamp } from '../utils/date-formatter';
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface EventQueryParams {
   from: string;
@@ -28,7 +29,19 @@ export interface Event {
   entityId?: string;
   entityName?: string;
   source?: string;
-  customProperties?: Record<string, any>;
+  properties: EventProperty[];
+  managementZones: ManagementZone[];
+  status: EventStatus;
+}
+
+export interface EventProperty {
+  key: string;
+  value: string;
+}
+
+export enum EventStatus {
+  CLOSED = 'CLOSED',
+  OPEN = 'OPEN',
 }
 
 export class EventsApiClient {
@@ -47,13 +60,17 @@ export class EventsApiClient {
       ...(params.entitySelector && { entitySelector: params.entitySelector }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/events', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListEventsResponse>(
+      '/api/v2/events',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('queryEvents response: ', { data: responses });
     return responses;
   }
 
-  async getEventDetails(eventId: string, environment_aliases: string): Promise<Map<string, any>> {
-    const responses = await this.authManager.makeRequests(
+  async getEventDetails(eventId: string, environment_aliases: string): Promise<Map<string, Event>> {
+    const responses = await this.authManager.makeRequests<Event>(
       `/api/v2/events/${encodeURIComponent(eventId)}`,
       {},
       environment_aliases,
@@ -66,14 +83,14 @@ export class EventsApiClient {
     let result = '';
     let totalNumEvents = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
 
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numEvents = data.events?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numEvents = data.events?.length || 0;
       totalNumEvents += numEvents;
-      let isLimited = totalCount != 0 - 1 && totalCount > numEvents;
+      const isLimited = totalCount != 0 - 1 && totalCount > numEvents;
 
       result +=
         'Listing ' +
@@ -89,7 +106,7 @@ export class EventsApiClient {
         anyLimited = true;
       }
 
-      data.events?.forEach((event: any) => {
+      data.events?.forEach((event: Event) => {
         result += `eventId: ${event.eventId}\n`;
         result += `  eventType: ${event.eventType}\n`;
         result += `  status: ${event.status}\n`;
@@ -103,13 +120,6 @@ export class EventsApiClient {
         if (event.endTime && event.endTime !== -1) {
           result += `. endTime: ${formatTimestamp(event.endTime)}`;
         }
-        // High Priority: Add severity and impact levels
-        if (event.severityLevel) {
-          result += `severityLevel: ${event.severityLevel}\n`;
-        }
-        if (event.impactLevel) {
-          result += `impactLevel: ${event.impactLevel}\n`;
-        }
         if (event.properties && Object.keys(event.properties).length > 0) {
           const props = Object.entries(event.properties)
             .slice(0, EventsApiClient.MAX_PROPERTIES_DISPLAY)
@@ -120,7 +130,7 @@ export class EventsApiClient {
         if (event.managementZones && event.managementZones.length > 0) {
           const zones = event.managementZones
             .slice(0, EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
-            .map((zone: any) => zone.name || zone.id || zone)
+            .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
           result += `Management Zones: ${zones}${event.managementZones.length > EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${event.managementZones.length - EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
         }
@@ -149,9 +159,9 @@ export class EventsApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, Event>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result += 'Event details from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';

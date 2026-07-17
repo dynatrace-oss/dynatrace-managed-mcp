@@ -6,10 +6,11 @@
 import { ManagedAuthClient } from '../../src/authentication/managed-auth-client';
 import httpProxy from 'http-proxy';
 import { logger } from '../../src/utils/logger';
+import { IncomingMessage, ServerResponse } from 'node:http';
 
 describe('ProxyConfig', () => {
   let proxyUrl: string;
-  let proxy: any;
+  let proxy: httpProxy<IncomingMessage, ServerResponse<IncomingMessage>>;
   let originalEnvs: NodeJS.ProcessEnv;
 
   beforeEach(async () => {
@@ -24,17 +25,17 @@ describe('ProxyConfig', () => {
       xfwd: true,
       headers: { Myproxyheader: 'myproxyval' },
     });
-    proxy.on('open', (proxySocket: any) => {
+    proxy.on('open', (proxySocket) => {
       console.log(`proxy.open: proxySocket=${JSON.stringify(proxySocket)}`);
     });
-    proxy.on('close', (res: any, socket: any, head: any) => {
+    proxy.on('close', (res) => {
       console.log(`proxy.close res=${JSON.stringify(res)}`);
     });
-    proxy.on('error', (err: any) => {
+    proxy.on('error', (err) => {
       logger.error('proxy.error: ', { data: err });
       console.log(err);
     });
-    proxy.on('proxyRes', (proxyRes: any, req: any, res: any) => {
+    proxy.on('proxyRes', (proxyRes, req, res) => {
       console.log(`proxy.proxyRes: req=${req}; proxyRes=${proxyRes}; res=${res}`);
     });
     proxy.listen(8123);
@@ -49,7 +50,7 @@ describe('ProxyConfig', () => {
   it(
     'should use HTTP_PROXY',
     async () => {
-      let client = new ManagedAuthClient({
+      const client = new ManagedAuthClient({
         apiBaseUrl: 'http://example.com',
         dashboardBaseUrl: 'http://example-dashboard.com',
         alias: 'alias',

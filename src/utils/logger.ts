@@ -94,11 +94,28 @@ function createTransports(): winston.transport[] {
   }
 }
 
-export const logger = winston.createLogger({
-  level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-  format: createFormat(),
-  transports: createTransports(),
-});
+export function createLogger(): winston.Logger {
+  return winston.createLogger({
+    level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
+    format: createFormat(),
+    transports: createTransports(),
+  });
+}
+
+export const logger = createLogger();
+
+export function logErrorObject(error: unknown, message?: string) {
+  const formattedMessage: string = message !== undefined && message.length > 0 ? message + ': ' : '';
+
+  if (axios.isAxiosError(error)) {
+    const formattedCode: string = error.code !== undefined && error.code.length > 0 ? error.code + ' ' : '';
+    logger.error(`${formattedCode}${formattedMessage}${error.message}`);
+  } else if (error instanceof Error) {
+    logger.error(`${formattedMessage}${error.message}`);
+  } else {
+    logger.error(`${message}: unknown error`);
+  }
+}
 
 export async function flushLogger() {
   logger.end();

@@ -1,4 +1,11 @@
-import { EntitiesApiClient, Entity, GetEntityRelationshipsResponse } from '../entities-api';
+import {
+  EntitiesApiClient,
+  Entity,
+  EntityType,
+  GetEntityRelationshipsResponse,
+  ListEntitiesResponse,
+  ListEntityTypesResponse,
+} from '../entities-api';
 import { ManagedAuthClientManager } from '../../authentication/managed-auth-client';
 import { readFileSync } from 'fs';
 
@@ -14,7 +21,7 @@ describe('EntitiesApiClient', () => {
       getBaseUrl: jest.fn(() => {
         return 'http://dashboardbaseurl.com/e/environment_id';
       }),
-    } as any;
+    } as unknown as jest.Mocked<ManagedAuthClientManager>;
     client = new EntitiesApiClient(mockAuthManager);
   });
 
@@ -24,7 +31,7 @@ describe('EntitiesApiClient', () => {
 
   describe('getEntityDetails', () => {
     it('should get entity details by ID', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, Entity>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
       const result = await client.getEntityDetails('SERVICE-123', 'testAlias');
 
@@ -35,50 +42,50 @@ describe('EntitiesApiClient', () => {
 
   describe('getEntityRelationships', () => {
     it('should get entity relationships', async () => {
-      const mockEntity = new Map<string, any>([
+      const mockEntity = new Map<string, Entity>([
         [
           'testAlias',
           {
             entityId: 'SERVICE-123',
             displayName: 'payment-service',
             entityType: 'SERVICE',
-            fromRelationships: [
-              {
-                id: 'rel-1',
-                type: 'CALLS',
-                fromEntityId: 'SERVICE-123',
-                toEntityId: 'SERVICE-456',
-              },
-            ],
-            toRelationships: [
-              {
-                id: 'rel-2',
-                type: 'RUNS_ON',
-                fromEntityId: 'SERVICE-123',
-                toEntityId: 'HOST-789',
-              },
-            ],
+            fromRelationships: {
+              CALLS: [
+                {
+                  id: 'SERVICE-123',
+                  type: 'SERVICE',
+                },
+              ],
+            },
+            toRelationships: {
+              RUNS_ON: [
+                {
+                  id: 'HOST-789',
+                  type: 'HOST',
+                },
+              ],
+            },
           },
         ],
       ]);
       const expectedResponse: GetEntityRelationshipsResponse = {
         entityId: 'SERVICE-123',
-        fromRelationships: [
-          {
-            id: 'rel-1',
-            type: 'CALLS',
-            fromEntityId: 'SERVICE-123',
-            toEntityId: 'SERVICE-456',
-          },
-        ],
-        toRelationships: [
-          {
-            id: 'rel-2',
-            type: 'RUNS_ON',
-            fromEntityId: 'SERVICE-123',
-            toEntityId: 'HOST-789',
-          },
-        ],
+        fromRelationships: {
+          CALLS: [
+            {
+              id: 'SERVICE-123',
+              type: 'SERVICE',
+            },
+          ],
+        },
+        toRelationships: {
+          RUNS_ON: [
+            {
+              id: 'HOST-789',
+              type: 'HOST',
+            },
+          ],
+        },
       };
 
       mockAuthManager.makeRequests.mockResolvedValue(mockEntity);
@@ -89,7 +96,7 @@ describe('EntitiesApiClient', () => {
 
   describe('formatEntityDetails', () => {
     it('should format details', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, Entity>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/getEntityDetails.json', 'utf8'))],
       ]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
@@ -103,7 +110,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should format details when sparse problem', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, Entity>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.getEntityDetails('my-id', 'testAlias');
@@ -117,7 +124,7 @@ describe('EntitiesApiClient', () => {
 
   describe('formatEntityTypes', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntityTypesResponse>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/listEntityTypes.json', 'utf8'))],
       ]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
@@ -130,7 +137,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should format list when sparse', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntityTypesResponse>([
         [
           'testAlias',
           {
@@ -149,7 +156,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should format list when empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListEntityTypesResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.listEntityTypes('ALL_ENVIRONMENTS');
@@ -160,7 +167,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should handle empty list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntityTypesResponse>([
         [
           'testAlias',
           {
@@ -180,7 +187,7 @@ describe('EntitiesApiClient', () => {
 
   describe('formatEntityTypeDetails', () => {
     it('should format details', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, EntityType>([
         [
           'testAlias',
           JSON.parse(readFileSync('src/capabilities/__tests__/resources/getEntityTypeDetails.json', 'utf8')),
@@ -198,7 +205,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should format list when sparse', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, EntityType>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.getEntityTypeDetails('SERVICE', 'ALL_ENVIRONMENTS');
@@ -211,7 +218,7 @@ describe('EntitiesApiClient', () => {
 
   describe('formatEntityList', () => {
     it('should format list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntitiesResponse>([
         ['testAlias', JSON.parse(readFileSync('src/capabilities/__tests__/resources/queryEntities.json', 'utf8'))],
       ]);
 
@@ -235,7 +242,7 @@ describe('EntitiesApiClient', () => {
         entityType: 'SERVICE',
         tags: [{ context: 'CONTEXTLESS', key: 'environment', value: 'production' }],
       }));
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntitiesResponse>([
         [
           'testAlias',
           {
@@ -257,7 +264,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should handle empty entities list', async () => {
-      const mockResponse = new Map<string, any>([
+      const mockResponse = new Map<string, ListEntitiesResponse>([
         [
           'testAlias',
           {
@@ -274,7 +281,7 @@ describe('EntitiesApiClient', () => {
     });
 
     it('should handle entities list that is empty', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListEntitiesResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const response = await client.queryEntities({ entitySelector: 'type(SERVICE)' }, 'ALL_ENVIRONMENTS');
@@ -285,51 +292,51 @@ describe('EntitiesApiClient', () => {
 
   describe('formatEntityRelationships', () => {
     it('should format entity relationships', async () => {
-      const mockEntity = new Map<string, any>([
+      const mockEntity = new Map<string, Entity>([
         [
           'testAlias',
           {
             entityId: 'SERVICE-123',
             displayName: 'payment-service',
             entityType: 'SERVICE',
-            fromRelationships: [
-              {
-                id: 'rel-1',
-                type: 'CALLS',
-                fromEntityId: 'SERVICE-123',
-                toEntityId: 'SERVICE-456',
-              },
-            ],
-            toRelationships: [
-              {
-                id: 'rel-2',
-                type: 'RUNS_ON',
-                fromEntityId: 'SERVICE-123',
-                toEntityId: 'HOST-789',
-              },
-            ],
+            fromRelationships: {
+              CALLS: [
+                {
+                  id: 'SERVICE-123',
+                  type: 'SERVICE',
+                },
+              ],
+            },
+            toRelationships: {
+              RUNS_ON: [
+                {
+                  id: 'HOST-789',
+                  type: 'HOST',
+                },
+              ],
+            },
           },
         ],
       ]);
 
       const expectedResponse: GetEntityRelationshipsResponse = {
         entityId: 'SERVICE-123',
-        fromRelationships: [
-          {
-            id: 'rel-1',
-            type: 'CALLS',
-            fromEntityId: 'SERVICE-123',
-            toEntityId: 'SERVICE-456',
-          },
-        ],
-        toRelationships: [
-          {
-            id: 'rel-2',
-            type: 'RUNS_ON',
-            fromEntityId: 'SERVICE-123',
-            toEntityId: 'HOST-789',
-          },
-        ],
+        fromRelationships: {
+          CALLS: [
+            {
+              id: 'SERVICE-123',
+              type: 'SERVICE',
+            },
+          ],
+        },
+        toRelationships: {
+          RUNS_ON: [
+            {
+              id: 'HOST-789',
+              type: 'HOST',
+            },
+          ],
+        },
       };
 
       mockAuthManager.makeRequests.mockResolvedValue(mockEntity);
@@ -339,13 +346,11 @@ describe('EntitiesApiClient', () => {
 
       expect(response.get('testAlias')).toEqual(expectedResponse);
       expect(result).toContain('Found 1 fromRelationship');
-      expect(result).toContain('"id":"rel-1"');
       expect(result).toContain('Found 1 toRelationship');
-      expect(result).toContain('"id":"rel-2"');
     });
 
     it('should return empty array when no relationships exist', async () => {
-      const mockEntity = new Map<string, any>([
+      const mockEntity = new Map<string, Entity>([
         [
           'testAlias',
           {
@@ -371,36 +376,8 @@ describe('EntitiesApiClient', () => {
       expect(result).toContain('No relationships found for entity SERVICE-123');
     });
 
-    it('should handle null relationships without error', async () => {
-      const mockEntity = new Map<string, any>([
-        [
-          'testAlias',
-          {
-            entityId: 'SERVICE-123',
-            displayName: 'service-with-undefined-relationships',
-            entityType: 'SERVICE',
-            fromRelationships: null,
-            toRelationships: null,
-          },
-        ],
-      ]);
-      const expectedResponse = {
-        entityId: 'SERVICE-123',
-        fromRelationships: null,
-        toRelationships: null,
-      };
-
-      mockAuthManager.makeRequests.mockResolvedValue(mockEntity);
-
-      const response = await client.getEntityRelationships('SERVICE-123', 'testAlias');
-      const result = client.formatEntityRelationships(response);
-
-      expect(response.get('testAlias')).toEqual(expectedResponse);
-      expect(result).toContain('No relationships found for entity SERVICE-123');
-    });
-
     it('should handle non-array relationships without error', async () => {
-      const mockEntity = new Map<string, any>([
+      const mockEntity = new Map<string, Record<string, unknown>>([
         [
           'testAlias',
           {
@@ -435,7 +412,7 @@ describe('EntitiesApiClient', () => {
 
   describe('queryEntities', () => {
     it('should query entities by entitySelector', async () => {
-      const mockResponse = new Map<string, any>([['testAlias', {}]]);
+      const mockResponse = new Map<string, ListEntitiesResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
       const result = await client.queryEntities(

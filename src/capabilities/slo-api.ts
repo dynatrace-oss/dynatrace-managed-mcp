@@ -1,6 +1,7 @@
 import { ManagedAuthClientManager } from '../authentication/managed-auth-client.js';
 
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface SloQueryParams {
   sloSelector?: string;
@@ -52,7 +53,7 @@ export interface SLO {
   metricRate?: string;
   metricNumerator?: string;
   metricDenominator?: string;
-  managementZones?: any[];
+  managementZones?: ManagementZone[];
 }
 
 export interface ErrorBudgetBurnRate {
@@ -72,7 +73,7 @@ export class SloApiClient {
   constructor(private authManager: ManagedAuthClientManager) {}
 
   async listSlos(params: SloQueryParams = {}, environment_aliases: string): Promise<Map<string, ListSlosResponse>> {
-    const queryParams: Record<string, any> = {
+    const queryParams: SloQueryParams = {
       pageSize: params.pageSize || SloApiClient.API_PAGE_SIZE,
       ...(params.sloSelector && { sloSelector: params.sloSelector }),
       ...(params.timeFrame && { timeFrame: params.timeFrame }),
@@ -85,13 +86,17 @@ export class SloApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/slo', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListSlosResponse>(
+      '/api/v2/slo',
+      { ...queryParams },
+      environment_aliases,
+    );
     logger.debug('listSLOs response', { data: responses });
     return responses;
   }
 
-  async getSloDetails(params: GetSloQueryParams, environment_aliases: string): Promise<Map<string, any>> {
-    const queryParams: Record<string, any> = {
+  async getSloDetails(params: GetSloQueryParams, environment_aliases: string): Promise<Map<string, SLO>> {
+    const queryParams: SloQueryParams = {
       ...(params.from && { from: params.from }),
       ...(params.to && { to: params.to }),
       ...(params.timeFrame && { timeFrame: params.timeFrame }),
@@ -100,9 +105,9 @@ export class SloApiClient {
       queryParams.timeFrame = 'GTF';
     }
 
-    const responses = await this.authManager.makeRequests(
+    const responses = await this.authManager.makeRequests<SLO>(
       `/api/v2/slo/${encodeURIComponent(params.id)}`,
-      queryParams,
+      { ...queryParams },
       environment_aliases,
     );
     logger.debug('getSLODetails response', { data: responses });
@@ -113,13 +118,13 @@ export class SloApiClient {
     let result = '';
     let totalNumSlo = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numSLOs = data.slo?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numSLOs = data.slo?.length || 0;
       totalNumSlo += numSLOs;
-      let isLimited = totalCount != 0 - 1 && totalCount > numSLOs;
+      const isLimited = totalCount != 0 - 1 && totalCount > numSLOs;
 
       result +=
         'Listing ' +
@@ -135,7 +140,7 @@ export class SloApiClient {
         anyLimited = true;
       }
 
-      data.slo?.forEach((slo: any) => {
+      data.slo?.forEach((slo: SLO) => {
         result += `id: ${slo.id}\n`;
         result += `  name: ${slo.name}\n`;
         if (slo.description) {
@@ -157,7 +162,7 @@ export class SloApiClient {
         if (slo.managementZones && slo.managementZones.length > 0) {
           const zones = slo.managementZones
             .slice(0, SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
-            .map((zone: any) => zone.name || zone.id || zone)
+            .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
           result += `  management zones: ${zones}${slo.managementZones.length > SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${slo.managementZones.length - SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
         }
@@ -181,7 +186,7 @@ export class SloApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, SLO>): string {
     let result = '';
     for (const [alias, data] of responses) {
       result += 'Details of SLO from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';

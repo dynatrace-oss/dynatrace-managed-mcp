@@ -2,6 +2,7 @@ import { ManagedAuthClientManager } from '../authentication/managed-auth-client'
 
 import { formatTimestamp } from '../utils/date-formatter';
 import { logger } from '../utils/logger';
+import ManagementZone from './management-zones.model';
 
 export interface SecurityProblemQueryParams {
   riskLevel?: string; // 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -39,10 +40,7 @@ export interface SecurityProblem {
     dataAssets?: 'PUBLIC' | 'INTERNAL' | 'RESTRICTED' | 'NOT_AVAILABLE';
     publicExploit?: 'AVAILABLE' | 'NOT_AVAILABLE';
   };
-  managementZones?: Array<{
-    id: string;
-    name: string;
-  }>;
+  managementZones?: ManagementZone[];
   affectedEntities?: Array<{
     entityId?: string;
     displayName?: string;
@@ -79,13 +77,20 @@ export class SecurityApiClient {
       ...(params.sort && { sort: params.sort }),
     };
 
-    const responses = await this.authManager.makeRequests('/api/v2/securityProblems', queryParams, environment_aliases);
+    const responses = await this.authManager.makeRequests<ListSecurityProblemsResponse>(
+      '/api/v2/securityProblems',
+      queryParams,
+      environment_aliases,
+    );
     logger.debug('listSecurityProblems response', { data: responses });
     return responses;
   }
 
-  async getSecurityProblemDetails(problemId: string, environment_aliases: string): Promise<Map<string, any>> {
-    const responses = await this.authManager.makeRequests(
+  async getSecurityProblemDetails(
+    problemId: string,
+    environment_aliases: string,
+  ): Promise<Map<string, SecurityProblem>> {
+    const responses = await this.authManager.makeRequests<SecurityProblem>(
       `/api/v2/securityProblems/${encodeURIComponent(problemId)}`,
       {},
       environment_aliases,
@@ -98,13 +103,13 @@ export class SecurityApiClient {
     let result = '';
     let totalNumProblems = 0;
     let anyLimited = false;
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
-      let totalCount = data.totalCount || -1;
-      let numProblems = data.securityProblems?.length || 0;
+      const totalCount = data.totalCount || -1;
+      const numProblems = data.securityProblems?.length || 0;
       totalNumProblems += numProblems;
-      let isLimited = totalCount != 0 - 1 && totalCount > numProblems;
+      const isLimited = totalCount != 0 - 1 && totalCount > numProblems;
 
       result +=
         'Listing ' +
@@ -120,7 +125,7 @@ export class SecurityApiClient {
         anyLimited = true;
       }
 
-      data.securityProblems?.forEach((problem: any) => {
+      data.securityProblems?.forEach((problem: SecurityProblem) => {
         result += `securityProblemId: ${problem.securityProblemId}\n`;
         result += `  displayId: ${problem.displayId}\n`;
         result += `  title: ${problem.title}\n`;
@@ -166,9 +171,9 @@ export class SecurityApiClient {
     return result;
   }
 
-  formatDetails(responses: Map<string, any>): string {
+  formatDetails(responses: Map<string, SecurityProblem>): string {
     let result = '';
-    let aliases: string[] = [];
+    const aliases: string[] = [];
     for (const [alias, data] of responses) {
       aliases.push(alias);
       result +=

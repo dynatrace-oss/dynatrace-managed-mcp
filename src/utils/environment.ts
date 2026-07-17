@@ -1,6 +1,6 @@
 import { JSONObject } from '@dynatrace/openkit-js';
-import { ConfigFileLoader } from './config-loader';
-import { logger } from './logger';
+import { logErrorObject, logger } from './logger';
+import { loadFromFile } from './config-loader';
 
 export interface ManagedEnvironmentConfig {
   environmentId: string;
@@ -21,7 +21,7 @@ export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): Mana
   const httpProxy = environmentInfo.httpProxyUrl ? environmentInfo.httpProxyUrl.toString() : '';
   const httpsProxy = environmentInfo.httpsProxyUrl ? environmentInfo.httpsProxyUrl.toString() : '';
 
-  let environmentId = environmentIdRaw.replace(/\/$/, ''); // Remove trailing slash
+  const environmentId = environmentIdRaw.replace(/\/$/, ''); // Remove trailing slash
   let apiUrl = '';
   if (apiUrlRaw != '') {
     apiUrl = apiUrlRaw + (apiUrlRaw.endsWith('/') ? '' : '/') + 'e/' + environmentId;
@@ -53,14 +53,14 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
     }
 
     try {
-      const environmentConfigurations = ConfigFileLoader.loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
-      let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+      const environmentConfigurations = loadFromFile(process.env.DT_CONFIG_FILE, requireToken);
+      const parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
       for (const environmentConfig of environmentConfigurations) {
         parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
       }
       return parsedManagedEnvironmentConfigs;
-    } catch (error: any) {
-      logger.error(`Failed to load configuration file: ${error.message}`);
+    } catch (error) {
+      logErrorObject(error, 'Failed to load configuration file');
       throw error;
     }
   }
@@ -78,12 +78,12 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
       environmentConfigurations = JSON.parse(environmentConfigs);
     } catch (e) {
       if (e instanceof SyntaxError) {
-        throw new Error(`JSON syntax error in environment file: ${e}`);
+        throw new Error('JSON syntax error in environment file', { cause: e });
       } else {
         throw e;
       }
     }
-    let parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
+    const parsedManagedEnvironmentConfigs: ManagedEnvironmentConfig[] = [];
     for (const environmentConfig of environmentConfigurations) {
       parsedManagedEnvironmentConfigs.push(parseManagedEnvironmentConfig(environmentConfig));
     }
@@ -119,8 +119,8 @@ export function validateEnvironments(
     alias: 'alias',
     apiToken: 'apiToken',
   };
-  let validConfigurations: ManagedEnvironmentConfig[] = [];
-  let errors: string[] = [];
+  const validConfigurations: ManagedEnvironmentConfig[] = [];
+  const errors: string[] = [];
 
   environmentConfigurations.forEach((configuration, index) => {
     const hasAllValues = requiredKeys.every((key) => {
