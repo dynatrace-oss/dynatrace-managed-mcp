@@ -61,11 +61,14 @@ const hasValidSuppliedTokens = (
     }
   }
 
+  const supplied = clients
+    .map((client) => ({ client, token: tokenMap.get(client.alias) }))
+    .filter((entry): entry is { client: ManagedAuthClient; token: string } => entry.token !== undefined);
+  if (supplied.length === 0) {
+    return Promise.resolve(false);
+  }
+
   const result = (async (): Promise<boolean> => {
-    const supplied = clients
-      .map((client) => ({ client, token: tokenMap.get(client.alias) }))
-      .filter((entry): entry is { client: ManagedAuthClient; token: string } => entry.token !== undefined);
-    if (supplied.length === 0) return false;
     const results = await Promise.all(supplied.map(({ client, token }) => client.validateAPIToken(token)));
     return results.every(Boolean);
   })();
