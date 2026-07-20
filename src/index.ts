@@ -39,6 +39,47 @@ logger.info('Starting Dynatrace Managed MCP');
 // In stdio mode there is a single user key, which reproduces the previous single-bucket behavior.
 const rateLimiter = new RateLimiter();
 
+const TOKEN_VALIDATION_TTL_MS = parseInt(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS ?? String(60 * 1000), 10);
+// Caches the in-flight Promise so a burst of concurrent requests shares one lookup.
+const tokenValidationCache = new Map<string, { expiresAt: number; result: Promise<boolean> }>();
+
+const hasValidSuppliedTokens = (
+  clients: ManagedAuthClient[],
+  tokenMap: Map<string, string>,
+  userKey: string,
+): Promise<boolean> => {
+  const now = Date.now();
+
+  const cached = tokenValidationCache.get(userKey);
+  if (cached && cached.expiresAt > now) {
+    return cached.result;
+  }
+
+  for (const [key, entry] of tokenValidationCache) {
+    if (entry.expiresAt <= now) {
+      tokenValidationCache.delete(key);
+    }
+  }
+
+  const result = (async (): Promise<boolean> => {
+    const supplied = clients
+      .map((client) => ({ client, token: tokenMap.get(client.alias) }))
+      .filter((entry): entry is { client: ManagedAuthClient; token: string } => entry.token !== undefined);
+    if (supplied.length === 0) return false;
+    const results = await Promise.all(supplied.map(({ client, token }) => client.validateAPIToken(token)));
+    return results.every(Boolean);
+  })();
+
+  tokenValidationCache.set(userKey, { expiresAt: now + TOKEN_VALIDATION_TTL_MS, result });
+  result
+    .then((valid) => {
+      if (!valid) tokenValidationCache.delete(userKey);
+    })
+    .catch(() => tokenValidationCache.delete(userKey));
+
+  return result;
+};
+
 const main = async () => {
   logger.info(`Initializing Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
 
@@ -118,7 +159,7 @@ const main = async () => {
   // Factory: creates a new McpServer with all tools registered, bound to this caller's tokens.
   // Must be called per-request in stateless HTTP mode (the SDK forbids connecting
   // the same McpServer instance to more than one transport).
-  const createConfiguredMcpServer = (tokenMap: Map<string, string>, userKey: string) => {
+  const createConfiguredMcpServer = (tokenMap: Map<string, string>, userKey: string): McpServer => {
     // Per-request auth router + API clients.
     const authClientManager = new ManagedAuthClientManager(allClients, validClients, validAliases, tokenMap);
     const metricsClient = new MetricsApiClient(authClientManager);
@@ -256,49 +297,25 @@ const main = async () => {
   // HTTP server mode (Stateless)
   if (httpMode) {
     const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-      // Reject requests without the X-Dynatrace-Tokens header before creating any MCP server
-      // instance, to prevent unauthenticated callers from receiving server info or the tool list
-      // via the MCP initialize handshake.
       const tokenHeader = req.headers['x-dynatrace-tokens'];
-      if (!tokenHeader) {
+      const tokenMap = parseTokenHeader(tokenHeader);
+      const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
+
+      // Validate every request: a stateless MCP connection spans several requests, and gating only
+      // the initialize handshake leaves the SSE GET to hang the client until timeout.
+      if (!(await hasValidSuppliedTokens(allClients, tokenMap, userKey))) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
         res.end(
           JSON.stringify({
             jsonrpc: '2.0',
             id: null,
-            error: { code: -32000, message: 'Unauthorized: X-Dynatrace-Tokens header is required' },
+            error: { code: -32000, message: 'Unauthorized: no valid Dynatrace token supplied' },
           }),
         );
         return;
       }
 
-      // Parse request body for POST requests
       let body: unknown;
-      // Create a new Stateless HTTP Transport
-      // enableJsonResponse: true returns application/json instead of keeping SSE streams open,
-      // which is required for MCP clients that don't support persistent SSE connections (e.g. Copilot CLI).
-      const httpTransport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: undefined, // No Session ID needed
-        enableJsonResponse: true,
-      });
-
-      // Per-request tokens come from the X-Dynatrace-Tokens header (alias=token;alias=token).
-      const tokenMap = parseTokenHeader(tokenHeader);
-      const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
-
-      // Create a fresh McpServer per request (stateless HTTP requirement)
-      const server = createConfiguredMcpServer(tokenMap, userKey);
-
-      res.on('close', () => {
-        // close transport and server, but not the httpServer itself
-        httpTransport.close();
-        server.close();
-      });
-
-      // Connecting MCP-server to HTTP transport
-      await server.connect(httpTransport);
-
-      // Handle POST Requests for this endpoint
       if (req.method === 'POST') {
         const maxBodySize = parseInt(process.env.DT_MCP_MAX_BODY_SIZE ?? String(1 * 1024 * 1024), 10); // default 1MB
         const chunks: Buffer[] = [];
@@ -330,13 +347,32 @@ const main = async () => {
         }
       }
 
+      // Create a new Stateless HTTP Transport
+      // enableJsonResponse: true returns application/json instead of keeping SSE streams open,
+      // which is required for MCP clients that don't support persistent SSE connections (e.g. Copilot CLI).
+      const httpTransport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined, // No Session ID needed
+        enableJsonResponse: true,
+      });
+
+      // Create a fresh McpServer per request (stateless HTTP requirement)
+      const server = createConfiguredMcpServer(tokenMap, userKey);
+
+      res.on('close', () => {
+        // close transport and server, but not the httpServer itself
+        httpTransport.close();
+        server.close();
+      });
+
+      // Connecting MCP-server to HTTP transport
+      await server.connect(httpTransport);
+
       await httpTransport.handleRequest(req, res, body);
     });
 
     // Start HTTP Server on the specified host and port
     httpServer.listen(httpPort, host, () => {
       logger.info(`Dynatrace Managed MCP Server running on HTTP at http://${host}:${httpPort}`);
-      console.error(`Dynatrace Managed MCP Server running on HTTP at http://${host}:${httpPort}`);
     });
 
     // Handle graceful shutdown for http server mode

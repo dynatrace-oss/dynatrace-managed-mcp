@@ -29,6 +29,11 @@ export interface ManagedAuthClientParams {
   minimum_version: string;
 }
 
+interface ApiToken {
+  enabled?: boolean;
+  scopes?: string[];
+}
+
 /** Thrown when a request targets an environment for which the caller supplied no token. */
 export class MissingTokenError extends Error {
   constructor(public readonly alias: string) {
@@ -73,6 +78,20 @@ export class ManagedAuthClient {
 
   private authHeader(token: string): Record<string, string> {
     return { Authorization: `Api-Token ${token}` };
+  }
+
+  async validateAPIToken(token: string): Promise<boolean> {
+    try {
+      const response = await this.httpClient.post<ApiToken>(
+        '/api/v2/apiTokens/lookup',
+        { token },
+        { headers: this.authHeader(token) },
+      );
+      return !!(response.data?.enabled && response.data?.scopes && response.data.scopes.length > 0);
+    } catch (error) {
+      logger.warn(`[Alias: ${this.alias}] API token failed validation`, { error });
+      return false;
+    }
   }
 
   async validateConnection(token: string): Promise<boolean> {
