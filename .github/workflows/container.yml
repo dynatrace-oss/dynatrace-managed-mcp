@@ -47,7 +47,7 @@ jobs:
       - name: Run Snyk container scan
         uses: snyk/actions/docker@v1.0.0
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+          SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN_V2 }}
         with:
           image: mcp/dynatrace-managed-mcp-server:scan
           args: >-
