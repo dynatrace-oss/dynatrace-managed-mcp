@@ -256,6 +256,22 @@ const main = async () => {
   // HTTP server mode (Stateless)
   if (httpMode) {
     const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+      // Reject requests without the X-Dynatrace-Tokens header before creating any MCP server
+      // instance, to prevent unauthenticated callers from receiving server info or the tool list
+      // via the MCP initialize handshake.
+      const tokenHeader = req.headers['x-dynatrace-tokens'];
+      if (!tokenHeader) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id: null,
+            error: { code: -32000, message: 'Unauthorized: X-Dynatrace-Tokens header is required' },
+          }),
+        );
+        return;
+      }
+
       // Parse request body for POST requests
       let body: unknown;
       // Create a new Stateless HTTP Transport
@@ -267,7 +283,6 @@ const main = async () => {
       });
 
       // Per-request tokens come from the X-Dynatrace-Tokens header (alias=token;alias=token).
-      const tokenHeader = req.headers['x-dynatrace-tokens'];
       const tokenMap = parseTokenHeader(tokenHeader);
       const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
 
