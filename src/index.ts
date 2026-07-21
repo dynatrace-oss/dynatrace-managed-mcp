@@ -70,7 +70,7 @@ const hasValidSuppliedTokens = (
 
   const result = (async (): Promise<boolean> => {
     const results = await Promise.all(supplied.map(({ client, token }) => client.validateAPIToken(token)));
-    return results.every(Boolean);
+    return results.some(Boolean);
   })();
 
   tokenValidationCache.set(userKey, { expiresAt: now + TOKEN_VALIDATION_TTL_MS, result });

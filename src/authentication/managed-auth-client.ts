@@ -274,6 +274,11 @@ export class ManagedAuthClientManager {
     return this.tokens.get(alias);
   }
 
+  /** Aliases the caller actually supplied a token for (their own input, not the configured set). */
+  suppliedAliases(): string[] {
+    return [...this.tokens.keys()];
+  }
+
   async makeRequests<T>(
     endpoint: string,
     params: Record<string, string | number | boolean | undefined>,

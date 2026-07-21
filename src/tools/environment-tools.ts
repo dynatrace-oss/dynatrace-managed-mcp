@@ -1,4 +1,6 @@
 import { ToolContext } from './context';
+import { logger } from '../utils/logger';
+import { ManagedAuthClient } from '../authentication/managed-auth-client';
 
 // Required API scopes for Managed deployment
 const MANAGED_API_SCOPES = [
@@ -21,65 +23,74 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
       readOnlyHint: true,
     },
     async () => {
-      let resp = `Dynatrace Managed Cluster Information - Listing info for ${ctx.authClientManager.rawClients.length} environments:\n\n`;
+      let resp = `Dynatrace Managed Cluster Information:\n\n`;
 
-      for (const authClient of ctx.authClientManager.rawClients) {
+      for (const alias of ctx.authClientManager.suppliedAliases()) {
+        const token = ctx.authClientManager.tokenFor(alias);
+        const authClient = ctx.authClientManager.rawClients.find((client) => client.alias === alias);
+
+        if (token === undefined || authClient === undefined || !(await authClient.validateAPIToken(token))) {
+          logger.error(`Invalid token supplied for ${alias} environment.`);
+          resp += `Invalid token supplied for ${alias} environment.\n`;
+          continue;
+        }
+
         resp += `- Environment Alias: ${authClient.alias}\n`;
         resp += `- API URL: ${authClient.apiBaseUrl}\n`;
         resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
 
         // In stdio mode, use cached startup validation results to avoid redundant live probes.
         if (!ctx.httpMode) {
-          if (authClient.isValid) {
-            resp += `- Valid Environment: Yes\n`;
-            if (authClient.clusterVersion) {
-              resp += `- Version: ${authClient.clusterVersion}\n`;
-              resp += `- Minimum Version Check: PASSED\n`;
-            }
-            resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-          } else {
-            resp += `- Valid Environment: No\n`;
-            resp += `- Error message: ${authClient.validationError || 'Environment failed startup validation'}\n\n`;
-          }
-          continue;
-        }
-
-        // HTTP mode: probe live because tokens are supplied per request.
-        const token = ctx.authClientManager.tokenFor(authClient.alias);
-        if (!token) {
-          resp += `- Valid Environment: No\n`;
-          resp += `- Error message: No token supplied for this environment. Add \`${authClient.alias}=<token>\` to your X-Dynatrace-Tokens header to query it.\n\n`;
-          continue;
-        }
-
-        try {
-          const clusterVersion = await authClient.getClusterVersion(token);
-          const isValidVersion = authClient.validateMinimumVersion(clusterVersion);
-          resp += `- Valid Environment: Yes\n`;
-          resp += `- Version: ${clusterVersion.version}\n`;
-          resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
-          resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
-        } catch (error) {
-          resp += `- Valid Environment: No\n`;
-          if (error instanceof Error) {
-            resp += `- Error message: Failed to connect to environment ${authClient.alias}: ${error.message}\n\n`;
-          } else {
-            resp += 'Unknown error\n\n';
-          }
+          resp += stdioModeVersionResponse(authClient);
+        } else {
+          resp += await httpModeVersionResponse(authClient, ctx);
         }
       }
-
-      if (ctx.initErrors.length > 0) {
-        resp += `Issues were found in environment configurations during start up: \n`;
-        for (const errorMessage of ctx.initErrors) {
-          resp += `- ${errorMessage}\n`;
-        }
-        resp += `\nPlease review all environments connection information. \n`;
-      }
-
-      resp += `\n\n\nAll Dynatrace Managed Cluster Environments listed. Environment showing connection errors and environments with "Valid environment" set to "No" are invalid environments.\n\n`;
 
       return resp;
     },
   );
+}
+
+function errorMessageForResponse(error: unknown, environmentAlias: string) {
+  let resp: string = '';
+  resp += `- Valid Environment: No\n`;
+  if (error instanceof Error) {
+    resp += `- Error message: Failed to connect to environment ${environmentAlias}: ${error.message}\n\n`;
+  } else {
+    resp += 'Unknown error\n\n';
+  }
+  return resp;
+}
+
+function stdioModeVersionResponse(authClient: ManagedAuthClient) {
+  let resp: string = '';
+  if (!authClient.isValid) {
+    resp += `- Valid Environment: No\n`;
+    resp += `- Error message: ${authClient.validationError || 'Environment failed startup validation'}\n\n`;
+    return resp;
+  }
+  resp += `- Valid Environment: Yes\n`;
+  if (authClient.clusterVersion) {
+    resp += `- Version: ${authClient.clusterVersion}\n`;
+    resp += `- Minimum Version Check: PASSED\n`;
+  }
+  resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+  return resp;
+}
+
+async function httpModeVersionResponse(authClient: ManagedAuthClient, ctx: ToolContext) {
+  let resp: string = '';
+  try {
+    const clusterVersion = await authClient.getClusterVersion(ctx.authClientManager.tokenFor(authClient.alias) ?? '');
+    const isValidVersion = authClient.validateMinimumVersion(clusterVersion);
+    resp += `- Valid Environment: Yes\n`;
+    resp += `- Version: ${clusterVersion.version}\n`;
+    resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
+    resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+  } catch (error) {
+    resp += errorMessageForResponse(error, authClient.alias);
+  }
+
+  return resp;
 }
