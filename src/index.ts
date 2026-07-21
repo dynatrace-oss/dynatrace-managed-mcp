@@ -39,7 +39,7 @@ logger.info('Starting Dynatrace Managed MCP');
 // In stdio mode there is a single user key, which reproduces the previous single-bucket behavior.
 const rateLimiter = new RateLimiter();
 
-const TOKEN_VALIDATION_TTL_MS = parseInt(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS ?? String(60 * 1000), 10);
+const TOKEN_VALIDATION_TTL_MS = Number(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS ?? String(60 * 1000));
 // Caches the in-flight Promise so a burst of concurrent requests shares one lookup.
 const tokenValidationCache = new Map<string, { expiresAt: number; result: Promise<boolean> }>();
 
@@ -100,7 +100,7 @@ const main = async () => {
 
   const options = program.opts();
   const httpMode = options.http || options.server;
-  const httpPort = parseInt(options.port, 10);
+  const httpPort = Number(options.port);
   const host = options.host || '127.0.0.1';
 
   // Read Managed environment configuration. In HTTP mode tokens are supplied per request
@@ -114,6 +114,8 @@ const main = async () => {
   if (initErrors.length > 0) {
     logger.error('Failed to get managed environments configurations: ', { error: initErrors });
     console.error('Failed to get managed environments configurations: ', { error: initErrors });
+    await flushLogger();
+    process.exit(1);
   }
 
   if (initConfigs.length === 0) {
@@ -320,7 +322,7 @@ const main = async () => {
 
       let body: unknown;
       if (req.method === 'POST') {
-        const maxBodySize = parseInt(process.env.DT_MCP_MAX_BODY_SIZE ?? String(1 * 1024 * 1024), 10); // default 1MB
+        const maxBodySize = Number(process.env.DT_MCP_MAX_BODY_SIZE ?? String(1024 * 1024)); // default 1MB
         const chunks: Buffer[] = [];
         let totalSize = 0;
         let tooLarge = false;

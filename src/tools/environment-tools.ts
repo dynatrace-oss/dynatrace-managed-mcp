@@ -14,27 +14,6 @@ const MANAGED_API_SCOPES = [
 
 export function registerEnvironmentTools(ctx: ToolContext): void {
   ctx.tool(
-    'dynatrace_managed_check_config_errors',
-    'Returns information about environment configurations and any potential error found during initialization',
-    {},
-    {
-      readOnlyHint: true,
-    },
-    async () => {
-      let resp = `Dynatrace Managed Environments Information - Listing configuration errors found during initialization:\n\n`;
-      if (ctx.initErrors.length > 0) {
-        resp += `Issues were found in environment configurations during start up: \n`;
-        for (const errorMessage of ctx.initErrors) {
-          resp += `- ${errorMessage}\n`;
-        }
-        resp += `\nPlease review all environment information and try again. \n`;
-      }
-
-      return resp;
-    },
-  );
-
-  ctx.tool(
     'dynatrace_managed_get_environments_info',
     'Get information about all connected Dynatrace Managed clusters and verify the connections and authentication services.',
     {},
