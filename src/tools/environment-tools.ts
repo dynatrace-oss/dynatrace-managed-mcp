@@ -25,6 +25,20 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
     async () => {
       let resp = `Dynatrace Managed Cluster Information:\n\n`;
 
+      // stdio is single-user and local: config tokens are validated once at startup, so report from
+      // the cached results instead of re-probing the cluster on every call.
+      if (!ctx.httpMode) {
+        for (const authClient of ctx.authClientManager.rawClients) {
+          resp += `- Environment Alias: ${authClient.alias}\n`;
+          resp += `- API URL: ${authClient.apiBaseUrl}\n`;
+          resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
+          resp += stdioModeVersionResponse(authClient);
+        }
+        return resp;
+      }
+
+      // HTTP: validate each supplied token live. The uniform error for unknown aliases and invalid
+      // tokens keeps callers from enumerating which environments are configured.
       for (const alias of ctx.authClientManager.suppliedAliases()) {
         const token = ctx.authClientManager.tokenFor(alias);
         const authClient = ctx.authClientManager.rawClients.find((client) => client.alias === alias);
@@ -38,13 +52,7 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
         resp += `- Environment Alias: ${authClient.alias}\n`;
         resp += `- API URL: ${authClient.apiBaseUrl}\n`;
         resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
-
-        // In stdio mode, use cached startup validation results to avoid redundant live probes.
-        if (!ctx.httpMode) {
-          resp += stdioModeVersionResponse(authClient);
-        } else {
-          resp += await httpModeVersionResponse(authClient, ctx);
-        }
+        resp += await httpModeVersionResponse(authClient, ctx);
       }
 
       return resp;
