@@ -39,9 +39,10 @@ logger.info('Starting Dynatrace Managed MCP');
 // In stdio mode there is a single user key, which reproduces the previous single-bucket behavior.
 const rateLimiter = new RateLimiter();
 
-const TOKEN_VALIDATION_TTL_MS = Number(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS ?? String(60 * 1000));
-// Caches the in-flight Promise so a burst of concurrent requests shares one lookup.
-const tokenValidationCache = new Map<string, { expiresAt: number; result: Promise<boolean> }>();
+const TOKEN_VALIDATION_TTL_MS = (() => {
+  const parsed = Number(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 60 * 1000;
+})();
 
 const hasValidSuppliedTokens = (
   clients: ManagedAuthClient[],
@@ -322,7 +323,10 @@ const main = async () => {
 
       let body: unknown;
       if (req.method === 'POST') {
-        const maxBodySize = Number(process.env.DT_MCP_MAX_BODY_SIZE ?? String(1024 * 1024)); // default 1MB
+        const maxBodySize = (() => {
+          const parsed = Number(process.env.DT_MCP_MAX_BODY_SIZE);
+          return Number.isFinite(parsed) && parsed > 0 ? parsed : 1024 * 1024;
+        })(); // default 1MB
         const chunks: Buffer[] = [];
         let totalSize = 0;
         let tooLarge = false;
