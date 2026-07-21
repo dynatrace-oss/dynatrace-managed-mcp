@@ -39,6 +39,8 @@ logger.info('Starting Dynatrace Managed MCP');
 // In stdio mode there is a single user key, which reproduces the previous single-bucket behavior.
 const rateLimiter = new RateLimiter();
 
+// Caches the in-flight Promise so a burst of concurrent requests shares one lookup.
+const tokenValidationCache = new Map<string, { expiresAt: number; result: Promise<boolean> }>();
 const TOKEN_VALIDATION_TTL_MS = (() => {
   const parsed = Number(process.env.DT_MCP_TOKEN_VALIDATION_TTL_MS);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 60 * 1000;
