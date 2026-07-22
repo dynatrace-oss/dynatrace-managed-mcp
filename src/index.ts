@@ -54,13 +54,11 @@ const hasValidSuppliedTokens = (
   const now = Date.now();
 
   const cached = tokenValidationCache.get(userKey);
-  if (cached && cached.expiresAt > now) {
-    return cached.result;
-  }
-
-  for (const [key, entry] of tokenValidationCache) {
-    if (entry.expiresAt <= now) {
-      tokenValidationCache.delete(key);
+  if (cached !== undefined) {
+    if (cached.expiresAt > now) {
+      return cached.result;
+    } else {
+      tokenValidationCache.delete(userKey);
     }
   }
 
@@ -79,7 +77,9 @@ const hasValidSuppliedTokens = (
   tokenValidationCache.set(userKey, { expiresAt: now + TOKEN_VALIDATION_TTL_MS, result });
   result
     .then((valid) => {
-      if (!valid) tokenValidationCache.delete(userKey);
+      if (!valid) {
+        tokenValidationCache.delete(userKey);
+      }
     })
     .catch(() => tokenValidationCache.delete(userKey));
 
