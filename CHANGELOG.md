@@ -1,7 +1,22 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
-## Unreleased Changes
+## Unreleased
 
+### Breaking changes
+
+- Security (HTTP mode): unauthenticated requests are now rejected. A request that omits the `X-Dynatrace-Tokens` header, or supplies no token that is valid on its environment, receives HTTP 401 before any MCP server or tool is created. Previously such a request could complete the MCP `initialize` handshake and call tools — including `get_environments_info`, which disclosed configured environment aliases and URLs.
+- Removed the `dynatrace_managed_check_config_errors` tool. The startup configuration errors it reported are redundant with `get_environments_info`; any automation referencing this tool by name must be updated.
+- The server no longer starts when any configured environment is invalid — configuration errors now fail startup instead of being skipped. Fix all environment configuration errors before starting.
+
+### Changes
+
+- Added `DT_MCP_TOKEN_VALIDATION_TTL_MS` (default `60000`) to control how long per-caller token-validation results are cached.
+- Updated `fast-uri` to 3.1.4.
+
+### Fixes
+
+- Per-request tokens are validated against the cluster (`POST /api/v2/apiTokens/lookup`) before tools are exposed. Validation results are cached per caller (keyed by a hash of the supplied tokens) and concurrent requests share a single validation, so the cluster is not probed on every request.
+- `get_environments_info` now reports only on environments the caller supplied a token for, and returns an identical "invalid token" message whether an alias is unknown or its token is invalid — so callers can no longer enumerate which environments are configured.
 - Improved `get_environments_info` in stdio mode: now uses cached startup validation results (version, validity, error) instead of re-probing live on every call, eliminating redundant network requests. The cluster version and minimum version check are now displayed from the cached result.
 - Improved rate-limiting key stability: `deriveUserKey` now normalises the `X-Dynatrace-Tokens` header (sorts aliases, strips whitespace) so equivalent token sets produce the same rate-limit bucket regardless of header ordering.
 
