@@ -33,7 +33,6 @@ jobs:
         with:
           command: monitor
           args: >-
-            --all-projects
             --target-reference=${{ github.ref_name }}
             --project-environment=external
             --project-lifecycle=development
