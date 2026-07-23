@@ -32,14 +32,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
         with:
           command: monitor
-          args: >-
-            --all-projects
-            --project-environment=external
-            --project-lifecycle=development
-            --project-business-criticality=low
-            --project-tags=team=team-se-cloud-automation,ticket-creation=true
-            --exclude=node_modules
-            --org=${{ secrets.SNYK_ORG_ID }}
+          args: --org=${{ secrets.SNYK_ORG_ID }}
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@v1.0.0
