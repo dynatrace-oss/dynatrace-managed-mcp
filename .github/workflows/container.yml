@@ -51,7 +51,6 @@ jobs:
         with:
           image: mcp/dynatrace-managed-mcp-server:scan
           args: >
-            --
             --severity-threshold=high
             --project-business-criticality=low
             --project-lifecycle=development
