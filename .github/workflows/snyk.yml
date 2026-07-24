@@ -33,6 +33,10 @@ jobs:
           command: monitor
           args: >-
             --all-projects
+            --project-environment=external
+            --project-lifecycle=development
+            --project-business-criticality=low
+            --project-tags=team=team-se-cloud-automation,ticket-creation=true
             --exclude=node_modules
 
       - name: Run Snyk to check for vulnerabilities
