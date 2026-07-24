@@ -56,4 +56,4 @@ jobs:
             --project-business-criticality=low
             --project-lifecycle=development
             --project-tags=team=team-se-cloud-automation
-            --policy-path=.snyk.
+            --policy-path=.snyk
