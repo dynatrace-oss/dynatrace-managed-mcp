@@ -31,10 +31,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
         with:
           command: monitor
-          args: >-
-            --all-projects
-            --exclude=node_modules
-            --project-environment=external
+          args: --project-environment=external
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@v1.0.0
