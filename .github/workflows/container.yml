@@ -50,7 +50,8 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
         with:
           image: mcp/dynatrace-managed-mcp-server:scan
-          args: --
+          args: >
+            --
             --severity-threshold=high
             --project-business-criticality=low
             --project-lifecycle=development
