@@ -1,0 +1,7 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities
+version: v1.25.0
+ignore:
+  SNYK-JS-HONONODESERVER-18170326:
+    - '*':
+      reason: Server host is hosted only on Windows operating system, server-static is not used
+      expiry: none
