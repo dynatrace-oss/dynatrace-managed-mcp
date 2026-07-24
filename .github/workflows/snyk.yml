@@ -35,9 +35,6 @@ jobs:
             --all-projects
             --exclude=node_modules
             --project-environment=external
-            --project-lifecycle=development
-            --project-business-criticality=low
-            --project-tags=team=team-se-cloud-automation,ticket-creation=true
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@v1.0.0
