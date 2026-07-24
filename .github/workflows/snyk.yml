@@ -32,12 +32,7 @@ jobs:
         with:
           command: monitor
           args: >-
-            --org=${{ secrets.SNYK_ORG_ID }}
             --all-projects
-            --target-reference=${{ github.ref_name }}
-            --project-environment=external
-            --project-lifecycle=development
-            --project-business-criticality=low
             --exclude=node_modules
 
       - name: Run Snyk to check for vulnerabilities
