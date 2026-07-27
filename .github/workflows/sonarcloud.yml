@@ -1,7 +1,9 @@
 name: SonarCloud
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'style/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,18 +15,7 @@ jobs:
         with:
           fetch-depth: 0 # Required by SonarCloud for blame information and new code detection
 
-      - name: Use Node.js # will read version from .nvmrc
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        run: npm run test:unit -- --coverage
-
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v5
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
