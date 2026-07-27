@@ -30,6 +30,7 @@ jobs:
         with:
           # Fail the build on high severity vulnerabilities
           args: --severity-threshold=high
+
       - name: Run Snyk Monitor
         # Only monitor on main branch pushes and releases, not on PRs
         if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
