@@ -20,7 +20,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install jsonschema
+        run: 'pip install jsonschema==4.26.0 --only-binary:all'
 
       - name: Ensure jq is present
         run: sudo apt update && sudo apt install -y jq

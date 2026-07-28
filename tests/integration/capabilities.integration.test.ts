@@ -119,7 +119,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
       const firstMetricId = response?.metrics && numMetrics > 0 ? response?.metrics[0].metricId : undefined;
 
       expect(numMetrics).toEqual(2);
-      expect(totalCount > numMetrics);
+      expect(totalCount > numMetrics).toEqual(true);
       expect(nextPageKey).toBeDefined();
       expect(firstMetricId).toBeDefined();
     }, 30000);
