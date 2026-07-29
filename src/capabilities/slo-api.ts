@@ -72,7 +72,7 @@ export class SloApiClient {
 
   constructor(private readonly authManager: ManagedAuthClientManager) {}
 
-  async listSlos(params: SloQueryParams = {}, environment_aliases: string): Promise<Map<string, ListSlosResponse>> {
+  async listSlos(environment_aliases: string, params: SloQueryParams = {}): Promise<Map<string, ListSlosResponse>> {
     const queryParams: SloQueryParams = {
       pageSize: params.pageSize || SloApiClient.API_PAGE_SIZE,
       ...(params.sloSelector && { sloSelector: params.sloSelector }),

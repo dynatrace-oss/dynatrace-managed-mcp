@@ -86,62 +86,62 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
   describe('Problems API Sorting', () => {
     it('should accept ascending sort parameter', async () => {
       await expect(
-        problemsClient.listProblems({ sort: '+startTime', pageSize: 5 }, 'testAlias'),
+        problemsClient.listProblems('testAlias', { sort: '+startTime', pageSize: 5 }),
       ).resolves.not.toThrow();
     });
 
     it('should accept descending sort parameter', async () => {
       await expect(
-        problemsClient.listProblems({ sort: '-startTime', pageSize: 5 }, 'testAlias'),
+        problemsClient.listProblems('testAlias', { sort: '-startTime', pageSize: 5 }),
       ).resolves.not.toThrow();
     });
 
     it('should work without sort parameter (backward compatibility)', async () => {
-      await expect(problemsClient.listProblems({ pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(problemsClient.listProblems('testAlias', { pageSize: 5 })).resolves.not.toThrow();
     });
   });
 
   describe('Security API Sorting', () => {
     it('should accept ascending sort parameter', async () => {
       await expect(
-        securityClient.listSecurityProblems({ sort: '+riskAssessment.riskScore' }, 'testAlias'),
+        securityClient.listSecurityProblems('testAlias', { sort: '+riskAssessment.riskScore' }),
       ).resolves.not.toThrow();
     });
 
     it('should accept descending sort parameter', async () => {
       await expect(
-        securityClient.listSecurityProblems({ sort: '-riskAssessment.riskScore' }, 'testAlias'),
+        securityClient.listSecurityProblems('testAlias', { sort: '-riskAssessment.riskScore' }),
       ).resolves.not.toThrow();
     });
 
     it('should work without sort parameter (backward compatibility)', async () => {
-      await expect(securityClient.listSecurityProblems(undefined, 'testAlias')).resolves.not.toThrow();
+      await expect(securityClient.listSecurityProblems('testAlias')).resolves.not.toThrow();
     });
   });
 
   describe('SLO API Sorting', () => {
     it('should accept ascending sort parameter', async () => {
-      await expect(sloClient.listSlos({ sort: 'name', pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { sort: 'name', pageSize: 5 })).resolves.not.toThrow();
     });
 
     it('should accept descending sort parameter', async () => {
-      await expect(sloClient.listSlos({ sort: '-name', pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { sort: '-name', pageSize: 5 })).resolves.not.toThrow();
     });
 
     it('should work without sort parameter (backward compatibility)', async () => {
-      await expect(sloClient.listSlos({ pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { pageSize: 5 })).resolves.not.toThrow();
     });
 
     it('should accept evaluate parameter', async () => {
-      await expect(sloClient.listSlos({ evaluate: true, pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { evaluate: true, pageSize: 5 })).resolves.not.toThrow();
     });
 
     it('should accept enabledSlos parameter', async () => {
-      await expect(sloClient.listSlos({ enabledSlos: 'true', pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { enabledSlos: 'true', pageSize: 5 })).resolves.not.toThrow();
     });
 
     it('should accept showGlobalSlos parameter', async () => {
-      await expect(sloClient.listSlos({ showGlobalSlos: false, pageSize: 5 }, 'testAlias')).resolves.not.toThrow();
+      await expect(sloClient.listSlos('testAlias', { showGlobalSlos: false, pageSize: 5 })).resolves.not.toThrow();
     });
   });
 

@@ -27,7 +27,7 @@ describe('SloApiClient', () => {
       const mockResponse = new Map<string, ListSlosResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listSlos(undefined, 'testAlias');
+      const result = await client.listSlos('testAlias');
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/slo',
@@ -43,21 +43,18 @@ describe('SloApiClient', () => {
       const mockResponse = new Map<string, ListSlosResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listSlos(
-        {
-          sloSelector: 'my-selector',
-          timeFrame: 'my-timeframe',
-          from: 'my-from',
-          to: 'my-to',
-          demo: true,
-          pageSize: 12,
-          evaluate: true,
-          sort: 'my-sort',
-          enabledSlos: 'my-enabled-slos',
-          showGlobalSlos: true,
-        },
-        'testAlias',
-      );
+      const result = await client.listSlos('testAlias', {
+        sloSelector: 'my-selector',
+        timeFrame: 'my-timeframe',
+        from: 'my-from',
+        to: 'my-to',
+        demo: true,
+        pageSize: 12,
+        evaluate: true,
+        sort: 'my-sort',
+        enabledSlos: 'my-enabled-slos',
+        showGlobalSlos: true,
+      });
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/slo',
@@ -192,7 +189,7 @@ describe('SloApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSlos(undefined, 'testAlias');
+      const response = await client.listSlos('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -213,7 +210,7 @@ describe('SloApiClient', () => {
       ]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSlos(undefined, 'testAlias');
+      const response = await client.listSlos('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -227,7 +224,7 @@ describe('SloApiClient', () => {
       const mockResponse = new Map<string, ListSlosResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSlos(undefined, 'testAlias');
+      const response = await client.listSlos('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);

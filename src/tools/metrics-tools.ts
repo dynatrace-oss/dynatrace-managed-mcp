@@ -51,14 +51,11 @@ export function registerMetricsTools(ctx: ToolContext): void {
       readOnlyHint: true,
     },
     async ({ entitySelector, searchText, limit, environment_alias }) => {
-      const responses = await ctx.metricsClient.listAvailableMetrics(
-        {
-          entitySelector: entitySelector,
-          text: searchText,
-          pageSize: limit,
-        },
-        environment_alias,
-      );
+      const responses = await ctx.metricsClient.listAvailableMetrics(environment_alias, {
+        entitySelector: entitySelector,
+        text: searchText,
+        pageSize: limit,
+      });
       return ctx.metricsClient.formatMetricList(responses);
     },
   );

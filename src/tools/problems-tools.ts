@@ -53,18 +53,15 @@ export function registerProblemsTools(ctx: ToolContext): void {
       readOnlyHint: true,
     },
     async ({ from, to, status, impactLevel, entitySelector, limit, sort, environment_alias }) => {
-      const responses = await ctx.problemsClient.listProblems(
-        {
-          from: from || 'now-24h',
-          to: to || 'now',
-          status: status,
-          impactLevel: impactLevel,
-          entitySelector: entitySelector,
-          pageSize: limit,
-          sort: sort,
-        },
-        environment_alias,
-      );
+      const responses = await ctx.problemsClient.listProblems(environment_alias, {
+        from: from || 'now-24h',
+        to: to || 'now',
+        status: status,
+        impactLevel: impactLevel,
+        entitySelector: entitySelector,
+        pageSize: limit,
+        sort: sort,
+      });
 
       return ctx.problemsClient.formatList(responses);
     },

@@ -69,8 +69,8 @@ export class MetricsApiClient {
   constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listAvailableMetrics(
-    params: MetricListParams = {},
     environment_aliases: string,
+    params: MetricListParams = {},
   ): Promise<Map<string, ListMetricsResponse>> {
     const queryParams = {
       pageSize: params.pageSize || MetricsApiClient.API_PAGE_SIZE,

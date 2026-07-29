@@ -68,7 +68,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
   describe('MetricsApiClient', () => {
     it('should search metrics', async () => {
-      const response = await metricsClient.listAvailableMetrics({ text: 'latency', pageSize: 5 }, 'testAlias');
+      const response = await metricsClient.listAvailableMetrics('testAlias', { text: 'latency', pageSize: 5 });
       const result = metricsClient.formatMetricList(response);
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
@@ -77,7 +77,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should get available metrics', async () => {
-      const response = await metricsClient.listAvailableMetrics({ pageSize: 5 }, 'testAlias');
+      const response = await metricsClient.listAvailableMetrics('testAlias', { pageSize: 5 });
       const result = metricsClient.formatMetricList(response);
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
@@ -111,7 +111,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
     it('should respect pageSize', async () => {
       // Assumes there are at least 3 metrics (2 in the first page; and more in subsequent pages)
-      const responses = await metricsClient.listAvailableMetrics({ pageSize: 2 }, 'testAlias');
+      const responses = await metricsClient.listAvailableMetrics('testAlias', { pageSize: 2 });
       const response = responses.get('testAlias');
       const totalCount = response?.totalCount || -1;
       const numMetrics = response?.metrics?.length || 0;
@@ -125,13 +125,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should support field selection in metrics listing', async () => {
-      const response = await metricsClient.listAvailableMetrics(
-        {
-          fields: 'metricId,displayName',
-          pageSize: 5,
-        },
-        'testAlias',
-      );
+      const response = await metricsClient.listAvailableMetrics('testAlias', {
+        fields: 'metricId,displayName',
+        pageSize: 5,
+      });
       const result = metricsClient.formatMetricList(response);
 
       expect(result).toContain('metricId:');
@@ -139,13 +136,10 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should support metadata selector filtering', async () => {
-      const results = await metricsClient.listAvailableMetrics(
-        {
-          metadataSelector: 'unit("Percent")',
-          pageSize: 5,
-        },
-        'testAlias',
-      );
+      const results = await metricsClient.listAvailableMetrics('testAlias', {
+        metadataSelector: 'unit("Percent")',
+        pageSize: 5,
+      });
       const result = results.get('testAlias');
 
       expect(result?.metrics?.length).toBeGreaterThan(0);
@@ -316,14 +310,11 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
   describe('ProblemsApiClient', () => {
     it('should list problems', async () => {
-      const responses = await problemsClient.listProblems(
-        {
-          from: 'now-24h',
-          to: 'now',
-          pageSize: 10,
-        },
-        'testAlias',
-      );
+      const responses = await problemsClient.listProblems('testAlias', {
+        from: 'now-24h',
+        to: 'now',
+        pageSize: 10,
+      });
       const result = problemsClient.formatList(responses);
       expect(typeof result).toBe('string');
       expect(result).toContain('title:');
@@ -338,7 +329,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should get problem details', async () => {
-      const responses = await problemsClient.listProblems({ pageSize: 1 }, 'testAlias');
+      const responses = await problemsClient.listProblems('testAlias', { pageSize: 1 });
       const problems = responses.get('testAlias');
 
       const problemId = problems?.problems ? problems?.problems[0].problemId : undefined;
@@ -356,7 +347,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
   describe('SecurityApiClient', () => {
     it('should list security problems', async () => {
-      const responses = await securityClient.listSecurityProblems(undefined, 'testAlias');
+      const responses = await securityClient.listSecurityProblems('testAlias');
       const result = securityClient.formatList(responses);
       expect(responses).toBeDefined();
       expect(typeof result).toBe('string');
@@ -372,7 +363,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
   describe('SloApiClient', () => {
     it('should list SLOs', async () => {
-      const response = await sloClient.listSlos(undefined, 'testAlias');
+      const response = await sloClient.listSlos('testAlias');
       const result = sloClient.formatList(response);
       expect(response).toBeDefined();
       expect(typeof result).toBe('string');
@@ -388,7 +379,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should get SLO details', async () => {
-      const list_responses = await sloClient.listSlos(undefined, 'testAlias');
+      const list_responses = await sloClient.listSlos('testAlias');
       const slos = list_responses.get('testAlias');
       const sloId = slos?.slo && slos?.slo.length > 0 ? slos?.slo[0].id : undefined;
       if (sloId == undefined) {
@@ -409,7 +400,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     }, 30000);
 
     it('should get SLO details with timeframe', async () => {
-      const list_responses = await sloClient.listSlos(undefined, 'testAlias');
+      const list_responses = await sloClient.listSlos('testAlias');
       const slos = list_responses.get('testAlias');
 
       const sloId = slos?.slo && slos?.slo.length > 0 ? slos?.slo[0].id : undefined;
@@ -485,7 +476,7 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
     it('should handle 401 Unauthorized errors correctly', async () => {
       // Create client with invalid token
       try {
-        await metricsClient.listAvailableMetrics({}, 'invalidApiToken');
+        await metricsClient.listAvailableMetrics('invalidApiToken');
         fail('Should have thrown an error for invalid token');
       } catch (error) {
         if (!(error instanceof Error)) {

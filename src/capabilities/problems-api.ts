@@ -72,8 +72,8 @@ export class ProblemsApiClient {
   constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listProblems(
-    params: ProblemQueryParams = {},
     environment_aliases: string,
+    params: ProblemQueryParams = {},
   ): Promise<Map<string, ListProblemResponse>> {
     const queryParams = {
       pageSize: params.pageSize || ProblemsApiClient.API_PAGE_SIZE,

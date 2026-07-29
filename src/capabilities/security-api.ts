@@ -64,8 +64,8 @@ export class SecurityApiClient {
   constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listSecurityProblems(
-    params: SecurityProblemQueryParams = {},
     environment_aliases: string,
+    params: SecurityProblemQueryParams = {},
   ): Promise<Map<string, ListSecurityProblemsResponse>> {
     const queryParams = {
       pageSize: params.pageSize || SecurityApiClient.API_PAGE_SIZE,

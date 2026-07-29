@@ -28,7 +28,7 @@ describe('SecurityApiClient', () => {
       const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listSecurityProblems({}, 'testAlias');
+      const result = await client.listSecurityProblems('testAlias');
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/securityProblems',
@@ -44,18 +44,15 @@ describe('SecurityApiClient', () => {
       const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', { securityProblems: [] }]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      await client.listSecurityProblems(
-        {
-          riskLevel: 'LOW',
-          status: 'OPEN',
-          entitySelector: 'my-entity-selector',
-          from: 'my-from',
-          to: 'my-to',
-          pageSize: 12,
-          sort: 'my-sort',
-        },
-        'testAlias',
-      );
+      await client.listSecurityProblems('testAlias', {
+        riskLevel: 'LOW',
+        status: 'OPEN',
+        entitySelector: 'my-entity-selector',
+        from: 'my-from',
+        to: 'my-to',
+        pageSize: 12,
+        sort: 'my-sort',
+      });
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/securityProblems',
@@ -78,7 +75,7 @@ describe('SecurityApiClient', () => {
       });
 
       try {
-        await client.listSecurityProblems({}, 'testAlias');
+        await client.listSecurityProblems('testAlias');
         fail('Should have propagated exception');
       } catch (error) {
         console.log(error);
@@ -125,7 +122,7 @@ describe('SecurityApiClient', () => {
       ]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSecurityProblems({}, 'testAlias');
+      const response = await client.listSecurityProblems('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -170,7 +167,7 @@ describe('SecurityApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSecurityProblems({}, 'testAlias');
+      const response = await client.listSecurityProblems('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -185,7 +182,7 @@ describe('SecurityApiClient', () => {
       const mockResponse = new Map<string, ListSecurityProblemsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listSecurityProblems({}, 'testAlias');
+      const response = await client.listSecurityProblems('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);

@@ -58,18 +58,15 @@ describe('MetricsApiClient', () => {
       const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listAvailableMetrics(
-        {
-          entitySelector: 'my-entity-selector',
-          metadataSelector: 'my-metadata-selector',
-          text: 'my-text',
-          fields: 'my-fields',
-          pageSize: 12,
-          nextPageKey: 'my-page-key',
-          writtenSince: 'my-written-since',
-        },
-        'testAlias',
-      );
+      const result = await client.listAvailableMetrics('testAlias', {
+        entitySelector: 'my-entity-selector',
+        metadataSelector: 'my-metadata-selector',
+        text: 'my-text',
+        fields: 'my-fields',
+        pageSize: 12,
+        nextPageKey: 'my-page-key',
+        writtenSince: 'my-written-since',
+      });
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/metrics',
@@ -91,7 +88,7 @@ describe('MetricsApiClient', () => {
       const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listAvailableMetrics({}, 'testAlias');
+      const result = await client.listAvailableMetrics('testAlias');
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/metrics',
@@ -115,7 +112,7 @@ describe('MetricsApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listAvailableMetrics({}, 'testAlias');
+      const response = await client.listAvailableMetrics('testAlias');
       const result = client.formatMetricList(response);
 
       expect(response).toEqual(mockResponse);
@@ -160,7 +157,7 @@ describe('MetricsApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listAvailableMetrics({}, 'ALL_ENVIRONMENTS');
+      const response = await client.listAvailableMetrics('ALL_ENVIRONMENTS');
       const result = client.formatMetricList(response);
 
       expect(response).toEqual(mockResponse);
@@ -172,7 +169,7 @@ describe('MetricsApiClient', () => {
       const mockResponse = new Map<string, ListMetricsResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listAvailableMetrics({}, 'testAlias');
+      const response = await client.listAvailableMetrics('testAlias');
       const result = client.formatMetricList(response);
 
       expect(response).toEqual(mockResponse);
@@ -192,7 +189,7 @@ describe('MetricsApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listAvailableMetrics({}, 'testAlias');
+      const response = await client.listAvailableMetrics('testAlias');
       const result = client.formatMetricList(response);
 
       expect(result).toContain('Listing 0 metrics');
