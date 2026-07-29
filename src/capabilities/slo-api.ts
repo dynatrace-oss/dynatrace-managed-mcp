@@ -70,7 +70,7 @@ export class SloApiClient {
   static readonly API_PAGE_SIZE = 200;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listSlos(params: SloQueryParams = {}, environment_aliases: string): Promise<Map<string, ListSlosResponse>> {
     const queryParams: SloQueryParams = {
@@ -164,7 +164,11 @@ export class SloApiClient {
             .slice(0, SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
             .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
-          result += `  management zones: ${zones}${slo.managementZones.length > SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${slo.managementZones.length - SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
+          result += `  management zones: ${zones}`;
+          result +=
+            slo.managementZones.length > SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY
+              ? ` (+${slo.managementZones.length - SloApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)\n`
+              : '\n';
         }
         result += '\n';
       });

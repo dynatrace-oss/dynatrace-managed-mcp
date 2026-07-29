@@ -29,7 +29,7 @@ export interface LogEntry {
 export class LogsApiClient {
   private static readonly API_PAGE_SIZE = 1000;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async queryLogs(params: LogQueryParams, environment_aliases: string): Promise<Map<string, ListLogsResponse>> {
     const queryParams = {

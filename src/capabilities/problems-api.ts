@@ -69,7 +69,7 @@ export interface Evidence {
 export class ProblemsApiClient {
   static readonly API_PAGE_SIZE = 50;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listProblems(
     params: ProblemQueryParams = {},

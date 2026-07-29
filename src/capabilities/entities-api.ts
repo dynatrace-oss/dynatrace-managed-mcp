@@ -195,7 +195,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_TAGS_DISPLAY)
             .map((tag: Tag) => (tag.value ? `${tag.key}:${tag.value}` : tag.key))
             .join(', ');
-          result += `  tags: ${tags}${entity.tags.length > EntitiesApiClient.MAX_TAGS_DISPLAY ? ` (+${entity.tags.length - EntitiesApiClient.MAX_TAGS_DISPLAY} more)` : ''}\n`;
+          result += `  tags: ${tags}`;
+          result +=
+            entity.tags.length > EntitiesApiClient.MAX_TAGS_DISPLAY
+              ? ` (+${entity.tags.length - EntitiesApiClient.MAX_TAGS_DISPLAY} more)\n`
+              : '\n';
         }
 
         if (entity.properties && Object.keys(entity.properties).length > 0) {
@@ -203,7 +207,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_PROPERTIES_DISPLAY)
             .map(([k, v]) => `${k}=${v}`)
             .join(', ');
-          result += `  properties: ${props}${Object.keys(entity.properties).length > EntitiesApiClient.MAX_PROPERTIES_DISPLAY ? ` (+${Object.keys(entity.properties).length - EntitiesApiClient.MAX_PROPERTIES_DISPLAY} more)` : ''}\n`;
+          result += `  properties: ${props}`;
+          result +=
+            Object.keys(entity.properties).length > EntitiesApiClient.MAX_PROPERTIES_DISPLAY
+              ? ` (+${Object.keys(entity.properties).length - EntitiesApiClient.MAX_PROPERTIES_DISPLAY} more)\n`
+              : '\n';
         }
 
         if (entity.managementZones && entity.managementZones.length > 0) {
@@ -211,7 +219,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
             .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
-          result += `  Management Zones: ${zones}${entity.managementZones.length > EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${entity.managementZones.length - EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
+          result += `  Management Zones: ${zones}`;
+          result +=
+            entity.managementZones.length > EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY
+              ? ` (+${entity.managementZones.length - EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)\n`
+              : '\n';
         }
         result += '\n';
       });
