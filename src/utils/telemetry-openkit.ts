@@ -29,7 +29,7 @@ class DynatraceMcpTelemetry implements Telemetry {
   constructor() {
     this._isEnabled = process.env.DT_MCP_DISABLE_TELEMETRY !== 'true';
     if (!this._isEnabled) {
-      logger.info('Not initialising Dynatrace Telemetry, because DT_MCP_DISABLE_TELEMETRY not "true"');
+      logger.info('Not initialising Dynatrace Telemetry because DT_MCP_DISABLE_TELEMETRY is "true"');
     }
   }
 
