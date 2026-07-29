@@ -27,17 +27,14 @@ describe('ProblemsApiClient', () => {
       const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listProblems(
-        {
-          from: 'now-24h',
-          to: 'now',
-          status: 'OPEN',
-          impactLevel: 'SERVICE',
-          pageSize: 25,
-          sort: '-startTime',
-        },
-        'testAlias',
-      );
+      const result = await client.listProblems('testAlias', {
+        from: 'now-24h',
+        to: 'now',
+        status: 'OPEN',
+        impactLevel: 'SERVICE',
+        pageSize: 25,
+        sort: '-startTime',
+      });
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/problems',
@@ -58,7 +55,7 @@ describe('ProblemsApiClient', () => {
       const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const result = await client.listProblems({}, 'testAlias');
+      const result = await client.listProblems('testAlias');
 
       expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
         '/api/v2/problems',
@@ -91,7 +88,7 @@ describe('ProblemsApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listProblems({}, 'testAlias');
+      const response = await client.listProblems('testAlias');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -110,7 +107,7 @@ describe('ProblemsApiClient', () => {
 
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listProblems({}, 'ALL_ENVIRONMENTS');
+      const response = await client.listProblems('ALL_ENVIRONMENTS');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);
@@ -128,7 +125,7 @@ describe('ProblemsApiClient', () => {
       const mockResponse = new Map<string, ListProblemResponse>([['testAlias', {}]]);
       mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
 
-      const response = await client.listProblems({}, 'ALL_ENVIRONMENTS');
+      const response = await client.listProblems('ALL_ENVIRONMENTS');
       const result = client.formatList(response);
 
       expect(response).toEqual(mockResponse);

@@ -49,7 +49,7 @@ export class EventsApiClient {
   static readonly MAX_PROPERTIES_DISPLAY = 11;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async queryEvents(params: EventQueryParams, environment_aliases: string): Promise<Map<string, ListEventsResponse>> {
     const queryParams = {
@@ -125,14 +125,22 @@ export class EventsApiClient {
             .slice(0, EventsApiClient.MAX_PROPERTIES_DISPLAY)
             .map(([k, v]) => `${k}=${v}`)
             .join(', ');
-          result += `Properties: ${props}${Object.keys(event.properties).length > EventsApiClient.MAX_PROPERTIES_DISPLAY ? ` (+${Object.keys(event.properties).length - EventsApiClient.MAX_PROPERTIES_DISPLAY} more)` : ''}\n`;
+          result += `Properties: ${props}`;
+          result +=
+            Object.keys(event.properties).length > EventsApiClient.MAX_PROPERTIES_DISPLAY
+              ? ` (+${Object.keys(event.properties).length - EventsApiClient.MAX_PROPERTIES_DISPLAY} more)\n`
+              : '\n';
         }
         if (event.managementZones && event.managementZones.length > 0) {
           const zones = event.managementZones
             .slice(0, EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
             .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
-          result += `Management Zones: ${zones}${event.managementZones.length > EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${event.managementZones.length - EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
+          result += `Management Zones: ${zones}`;
+          result +=
+            event.managementZones.length > EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY
+              ? ` (+${event.managementZones.length - EventsApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)\n`
+              : '\n';
         }
 
         result += '\n';

@@ -66,11 +66,11 @@ export class MetricsApiClient {
   static readonly API_PAGE_SIZE = 500;
   static readonly MAX_DIMENSIONS_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listAvailableMetrics(
-    params: MetricListParams = {},
     environment_aliases: string,
+    params: MetricListParams = {},
   ): Promise<Map<string, ListMetricsResponse>> {
     const queryParams = {
       pageSize: params.pageSize || MetricsApiClient.API_PAGE_SIZE,
@@ -163,7 +163,11 @@ export class MetricsApiClient {
             .slice(0, MetricsApiClient.MAX_DIMENSIONS_DISPLAY)
             .map((dim: DimensionDefinition) => dim.name)
             .join(', ');
-          result += `  dimensions: ${dims}${metric.dimensionDefinitions.length > MetricsApiClient.MAX_DIMENSIONS_DISPLAY ? ` (+${metric.dimensionDefinitions.length - MetricsApiClient.MAX_DIMENSIONS_DISPLAY} more)` : ''}\n`;
+          result += `  dimensions: ${dims}`;
+          result +=
+            metric.dimensionDefinitions.length > MetricsApiClient.MAX_DIMENSIONS_DISPLAY
+              ? ` (+${metric.dimensionDefinitions.length - MetricsApiClient.MAX_DIMENSIONS_DISPLAY} more)\n`
+              : '\n';
         }
         result += '\n';
       });
@@ -192,9 +196,7 @@ export class MetricsApiClient {
 
   formatMetricDetails(responses: Map<string, Metric>): string {
     let result = '';
-    const aliases: string[] = [];
     for (const [alias, data] of responses) {
-      aliases.push(alias);
       result +=
         'Details of metric from environment ' + alias + ' in the following json:\n' + JSON.stringify(data) + '\n';
     }

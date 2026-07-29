@@ -69,11 +69,11 @@ export interface Evidence {
 export class ProblemsApiClient {
   static readonly API_PAGE_SIZE = 50;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listProblems(
-    params: ProblemQueryParams = {},
     environment_aliases: string,
+    params: ProblemQueryParams = {},
   ): Promise<Map<string, ListProblemResponse>> {
     const queryParams = {
       pageSize: params.pageSize || ProblemsApiClient.API_PAGE_SIZE,

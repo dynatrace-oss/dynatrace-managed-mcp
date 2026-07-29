@@ -5,8 +5,8 @@
  */
 export function getRateLimitConfig(): { maxCalls: number; windowMs: number } {
   return {
-    maxCalls: parseInt(process.env.DT_MCP_RATE_LIMIT_MAX_CALLS ?? '20', 10),
-    windowMs: parseInt(process.env.DT_MCP_RATE_LIMIT_WINDOW_MS ?? '20000', 10),
+    maxCalls: Number.parseInt(process.env.DT_MCP_RATE_LIMIT_MAX_CALLS ?? '20', 10),
+    windowMs: Number.parseInt(process.env.DT_MCP_RATE_LIMIT_WINDOW_MS ?? '20000', 10),
   };
 }
 
@@ -45,7 +45,7 @@ export class RateLimiter {
 
     // Bound memory: drop other users' buckets whose calls are all outside the current window.
     for (const [key, times] of this.buckets) {
-      if (key !== userKey && (times.length === 0 || times[times.length - 1] <= windowStart)) {
+      if (key !== userKey && (times.length === 0 || (times.at(-1) ?? -Infinity) <= windowStart)) {
         this.buckets.delete(key);
       }
     }

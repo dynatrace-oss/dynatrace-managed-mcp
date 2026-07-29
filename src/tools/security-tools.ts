@@ -45,18 +45,15 @@ export function registerSecurityTools(ctx: ToolContext): void {
       readOnlyHint: true,
     },
     async ({ riskLevel, status, entitySelector, from, to, limit, sort, environment_alias }) => {
-      const responses = await ctx.securityClient.listSecurityProblems(
-        {
-          riskLevel: riskLevel,
-          status: status,
-          entitySelector: entitySelector,
-          from: from,
-          to: to,
-          pageSize: limit,
-          sort: sort,
-        },
-        environment_alias,
-      );
+      const responses = await ctx.securityClient.listSecurityProblems(environment_alias, {
+        riskLevel: riskLevel,
+        status: status,
+        entitySelector: entitySelector,
+        from: from,
+        to: to,
+        pageSize: limit,
+        sort: sort,
+      });
 
       return ctx.securityClient.formatList(responses);
     },

@@ -12,6 +12,8 @@
 
 - Added `DT_MCP_TOKEN_VALIDATION_TTL_MS` (default `60000`) to control how long per-caller token-validation results are cached.
 - Updated `fast-uri` to 3.1.4.
+- Hardened the CI and release pipeline: pinned all GitHub Actions to full commit SHAs, installed dependencies with `npm ci --ignore-scripts`, pinned `jsonschema` to `4.26.0` with `--only-binary`, and forced HTTPS for release-tooling downloads.
+- Reordered the optional `params` argument to be last in the `listAvailableMetrics`, `listProblems`, `listSecurityProblems`, and `listSlos` capability-client methods so the default value applies. This is an internal API change only and does not affect MCP tool behavior.
 
 ### Fixes
 
@@ -19,6 +21,8 @@
 - `get_environments_info` now reports only on environments the caller supplied a token for, and returns an identical "invalid token" message whether an alias is unknown or its token is invalid — so callers can no longer enumerate which environments are configured.
 - Improved `get_environments_info` in stdio mode: now uses cached startup validation results (version, validity, error) instead of re-probing live on every call, eliminating redundant network requests. The cluster version and minimum version check are now displayed from the cached result.
 - Improved rate-limiting key stability: `deriveUserKey` now normalises the `X-Dynatrace-Tokens` header (sorts aliases, strips whitespace) so equivalent token sets produce the same rate-limit bucket regardless of header ordering.
+- Resolved SonarQube blocker, security, and code-quality findings across the server through internal refactors, with no change to tool behavior, output, or configuration.
+- Fixed an ineffective assertion in the metrics pagination integration test that was not actually verifying its condition.
 
 ## 0.6.0
 

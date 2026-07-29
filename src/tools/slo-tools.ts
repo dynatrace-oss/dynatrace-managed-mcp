@@ -77,21 +77,18 @@ export function registerSloTools(ctx: ToolContext): void {
       limit,
       environment_alias,
     }) => {
-      const responses = await ctx.sloClient.listSlos(
-        {
-          sloSelector: sloSelector,
-          timeFrame: timeFrame,
-          from: from,
-          to: to,
-          evaluate: evaluate,
-          sort: sort,
-          enabledSlos: enabledSlos,
-          showGlobalSlos: showGlobalSlos,
-          demo: demo,
-          pageSize: limit,
-        },
-        environment_alias,
-      );
+      const responses = await ctx.sloClient.listSlos(environment_alias, {
+        sloSelector: sloSelector,
+        timeFrame: timeFrame,
+        from: from,
+        to: to,
+        evaluate: evaluate,
+        sort: sort,
+        enabledSlos: enabledSlos,
+        showGlobalSlos: showGlobalSlos,
+        demo: demo,
+        pageSize: limit,
+      });
       return ctx.sloClient.formatList(responses);
     },
   );

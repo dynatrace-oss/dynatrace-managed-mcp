@@ -78,7 +78,7 @@ export class EntitiesApiClient {
   static readonly MAX_PROPERTIES_DISPLAY = 11;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listEntityTypes(environment_aliases: string): Promise<Map<string, ListEntityTypesResponse>> {
     // Deliberately large page size; will format this concisely rather than returning all json in tool response.
@@ -195,7 +195,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_TAGS_DISPLAY)
             .map((tag: Tag) => (tag.value ? `${tag.key}:${tag.value}` : tag.key))
             .join(', ');
-          result += `  tags: ${tags}${entity.tags.length > EntitiesApiClient.MAX_TAGS_DISPLAY ? ` (+${entity.tags.length - EntitiesApiClient.MAX_TAGS_DISPLAY} more)` : ''}\n`;
+          result += `  tags: ${tags}`;
+          result +=
+            entity.tags.length > EntitiesApiClient.MAX_TAGS_DISPLAY
+              ? ` (+${entity.tags.length - EntitiesApiClient.MAX_TAGS_DISPLAY} more)\n`
+              : '\n';
         }
 
         if (entity.properties && Object.keys(entity.properties).length > 0) {
@@ -203,7 +207,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_PROPERTIES_DISPLAY)
             .map(([k, v]) => `${k}=${v}`)
             .join(', ');
-          result += `  properties: ${props}${Object.keys(entity.properties).length > EntitiesApiClient.MAX_PROPERTIES_DISPLAY ? ` (+${Object.keys(entity.properties).length - EntitiesApiClient.MAX_PROPERTIES_DISPLAY} more)` : ''}\n`;
+          result += `  properties: ${props}`;
+          result +=
+            Object.keys(entity.properties).length > EntitiesApiClient.MAX_PROPERTIES_DISPLAY
+              ? ` (+${Object.keys(entity.properties).length - EntitiesApiClient.MAX_PROPERTIES_DISPLAY} more)\n`
+              : '\n';
         }
 
         if (entity.managementZones && entity.managementZones.length > 0) {
@@ -211,7 +219,11 @@ export class EntitiesApiClient {
             .slice(0, EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY)
             .map((zone: ManagementZone) => zone.name || zone.id || zone)
             .join(', ');
-          result += `  Management Zones: ${zones}${entity.managementZones.length > EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY ? ` (+${entity.managementZones.length - EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)` : ''}\n`;
+          result += `  Management Zones: ${zones}`;
+          result +=
+            entity.managementZones.length > EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY
+              ? ` (+${entity.managementZones.length - EntitiesApiClient.MAX_MANAGEMENT_ZONES_DISPLAY} more)\n`
+              : '\n';
         }
         result += '\n';
       });
@@ -239,7 +251,7 @@ export class EntitiesApiClient {
   formatEntityTypeList(responses: Map<string, ListEntityTypesResponse>): string {
     let result = '';
     const aliases: string[] = [];
-    const commonTypes = [
+    const commonTypes = new Set([
       'SERVICE',
       'PROCESS_GROUP',
       'HOST',
@@ -248,7 +260,7 @@ export class EntitiesApiClient {
       'CONTAINER_GROUP_INSTANCE',
       'AWS_LAMBDA_FUNCTION',
       'AZURE_WEB_APP',
-    ];
+    ]);
 
     for (const [alias, data] of responses) {
       aliases.push(alias);
@@ -278,7 +290,7 @@ export class EntitiesApiClient {
         }
         conciseList += '\n';
 
-        if (commonTypes.includes(entityType.type ?? '')) {
+        if (commonTypes.has(entityType.type ?? '')) {
           availableCommonTypes.push(entityType.type ?? '');
         }
       });

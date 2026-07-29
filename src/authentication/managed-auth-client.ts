@@ -49,8 +49,8 @@ export class ManagedAuthClient {
   public isValid: boolean;
   public validationError: string;
   public clusterVersion: string;
-  private proxy: AxiosProxyConfig | undefined;
-  private httpClient: AxiosInstance;
+  private readonly proxy: AxiosProxyConfig | undefined;
+  private readonly httpClient: AxiosInstance;
   public MINIMUM_VERSION: string;
 
   constructor(params: ManagedAuthClientParams) {
@@ -291,7 +291,7 @@ export class ManagedAuthClientManager {
 
     const responses = new Map<string, T>();
     for (const client of this.clients) {
-      if (selectedAliases.indexOf(client.alias) > -1) {
+      if (selectedAliases.includes(client.alias)) {
         const token = this.tokens.get(client.alias);
         if (!token) {
           throw new MissingTokenError(client.alias);
@@ -313,45 +313,36 @@ export class ManagedAuthClientManager {
   }
 }
 
+function buildProxyConfig(proxyUrl: string, defaultPort: string): AxiosProxyConfig {
+  const url = new URL(proxyUrl);
+  const port = url.port || defaultPort;
+
+  logger.info(`Configuring HTTP Proxy for Axios client: ${url.hostname}:${port}`);
+
+  return {
+    host: url.hostname,
+    port: Number(port),
+    protocol: url.protocol,
+    auth: url.username
+      ? { username: decodeURIComponent(url.username), password: decodeURIComponent(url.password) }
+      : undefined,
+  };
+}
+
 export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig | undefined {
   if (httpsProxy && httpProxy) {
     logger.error('Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.');
     return undefined;
-  } else if (!httpsProxy && !httpProxy) {
+  }
+  if (!httpsProxy && !httpProxy) {
     // No proxy configured, nothing to do
     return undefined;
   }
 
   try {
-    let url: URL;
-    let port: string;
-    let protocol: string;
-
-    if (httpsProxy) {
-      url = new URL(httpsProxy);
-      port = url.port ? url.port : '443';
-      protocol = url.protocol ? url.protocol : 'https';
-    } else if (httpProxy) {
-      url = new URL(httpProxy);
-      port = url.port ? url.port : '80';
-      protocol = url.protocol ? url.protocol : 'http';
-    } else {
-      // No proxy configured, nothing to do
-      return undefined;
-    }
-
-    logger.info(`Configuring HTTP Proxy for Axios client: ${url.hostname}:${port}`);
-
-    return {
-      host: url.hostname,
-      port: Number(port),
-      protocol: protocol,
-      auth: url.username
-        ? { username: decodeURIComponent(url.username), password: decodeURIComponent(url.password) }
-        : undefined,
-    };
+    return httpsProxy ? buildProxyConfig(httpsProxy, '443') : buildProxyConfig(httpProxy, '80');
   } catch (err) {
     logErrorObject(err, 'Failed to configure HTTP Proxy for Axios client');
-    throw Error('Failed to parse and configure http(s) proxy', { cause: err });
+    throw new Error('Failed to parse and configure http(s) proxy', { cause: err });
   }
 }

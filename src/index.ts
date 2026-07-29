@@ -15,7 +15,7 @@ import {
 } from './authentication/managed-auth-client';
 import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from './utils/environment';
 import { parseTokenHeader, deriveUserKey } from './utils/token-header';
-import { createTelemetry } from './utils/telemetry-openkit';
+import { createAndInitializeTelemetry } from './utils/telemetry-openkit';
 import { MetricsApiClient } from './capabilities/metrics-api';
 import { LogsApiClient } from './capabilities/logs-api';
 
@@ -149,8 +149,8 @@ const main = async () => {
   }
 
   // Initialize usage tracking
-  const telemetry = createTelemetry();
-  await telemetry.trackMcpServerStart();
+  const telemetry = await createAndInitializeTelemetry();
+  await telemetry?.trackMcpServerStart();
 
   // Create a shutdown handler that takes shutdown operations as parameters
   const shutdownHandler = (...shutdownOps: Array<() => void | Promise<void>>) => {
@@ -162,6 +162,77 @@ const main = async () => {
       await flushLogger();
       process.exit(0);
     };
+  };
+
+  const registerTool = <TArgs = undefined>(
+    name: string,
+    description: string,
+    paramsSchema: ZodRawShape,
+    annotations: ToolAnnotations,
+    cb: (args: TArgs) => Promise<string>,
+    userKey: string,
+    server: McpServer,
+  ) => {
+    const wrappedCb = async (args: TArgs): Promise<CallToolResult> => {
+      // Capture starttime for telemetry and rate limiting
+      const startTime = Date.now();
+
+      // Per-user (per-token) rate limiting. userKey identifies the caller for this request.
+      if (!rateLimiter.tryAcquire(userKey)) {
+        logger.debug(`Rate-limiting tool execution: ${name}; args: ${JSON.stringify(args)}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Rate limit exceeded: Maximum ${rateLimiter.maxCalls} tool calls per ${rateLimiter.windowMs / 1000} seconds. Please try again later.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      let toolCallSuccessful = false;
+
+      try {
+        logger.debug(`Executing tool: ${name}; args: ${JSON.stringify(args)}`);
+        const response = await cb(args);
+        toolCallSuccessful = true;
+        logger.debug(
+          `Executed tool: ${name}; args: ${JSON.stringify(args)}; response length ${response.length} chars; ${response}`,
+        );
+        return {
+          content: [{ type: 'text', text: response }],
+        };
+      } catch (error) {
+        logErrorObject(error, `Failed to run tool ${name}`);
+        if (error instanceof Error) {
+          telemetry?.trackError(error, `tool_${name}`).catch((e) => logErrorObject(e, 'Failed to track error'));
+          return {
+            content: [{ type: 'text', text: `Error: ${error.message}` }],
+            isError: true,
+          };
+        }
+        return {
+          content: [{ type: 'text', text: 'Error: Unknown error' }],
+          isError: true,
+        };
+      } finally {
+        const duration = Date.now() - startTime;
+        telemetry
+          ?.trackMcpToolUsage(name, toolCallSuccessful, duration)
+          .catch((e) => logger.warn(`Failed to track tool usage: ${e.message}`, { error: e }));
+      }
+    };
+
+    server.registerTool(
+      name,
+      {
+        description,
+        inputSchema: paramsSchema,
+        annotations,
+      },
+      wrappedCb as ToolCallback<ZodRawShape>,
+    );
   };
 
   // Factory: creates a new McpServer with all tools registered, bound to this caller's tokens.
@@ -194,76 +265,6 @@ const main = async () => {
     // Ready to start the server
     logger.info(`Starting Dynatrace Managed MCP Server v${getPackageJsonVersion()}...`);
 
-    // Tool wrapper for consistent error handling and telemetry
-    const tool = <TArgs = undefined>(
-      name: string,
-      description: string,
-      paramsSchema: ZodRawShape,
-      annotations: ToolAnnotations,
-      cb: (args: TArgs) => Promise<string>,
-    ) => {
-      const wrappedCb = async (args: TArgs): Promise<CallToolResult> => {
-        // Capture starttime for telemetry and rate limiting
-        const startTime = Date.now();
-
-        // Per-user (per-token) rate limiting. userKey identifies the caller for this request.
-        if (!rateLimiter.tryAcquire(userKey)) {
-          logger.debug(`Rate-limiting tool execution: ${name}; args: ${JSON.stringify(args)}`);
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Rate limit exceeded: Maximum ${rateLimiter.maxCalls} tool calls per ${rateLimiter.windowMs / 1000} seconds. Please try again later.`,
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        let toolCallSuccessful = false;
-
-        try {
-          logger.debug(`Executing tool: ${name}; args: ${JSON.stringify(args)}`);
-          const response = await cb(args);
-          toolCallSuccessful = true;
-          logger.debug(
-            `Executed tool: ${name}; args: ${JSON.stringify(args)}; response length ${response.length} chars; ${response}`,
-          );
-          return {
-            content: [{ type: 'text', text: response }],
-          };
-        } catch (error) {
-          logErrorObject(error, `Failed to run tool ${name}`);
-          if (error instanceof Error) {
-            telemetry.trackError(error, `tool_${name}`).catch((e) => logErrorObject(e, 'Failed to track error'));
-            return {
-              content: [{ type: 'text', text: `Error: ${error.message}` }],
-              isError: true,
-            };
-          }
-          return {
-            content: [{ type: 'text', text: 'Error: Unknown error' }],
-            isError: true,
-          };
-        } finally {
-          const duration = Date.now() - startTime;
-          telemetry
-            .trackMcpToolUsage(name, toolCallSuccessful, duration)
-            .catch((e) => logger.warn(`Failed to track tool usage: ${e.message}`, { error: e }));
-        }
-      };
-
-      server.registerTool(
-        name,
-        {
-          description,
-          inputSchema: paramsSchema,
-          annotations,
-        },
-        wrappedCb as ToolCallback<ZodRawShape>,
-      );
-    };
-
     const envAliasValidate = (alias: string) => {
       if (alias == 'ALL_ENVIRONMENTS') {
         return true;
@@ -275,6 +276,16 @@ const main = async () => {
         }
       }
       return true;
+    };
+
+    const tool = <TArgs = undefined>(
+      name: string,
+      description: string,
+      paramsSchema: ZodRawShape,
+      annotations: ToolAnnotations,
+      cb: (args: TArgs) => Promise<string>,
+    ) => {
+      registerTool(name, description, paramsSchema, annotations, cb, userKey, server);
     };
 
     // Assemble the per-request context and register all tools (grouped by capability in src/tools/*).
@@ -390,7 +401,7 @@ const main = async () => {
     process.on(
       'SIGINT',
       shutdownHandler(
-        async () => await telemetry.shutdown(),
+        async () => await telemetry?.shutdown(),
         () =>
           new Promise<void>((resolve) => {
             httpServer.closeAllConnections?.(); // Force close all connections (Node.js 18.2+)
@@ -401,7 +412,7 @@ const main = async () => {
     process.on(
       'SIGTERM',
       shutdownHandler(
-        async () => await telemetry.shutdown(),
+        async () => await telemetry?.shutdown(),
         () =>
           new Promise<void>((resolve) => {
             httpServer.closeAllConnections?.(); // Force close all connections (Node.js 18.2+)
@@ -437,11 +448,11 @@ const main = async () => {
     // Handle graceful shutdown for stdio mode
     process.on(
       'SIGINT',
-      shutdownHandler(async () => await telemetry.shutdown()),
+      shutdownHandler(async () => await telemetry?.shutdown()),
     );
     process.on(
       'SIGTERM',
-      shutdownHandler(async () => await telemetry.shutdown()),
+      shutdownHandler(async () => await telemetry?.shutdown()),
     );
   }
 };
@@ -450,9 +461,9 @@ main().catch(async (error) => {
   logErrorObject(error, 'Fatal error in main()');
   try {
     // report error in main
-    const telemetry = createTelemetry();
-    await telemetry.trackError(error, 'main_error');
-    await telemetry.shutdown();
+    const telemetry = await createAndInitializeTelemetry();
+    await telemetry?.trackError(error, 'main_error');
+    await telemetry?.shutdown();
   } catch (e) {
     logErrorObject(e, 'Failed to track');
   }

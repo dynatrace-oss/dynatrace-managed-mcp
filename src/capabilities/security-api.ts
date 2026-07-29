@@ -61,11 +61,11 @@ export class SecurityApiClient {
   static readonly API_PAGE_SIZE = 200;
   static readonly MAX_CVES_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listSecurityProblems(
-    params: SecurityProblemQueryParams = {},
     environment_aliases: string,
+    params: SecurityProblemQueryParams = {},
   ): Promise<Map<string, ListSecurityProblemsResponse>> {
     const queryParams = {
       pageSize: params.pageSize || SecurityApiClient.API_PAGE_SIZE,
@@ -139,9 +139,11 @@ export class SecurityApiClient {
             `exposure: ${problem.riskAssessment.exposure}\n`;
         }
         if (problem.cveIds && problem.cveIds.length > 0) {
+          result += `  cveIds: ${problem.cveIds.slice(0, SecurityApiClient.MAX_CVES_DISPLAY).join(', ')}`;
           result +=
-            `  cveIds: ${problem.cveIds.slice(0, SecurityApiClient.MAX_CVES_DISPLAY).join(', ')}` +
-            `${problem.cveIds.length > SecurityApiClient.MAX_CVES_DISPLAY ? ` (+${problem.cveIds.length - SecurityApiClient.MAX_CVES_DISPLAY} more)` : ''}\n`;
+            problem.cveIds.length > SecurityApiClient.MAX_CVES_DISPLAY
+              ? ` (+${problem.cveIds.length - SecurityApiClient.MAX_CVES_DISPLAY} more)\n`
+              : '\n';
         }
         if (problem.firstSeenTimestamp) {
           result += `  firstSeen: ${formatTimestamp(problem.firstSeenTimestamp)}\n`;
