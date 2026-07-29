@@ -78,7 +78,7 @@ export class EntitiesApiClient {
   static readonly MAX_PROPERTIES_DISPLAY = 11;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
 
-  constructor(private authManager: ManagedAuthClientManager) {}
+  constructor(private readonly authManager: ManagedAuthClientManager) {}
 
   async listEntityTypes(environment_aliases: string): Promise<Map<string, ListEntityTypesResponse>> {
     // Deliberately large page size; will format this concisely rather than returning all json in tool response.
@@ -239,7 +239,7 @@ export class EntitiesApiClient {
   formatEntityTypeList(responses: Map<string, ListEntityTypesResponse>): string {
     let result = '';
     const aliases: string[] = [];
-    const commonTypes = [
+    const commonTypes = new Set([
       'SERVICE',
       'PROCESS_GROUP',
       'HOST',
@@ -248,7 +248,7 @@ export class EntitiesApiClient {
       'CONTAINER_GROUP_INSTANCE',
       'AWS_LAMBDA_FUNCTION',
       'AZURE_WEB_APP',
-    ];
+    ]);
 
     for (const [alias, data] of responses) {
       aliases.push(alias);
@@ -278,7 +278,7 @@ export class EntitiesApiClient {
         }
         conciseList += '\n';
 
-        if (commonTypes.includes(entityType.type ?? '')) {
+        if (commonTypes.has(entityType.type ?? '')) {
           availableCommonTypes.push(entityType.type ?? '');
         }
       });

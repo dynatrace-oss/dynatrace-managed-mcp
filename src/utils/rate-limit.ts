@@ -5,8 +5,8 @@
  */
 export function getRateLimitConfig(): { maxCalls: number; windowMs: number } {
   return {
-    maxCalls: parseInt(process.env.DT_MCP_RATE_LIMIT_MAX_CALLS ?? '20', 10),
-    windowMs: parseInt(process.env.DT_MCP_RATE_LIMIT_WINDOW_MS ?? '20000', 10),
+    maxCalls: Number.parseInt(process.env.DT_MCP_RATE_LIMIT_MAX_CALLS ?? '20', 10),
+    windowMs: Number.parseInt(process.env.DT_MCP_RATE_LIMIT_WINDOW_MS ?? '20000', 10),
   };
 }
 
