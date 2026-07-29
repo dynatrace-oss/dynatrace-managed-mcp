@@ -6,7 +6,7 @@
     "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp",
     "source": "github"
   },
-  "version": "0.5.7",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
