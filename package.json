@@ -1,6 +1,6 @@
 {
   "name": "@dynatrace-oss/dynatrace-managed-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "node": ">=26.5.1 <27"
   },
