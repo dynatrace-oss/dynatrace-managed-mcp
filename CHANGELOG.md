@@ -1,19 +1,26 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
-## Unreleased
+## 1.0.1
 
 ### Dependencies
 
-- Bumped `fast-uri` `3.1.4` -> `3.1.5`
-- Bumped `node` `26.3.1` -> `26.5.1`
+| Type   | Name                      | Old    | New    |
+| ------ | ------------------------- | ------ | ------ |
+| ci     | docker/login-action       | 4.5.2  | 4.6.0  |
+| deps   | fast-uri                  | 3.1.4  | 3.1.5  |
+| deps   | ip-address                | 10.2.0 | 10.4.0 |
+| deps   | @modelcontextprotocol/sdk | 1.29.0 | 1.30.0 |
+| docker | node                      | 26.3.1 | 26.5.1 |
+| engine | node                      | None   | 26.5.1 |
 
 ### Changes
 
 - Added `engine` property to `package.json` and defined `node` version to `>=26.5.1 <27`. Failure to provide proper version will result in a warning
 
-### Fixes
+### Documentation
 
-- Fixed npm badge in `README.md` file
+- npm badge in `README.md` file now correctly displays number of monthly downloads and points to correct repository
+- Changed order and colours of badges in `README.md` file. Colours were extracted from Barista library
 
 ## 1.0.0
 
