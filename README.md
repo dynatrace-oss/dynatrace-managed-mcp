@@ -1,20 +1,20 @@
 # Dynatrace Managed MCP Server
 
-<h4 align="center">
+<h4>
   <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp/releases">
-    <img src="https://img.shields.io/github/release/dynatrace-oss/dynatrace-managed-mcp" />
+    <img src="https://img.shields.io/github/release/dynatrace-oss/dynatrace-managed-mcp?color=c05240" alt="Latest Dynatrace Managed MCP Server releases"/>
   </a>
   <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-mit-blue.svg" alt="Dynatrace Managed MCP Server is released under the MIT License" />
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue?color=7c38a1" alt="Dynatrace Managed MCP Server is released under the Apache 2.0 License" />
   </a>
-  <a href="https://www.npmjs.com/package/@dynatrace-oss/dynatrace-managed-mcp">
-    <img src="https://img.shields.io/npm/dm/@dynatrace-oss/dynatrace-managed-mcp?logo=npm&style=flat&color=red" alt="npm" />
+  <a href="https://www.npmjs.com/package/@dynatrace-oss/dynatrace-managed-mcp-server">
+    <img src="https://img.shields.io/npm/dm/@dynatrace-oss/dynatrace-managed-mcp-server?logo=npm&color=5ead35" alt="npm" />
+  </a>
+  <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp">
+    <img src="https://img.shields.io/github/contributors/dynatrace-oss/dynatrace-managed-mcp?color=5ead35" alt="Dynatrace Managed MCP Server Contributors on GitHub" />
   </a>
   <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp">
     <img src="https://img.shields.io/github/stars/dynatrace-oss/dynatrace-managed-mcp" alt="Dynatrace Managed MCP Server Stars on GitHub" />
-  </a>
-  <a href="https://github.com/dynatrace-oss/dynatrace-managed-mcp">
-    <img src="https://img.shields.io/github/contributors/dynatrace-oss/dynatrace-managed-mcp?color=green" alt="Dynatrace Managed MCP Server Contributors on GitHub" />
   </a>
 </h4>
 
