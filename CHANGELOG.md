@@ -1,5 +1,20 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased
+
+### Dependencies
+
+- Bumped `fast-uri` `3.1.4` -> `3.1.5`
+- Bumped `node` `26.3.1` -> `26.5.1`
+
+### Changes
+
+- Added `engine` property to `package.json` and defined `node` version to `>=26.5.1 <27`. Failure to provide proper version will result in a warning
+
+### Fixes
+
+- Fixed npm badge in `README.md` file
+
 ## 1.0.0
 
 ### Breaking changes
