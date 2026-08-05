@@ -1,5 +1,11 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased
+
+### Changes
+
+- Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
+
 ## 1.0.1
 
 ### Dependencies
