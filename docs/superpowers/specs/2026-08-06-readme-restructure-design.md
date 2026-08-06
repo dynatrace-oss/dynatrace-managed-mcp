@@ -131,7 +131,7 @@ limits & tuning
 
 Four things the current README never states:
 
-- The environment config **must not contain `apiToken`** in HTTP mode; tokens arrive per request only.
+- In HTTP mode `apiToken` is **ignored** — tokens arrive per request only, and the server never reads the field (`src/index.ts:138-142` sets `startupTokens` to an empty map unconditionally). Omit it so the config holds no unused secret. Nothing validates or rejects a config that includes it, so the documentation must not present omitting it as a hard requirement. _(Corrected during implementation: the original wording claimed it "must not contain `apiToken`", which overstated enforcement.)_
 - There is **no startup validation** in HTTP mode — the opposite of local mode. A bad URL surfaces as a per-request `401 Unauthorized: no valid Dynatrace token supplied`, not a startup crash. Token validity is cached for 60 s (`DT_MCP_TOKEN_VALIDATION_TTL_MS`).
 - `--host` defaults to `127.0.0.1`, so a container started with default flags is **unreachable**. `--host 0.0.0.0` is required. This gets a callout: it is a guaranteed first-attempt failure.
 - `--server` is an undocumented alias for `--http`. `DT_MCP_MAX_BODY_SIZE` (1 MB default, `413` beyond it) is undocumented entirely.
