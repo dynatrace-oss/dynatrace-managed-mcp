@@ -50,7 +50,8 @@
     "stdio": "node --env-file='.env' ./dist/index.js",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "check:docs": "node scripts/check-docs.mjs"
+    "check:docs": "node scripts/check-docs.mjs",
+    "check:docs:strict": "node scripts/check-docs.mjs --strict"
   },
   "author": "Dynatrace",
   "license": "MIT",

@@ -182,7 +182,7 @@ In `--http` mode, `src/index.ts` creates a **new `McpServer` instance per reques
 
 - Uses API tokens (not OAuth) passed in HTTP headers
 - Multi-environment support via `DT_ENVIRONMENT_CONFIGS` JSON array
-- Required API scopes documented in `README.md#api-scopes-for-managed-deployment`
+- Required API scopes documented in [`docs/api-token.md#required-scopes`](../docs/api-token.md#required-scopes)
 
 ### Changelog Maintenance
 

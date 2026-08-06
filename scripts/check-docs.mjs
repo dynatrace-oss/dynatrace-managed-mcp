@@ -32,7 +32,9 @@ function walk(dir, ext, acc = []) {
 
 const DOC_FILES = [
   join(ROOT, 'README.md'),
+  join(ROOT, 'CONTRIBUTING.md'),
   ...walk(join(ROOT, 'docs'), '.md'),
+  ...walk(join(ROOT, '.github'), '.md'),
   join(ROOT, 'examples/README.md'),
 ].filter(existsSync);
 
@@ -142,8 +144,14 @@ const FORBIDDEN = [
   ['@dynatrace-oss/dynatrace-mcp-server', 'that is the SaaS package; use @dynatrace-oss/dynatrace-managed-mcp-server'],
   ['DT_API_ENDPOINT_URL', 'no such variable; dynatraceUrl falls back to the apiEndpointUrl field'],
   ['gemini extensions install', 'this repo ships no gemini-extension.json'],
-  ['honors system proxy', 'false: HTTP_PROXY/HTTPS_PROXY are never read; only the per-environment httpProxyUrl/httpsProxyUrl fields work'],
-  ['default: `dynatrace-managed-mcp`', 'wrong: DT_MCP_TELEMETRY_APPLICATION_ID defaults to the UUID in telemetry-openkit.ts:38'],
+  [
+    'honors system proxy',
+    'false: HTTP_PROXY/HTTPS_PROXY are never read; only the per-environment httpProxyUrl/httpsProxyUrl fields work',
+  ],
+  [
+    'default: `dynatrace-managed-mcp`',
+    'wrong: DT_MCP_TELEMETRY_APPLICATION_ID defaults to the UUID in telemetry-openkit.ts:38',
+  ],
 ];
 for (const file of DOC_FILES) {
   const text = read(file);
