@@ -36,6 +36,8 @@ For use cases and architecture, see [Overview](docs/overview.md).
 
 ## Quickstart
 
+This quickstart sets up **local (stdio) mode** — one person, one machine, the AI client launches the server itself. Setting up one server shared by a team instead? See [Set up remote (HTTP) mode](docs/setup-remote.md).
+
 1. Create a Dynatrace API token with the required scopes — see [Create an API token](docs/api-token.md).
 
 2. Create `~/.dynatrace/managed-mcp.yaml`:

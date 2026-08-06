@@ -19,13 +19,15 @@ Specific use cases for the Dynatrace Managed MCP include:
 
 ## Capabilities
 
-- **Problems** - List and get [problem](https://www.dynatrace.com/hub/detail/problems/) details from your services (for example Kubernetes)
-- **Security** - List and get security problems / [vulnerability](https://www.dynatrace.com/hub/detail/vulnerabilities/) details
-- **Entities** - Get more information about a monitored entity, including relationship mappings
-- **SLO** - List and get Service Level Objective details, including evaluation and error budgets
-- **Event Tracking** - List and get system events
-- **Log Investigation** - Search and filter logs with advanced content and time-based queries
-- **Metrics Analysis** - Query and analyze performance metrics using V2 Metrics API
+The [README](../README.md#capabilities) lists these seven capabilities as a one-line-each summary; this section is the detailed version — what each one actually lets you ask, and the API domain it's built on.
+
+- **Problems** — List open or historical [problems](https://www.dynatrace.com/hub/detail/problems/) and fetch full details for one, including affected entities and root-cause information, for services and infrastructure across your monitored environments (for example Kubernetes workloads). Built on the Problems v2 API.
+- **Security** — List and get [security problems](https://www.dynatrace.com/hub/detail/vulnerabilities/) — vulnerabilities detected in your runtime — with severity, affected entities, and remediation context. Built on the Security Problems v2 API.
+- **Entities** — Look up a monitored entity (a host, service, process group, and so on) and its relationship mappings to other entities, so an assistant can walk from a symptom (a problem or a log line) to the topology around it. Built on the Entities v2 API.
+- **SLO** — List Service Level Objectives and get evaluation details for one, including its current error budget, so an assistant can answer "are we within budget" without a dashboard round-trip. Built on the SLO v2 API.
+- **Event Tracking** — List and get system events (deployments, configuration changes, and similar), useful for correlating a problem's onset with something that changed around the same time. Built on the Events v2 API.
+- **Log Investigation** — Search and filter logs with content-based queries (matching text or fields) and time-based windows, for pulling the log lines relevant to an incident without leaving the assistant. Built on the Logs v2 API.
+- **Metrics Analysis** — Query and analyze performance metrics (response time, error rate, throughput, and more), including time-series aggregation, for answering "what did this look like over the last hour" directly. Built on the Metrics v2 API.
 
 These capabilities are all implemented on top of Dynatrace Managed's V2 REST APIs. Per standard Dynatrace Managed licensing, calls to these APIs incur no additional cost beyond your existing Managed license.
 
