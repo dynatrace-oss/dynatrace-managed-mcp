@@ -64,33 +64,33 @@ Full examples: [`../examples/dt-config.yaml`](../examples/dt-config.yaml) and [`
 
 One table for every field, however you supply it — config file or `DT_ENVIRONMENT_CONFIGS`:
 
-| Field            | Required                                            | Notes                                                                                                             |
-| ---------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `apiEndpointUrl` | yes                                                 | Base URL for the Managed API; the environment ID is appended. Example `https://abc123.dynatrace-managed.com:9999` |
-| `environmentId`  | yes                                                 | e.g. `01234567-89ab-cdef-abcd-ef0123456789`                                                                       |
-| `apiToken`       | yes in local mode, **must be omitted in HTTP mode** | See [required scopes](api-token.md#required-scopes)                                                               |
-| `alias`          | yes                                                 | Human-readable name; how you refer to the environment when talking to the assistant                               |
-| `dynatraceUrl`   | no                                                  | Base URL for the dashboard. If omitted, falls back to the `apiEndpointUrl` field of the same entry                |
-| `httpProxyUrl`   | no                                                  | Per-environment HTTP proxy — see [Proxy](#proxy)                                                                  |
-| `httpsProxyUrl`  | no                                                  | Per-environment HTTPS proxy — see [Proxy](#proxy)                                                                 |
+| Field            | Required                                    | Notes                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiEndpointUrl` | yes                                         | Base URL for the Managed API; the environment ID is appended. Example `https://abc123.dynatrace-managed.com:9999`                                                                         |
+| `environmentId`  | yes                                         | e.g. `01234567-89ab-cdef-abcd-ef0123456789`                                                                                                                                               |
+| `apiToken`       | yes in local mode, **ignored in HTTP mode** | In HTTP mode the server never reads this field — tokens arrive per request instead. Omit it so the file has no unused secret at rest. See [required scopes](api-token.md#required-scopes) |
+| `alias`          | yes                                         | Human-readable name; how you refer to the environment when talking to the assistant                                                                                                       |
+| `dynatraceUrl`   | no                                          | Base URL for the dashboard. If omitted, falls back to the `apiEndpointUrl` field of the same entry                                                                                        |
+| `httpProxyUrl`   | no                                          | Per-environment HTTP proxy — see [Proxy](#proxy)                                                                                                                                          |
+| `httpsProxyUrl`  | no                                          | Per-environment HTTPS proxy — see [Proxy](#proxy)                                                                                                                                         |
 
 ## Environment variables
 
-| Variable                          | Category       | Default                     | Notes                                                                                                                 |
-| --------------------------------- | -------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `DT_CONFIG_FILE`                  | Configuration  | none                        | Path to the config file. See [Configuration file](#configuration-file).                                               |
-| `DT_ENVIRONMENT_CONFIGS`          | Configuration  | none                        | JSON-array string, used only when `DT_CONFIG_FILE` is unset. See [`DT_ENVIRONMENT_CONFIGS`](#dt_environment_configs). |
-| `LOG_LEVEL`                       | Logging        | `info`                      | Log verbosity. See [Logging](#logging).                                                                               |
-| `LOG_OUTPUT`                      | Logging        | `file`                      | Log destination. See [Logging](#logging) for the full transport matrix.                                               |
-| `LOG_FILE`                        | Logging        | `dynatrace-managed-mcp.log` | Log file path, used when `LOG_OUTPUT` includes `file`.                                                                |
-| `DT_MCP_RATE_LIMIT_MAX_CALLS`     | Rate limiting  | `20`                        | Max tool calls per window, per caller. See [Rate limiting](#rate-limiting).                                           |
-| `DT_MCP_RATE_LIMIT_WINDOW_MS`     | Rate limiting  | `20000`                     | Rate-limit window size, in milliseconds.                                                                              |
-| `DT_MCP_MAX_BODY_SIZE`            | HTTP transport | `1048576`                   | Maximum accepted POST body size in bytes, HTTP mode only. Larger requests get `413 Request Entity Too Large`.         |
-| `DT_MCP_TOKEN_VALIDATION_TTL_MS`  | HTTP transport | `60000`                     | How long a validated token is cached, HTTP mode only. `0` disables caching.                                           |
-| `DT_MCP_DISABLE_TELEMETRY`        | Telemetry      | `false`                     | Set to `true` to disable telemetry. See [Telemetry](#telemetry).                                                      |
-| `DT_MCP_TELEMETRY_APPLICATION_ID` | Telemetry      | Dynatrace-owned default     | Overrides the OpenKit application ID.                                                                                 |
-| `DT_MCP_TELEMETRY_ENDPOINT_URL`   | Telemetry      | Dynatrace-owned default     | Overrides the OpenKit beacon endpoint the data is sent to.                                                            |
-| `DT_MCP_TELEMETRY_DEVICE_ID`      | Telemetry      | auto-generated              | Overrides the per-install device identifier.                                                                          |
+| Variable                          | Category       | Default                                       | Notes                                                                                                                 |
+| --------------------------------- | -------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DT_CONFIG_FILE`                  | Configuration  | none                                          | Path to the config file. See [Configuration file](#configuration-file).                                               |
+| `DT_ENVIRONMENT_CONFIGS`          | Configuration  | none                                          | JSON-array string, used only when `DT_CONFIG_FILE` is unset. See [`DT_ENVIRONMENT_CONFIGS`](#dt_environment_configs). |
+| `LOG_LEVEL`                       | Logging        | `info`                                        | Log verbosity. See [Logging](#logging).                                                                               |
+| `LOG_OUTPUT`                      | Logging        | `file`                                        | Log destination. See [Logging](#logging) for the full transport matrix.                                               |
+| `LOG_FILE`                        | Logging        | `dynatrace-managed-mcp.log`                   | Log file path, used when `LOG_OUTPUT` includes `file`.                                                                |
+| `DT_MCP_RATE_LIMIT_MAX_CALLS`     | Rate limiting  | `20`                                          | Max tool calls per window, per caller. See [Rate limiting](#rate-limiting).                                           |
+| `DT_MCP_RATE_LIMIT_WINDOW_MS`     | Rate limiting  | `20000`                                       | Rate-limit window size, in milliseconds.                                                                              |
+| `DT_MCP_MAX_BODY_SIZE`            | HTTP transport | `1048576`                                     | Maximum accepted POST body size in bytes, HTTP mode only. Larger requests get `413 Request Entity Too Large`.         |
+| `DT_MCP_TOKEN_VALIDATION_TTL_MS`  | HTTP transport | `60000`                                       | How long a validated token is cached, HTTP mode only. `0` disables caching.                                           |
+| `DT_MCP_DISABLE_TELEMETRY`        | Telemetry      | `false`                                       | Set to `true` to disable telemetry. See [Telemetry](#telemetry).                                                      |
+| `DT_MCP_TELEMETRY_APPLICATION_ID` | Telemetry      | `5e2dbb56-076b-412e-8ffc-7babb7ae7c5d`        | Dynatrace-owned OpenKit application ID; overrides it.                                                                 |
+| `DT_MCP_TELEMETRY_ENDPOINT_URL`   | Telemetry      | `https://bf96767wvv.bf.dynatrace.com/mbeacon` | Dynatrace-owned OpenKit beacon endpoint the data is sent to; overrides it.                                            |
+| `DT_MCP_TELEMETRY_DEVICE_ID`      | Telemetry      | auto-generated                                | Overrides the per-install device identifier.                                                                          |
 
 ## Configuration precedence
 
@@ -98,7 +98,7 @@ One table for every field, however you supply it — config file or `DT_ENVIRONM
 2. `DT_ENVIRONMENT_CONFIGS` — used only if `DT_CONFIG_FILE` is unset.
 3. Neither set — the server exits with an error describing both options.
 
-Setting both is allowed but discouraged: the server logs a warning and uses `DT_CONFIG_FILE`, silently ignoring `DT_ENVIRONMENT_CONFIGS`.
+Setting both is allowed but discouraged: the server logs a warning and uses `DT_CONFIG_FILE`, without erroring, and `DT_ENVIRONMENT_CONFIGS` is ignored.
 
 ## `DT_ENVIRONMENT_CONFIGS`
 
@@ -162,7 +162,10 @@ Proxies are configured **per environment**, with the `httpProxyUrl` / `httpsProx
 
 > [!WARNING]
 > The standard `HTTP_PROXY` and `HTTPS_PROXY` environment variables are **not** read by this server. Setting them has no effect on outbound requests.
->
+
+<!-- -->
+
+> [!WARNING]
 > Set at most one of `httpProxyUrl` / `httpsProxyUrl` per environment. Setting **both** on the same environment logs an error and disables the proxy for that environment entirely — neither proxy is used.
 
 ```yaml
@@ -185,8 +188,8 @@ Proxies are configured **per environment**, with the `httpProxyUrl` / `httpsProx
 The server sends anonymous usage telemetry to Dynatrace via OpenKit: server-start events, tool usage (which tools, success/failure, duration), and error tracking. No data from your Dynatrace Managed environment — entities, logs, metrics, tokens — is included; only information about how the MCP server itself is used.
 
 - `DT_MCP_DISABLE_TELEMETRY` — set to `true` to disable telemetry entirely. Default `false` (enabled).
-- `DT_MCP_TELEMETRY_APPLICATION_ID` — overrides the OpenKit application ID. Default: a fixed ID owned by Dynatrace.
-- `DT_MCP_TELEMETRY_ENDPOINT_URL` — overrides the OpenKit beacon endpoint the data is sent to. Default: Dynatrace's analytics endpoint.
+- `DT_MCP_TELEMETRY_APPLICATION_ID` — overrides the OpenKit application ID. Default `5e2dbb56-076b-412e-8ffc-7babb7ae7c5d`, owned by Dynatrace.
+- `DT_MCP_TELEMETRY_ENDPOINT_URL` — overrides the OpenKit beacon endpoint the data is sent to. Default `https://bf96767wvv.bf.dynatrace.com/mbeacon`, Dynatrace's analytics endpoint — allowlist this hostname if your egress controls require it.
 - `DT_MCP_TELEMETRY_DEVICE_ID` — overrides the per-install device identifier. Default: auto-generated from the hostname and random bytes at startup.
 
 ```bash
