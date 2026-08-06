@@ -25,7 +25,8 @@ Every task's requirements implicitly include this section. Values are copied ver
 - **The 13 documentable environment variables** [`grep process.env src/ --include=*.ts`, excluding `__tests__`]: `DT_CONFIG_FILE`, `DT_ENVIRONMENT_CONFIGS`, `LOG_LEVEL`, `LOG_OUTPUT`, `LOG_FILE`, `DT_MCP_RATE_LIMIT_MAX_CALLS`, `DT_MCP_RATE_LIMIT_WINDOW_MS`, `DT_MCP_MAX_BODY_SIZE`, `DT_MCP_TOKEN_VALIDATION_TTL_MS`, `DT_MCP_DISABLE_TELEMETRY`, `DT_MCP_TELEMETRY_APPLICATION_ID`, `DT_MCP_TELEMETRY_ENDPOINT_URL`, `DT_MCP_TELEMETRY_DEVICE_ID`. `HOME` and `USERPROFILE` are internal and are not documented as configuration.
 - **`DT_API_ENDPOINT_URL` does not exist.** It must never appear in documentation.
 - **No changes to `src/`.** Where docs and code disagree, the docs are corrected.
-- **Every task ends green:** `npm run prettier` and `npx markdownlint-cli2 <changed files>` pass, and `node scripts/check-docs.mjs` reports no hard errors — **except** where a task's own steps name the exact errors it is permitted to leave open (Task 1, which must fail by design, and Task 2, which may leave exactly the two named environment-variable errors for Task 4 to close). No task may leave an error its own steps do not name. Pending links are expected until Task 13.
+- **Every task ends green:** `npx prettier --check <changed files>` and `npx markdownlint-cli2 <changed files>` pass, and `node scripts/check-docs.mjs` reports no hard errors — **except** where a task's own steps name the class of errors it is permitted to leave open. Two tasks have such an exception: Task 1 must fail by design, and Tasks 2 and 3 may leave `env var read by src/ but not documented` lines, which Task 4 closes by creating the reference page that owns them. No task may leave an error outside the class its own steps name. Pending links are expected until Task 13.
+- **`markdownlint-cli2` is not wired into CI, `package.json`, or the husky hook** — it is a local tool, and the legacy README violated it. Use it as a gate on files this branch writes, and do not treat pre-existing violations elsewhere as this branch's problem.
 - **Migration source:** the old 778-line README is on the base branch. Retrieve any range with `git show main:README.md | sed -n 'A,Bp'`.
 
 ---
@@ -309,6 +310,7 @@ Rewritten early: it defines the link contract every later page must satisfy. Its
 **Files:**
 
 - Modify: `README.md` (full rewrite, 778 → ~170 lines)
+- Modify: `docs/DEVELOPMENT.md` (two anchor links only — see Step 4b)
 
 **Interfaces:**
 
@@ -324,7 +326,12 @@ Keep this file for Tasks 3–12. It is the source for every "migrate lines A–B
 
 - [ ] **Step 2: Rewrite `README.md`**
 
-Preserve verbatim from the legacy README: the badge block (L3–19) and the two callouts (L28–34). Everything else is new or condensed as follows.
+Carry over the badge block (legacy L3–19) and the two callouts (legacy L28–34), preserving their content and the URLs they point at, with two mechanical changes:
+
+- **Rewrite the five badges as markdown badge links** — `[![alt](shield-url)](target-url)` — instead of the legacy raw `<h4>`/`<a>`/`<img>` block. Renders identically on GitHub and npm, and clears eleven `MD033/no-inline-html` violations that the legacy block causes.
+- **Do not place the two callouts back to back.** Two adjacent block quotes separated by a blank line trip `MD028/no-blanks-blockquote`. Put the SaaS `[!TIP]` after the opening pitch paragraph and the community-support `[!NOTE]` after the capabilities list, so ordinary content separates them.
+
+Everything else is new or condensed as follows.
 
 Structure, in order:
 
@@ -374,20 +381,35 @@ Do **not** include in the README: any client JSON snippet beyond the table, any 
 
 Run: `node scripts/check-docs.mjs`
 
-Expected: exit 0 for hard errors. Specifically, these must no longer appear:
+These must no longer appear:
 
 - the three forbidden strings (they left with the old README body)
 - `engines.node ">=26.5.1 <27" is not stated in README.md`
 - `MINIMUM_VERSION 1.328.0 ... not stated`
+- `env var documented but never read by src/: DT_API_ENDPOINT_URL`
+- `README.md: missing same-file anchor -> #Example-Prompts`
 
-`DT_MCP_MAX_BODY_SIZE` and `DT_MCP_TOKEN_VALIDATION_TTL_MS` are still reported as undocumented — Task 4 fixes those. Until then this task's gate is: **no hard errors other than those two**, plus a list of pending links for the fourteen pages not yet created.
+This task exits 1, and that is expected. Removing the README's reference material takes the environment-variable documentation with it, so the checker reports **every** variable `src/` reads as undocumented — twelve of them, not two. Their owner file is `docs/configuration.md`, which Task 4 creates. This is the unavoidable consequence of rewriting the README before the reference page exists.
 
-If the two env-var errors block exit 0, add `DT_MCP_MAX_BODY_SIZE` and `DT_MCP_TOKEN_VALIDATION_TTL_MS` to nothing — do not paper over it in the README. Instead accept exit 1 for this task with **only** those two errors present, and record that in the commit message. Task 4 closes them.
+The gate for this task is therefore: **every remaining hard error is an `env var read by src/ but not documented` line**, plus pending links for the pages later tasks create. Any other hard error is a real failure.
+
+Do **not** document environment variables in the README to silence the checker. The single-source-of-truth rule reserves the environment-variable reference for `docs/configuration.md`; papering over it here would recreate the duplication this project exists to remove.
 
 - [ ] **Step 4: Confirm the README length target**
 
 Run: `wc -l README.md`
-Expected: between 140 and 200 lines. If over 200, content belongs in `docs/` — move it.
+Expected: at most 200 lines, with all nine sections present. If over 200, content belongs in `docs/` — move it. There is no lower bound: shorter is better, and padding prose to reach a line count would defeat the purpose of this task.
+
+- [ ] **Step 4b: Repoint the two `docs/DEVELOPMENT.md` anchors**
+
+Rewriting the README deletes the headings that `docs/DEVELOPMENT.md` links to, which the checker reports as two hard errors:
+
+```text
+docs/DEVELOPMENT.md: missing anchor -> ../README.md#api-scopes-for-managed-deployment
+docs/DEVELOPMENT.md: missing anchor -> ../README.md#environment-variables
+```
+
+Repoint them to their new owners — `api-token.md#required-scopes` and `configuration.md#environment-variables` — changing nothing else in that file. Both targets are created by Tasks 3 and 4, so until then the checker downgrades these from hard errors to pending links, which is the point: the errors your task caused are resolved by your task.
 
 - [ ] **Step 5: Format and lint**
 
@@ -488,10 +510,15 @@ Carries defects 7 and 8, merges the two duplicated field tables, and documents t
 - Consumes: the README link from Task 2; `docs/api-token.md#required-scopes` from Task 3.
 - Produces: anchors `#configuration-file`, `#environment-variables`, `#logging`, `#proxy`, `#rate-limiting`, `#telemetry`, linked by Tasks 5, 6, 7–9, 11 and 12, and by `docs/DEVELOPMENT.md` in Task 13. This is the only file that may contain an environment-variable table or a config-field table.
 
-- [ ] **Step 1: Confirm the two env-var errors are still open**
+- [ ] **Step 1: Confirm the env-var errors are still open**
 
 Run: `node scripts/check-docs.mjs 2>&1 | grep "not documented"`
-Expected: two lines naming `DT_MCP_MAX_BODY_SIZE` and `DT_MCP_TOKEN_VALIDATION_TTL_MS`
+
+Expected: twelve lines, one per variable `src/` reads — `DT_CONFIG_FILE`, `DT_ENVIRONMENT_CONFIGS`, `LOG_LEVEL`, `LOG_OUTPUT`, `LOG_FILE`, `DT_MCP_RATE_LIMIT_MAX_CALLS`, `DT_MCP_RATE_LIMIT_WINDOW_MS`, `DT_MCP_MAX_BODY_SIZE`, `DT_MCP_TOKEN_VALIDATION_TTL_MS`, `DT_MCP_DISABLE_TELEMETRY`, `DT_MCP_TELEMETRY_APPLICATION_ID`, `DT_MCP_TELEMETRY_ENDPOINT_URL`, `DT_MCP_TELEMETRY_DEVICE_ID`.
+
+(`DT_MCP_DISABLE_TELEMETRY` may already be closed by the README's telemetry section, which backticks it. Eleven or twelve lines are both correct here.)
+
+This task closes all of them. Your file is the single owner of the environment-variable reference, so after your work the checker must report **zero** `not documented` lines.
 
 - [ ] **Step 2: Write `docs/configuration.md`**
 
@@ -1287,14 +1314,16 @@ Closes the loop: the index, the cross-links from files outside the new set, the 
 
 A pure index, no prose of its own beyond one opening line. A table with every guide and a one-line description, grouped: **Getting started** (`api-token.md`, `setup-local.md`, `setup-remote.md`), **Clients** (the five pages), **Reference** (`configuration.md`, `multi-environment.md`, `hybrid-saas-managed.md`, `troubleshooting.md`, `overview.md`), **Contributing** (`DEVELOPMENT.md`, `../examples/README.md`). Link back to `../README.md`.
 
-- [ ] **Step 2: Find the stale cross-links in `docs/DEVELOPMENT.md`**
+- [ ] **Step 2: Confirm the two `docs/DEVELOPMENT.md` anchors were already repointed**
+
+Task 2 Step 4b repointed them, because rewriting the README is what broke them.
 
 Run: `grep -n "README.md#" docs/DEVELOPMENT.md`
-Expected: hits at lines ~37 and ~38 pointing at `../README.md#api-scopes-for-managed-deployment` and `../README.md#environment-variables` — anchors that no longer exist after Task 2.
+Expected: no output. If any `../README.md#...` link remains, repoint it now to the new owner — `api-token.md#required-scopes` for scopes, `configuration.md#environment-variables` for variables.
 
-- [ ] **Step 3: Fix them**
+- [ ] **Step 3: Check the rest of `docs/DEVELOPMENT.md` for references to moved content**
 
-Repoint to the new owners: `../README.md#api-scopes-for-managed-deployment` → `api-token.md#required-scopes`; `../README.md#environment-variables` → `configuration.md#environment-variables`. Then check the rest of the file for references to moved content — the Docker section (`DEVELOPMENT.md:134`) uses `DT_ENVIRONMENT_CONFIGS`, which is still valid, but add a pointer to `setup-remote.md` for the published image so contributors do not think a local build is the only option. Leave everything else untouched.
+The Docker section (`DEVELOPMENT.md:134`) uses `DT_ENVIRONMENT_CONFIGS`, which is still valid. Add a pointer to `setup-remote.md` for the published image, so contributors do not think a local build is the only option. Leave everything else untouched.
 
 - [ ] **Step 4: Add one link to `examples/README.md`**
 
