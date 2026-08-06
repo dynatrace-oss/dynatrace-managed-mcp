@@ -2,6 +2,8 @@
 
 Before touching your AI client's configuration, run the server standalone, outside any client, and read what it prints. That single step tells you whether the problem is the server's own configuration or the client wiring around it — see [Verify the server starts](setup-local.md#verify-the-server-starts) for the full explanation.
 
+Running remote (HTTP) mode instead? The command below is for local (stdio) mode specifically — see [Verify the server starts](setup-remote.md#verify-the-server-starts) in the remote setup guide for the equivalent check there; HTTP mode has no live-cluster check, so the outcomes differ.
+
 ## Start here
 
 ```bash
@@ -21,24 +23,66 @@ Watch stderr for one of three outcomes:
 
 Your Node.js version is outside `>=26.5.1 <27`. Install a supported version and reinstall.
 
+### `Configuration not found. Please set one of:`
+
+This is the **most likely first-run failure**: neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set, usually because the client's `env` block was left out or the variable name was misspelled. The full error:
+
+```text
+Configuration not found. Please set one of:
+  - DT_CONFIG_FILE: Path to config file (JSON or YAML)
+  - DT_ENVIRONMENT_CONFIGS: JSON string
+
+Example with file:
+  DT_CONFIG_FILE=./dt-config.yaml
+
+Example with JSON string:
+  DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"...","environmentId":"..."}]'
+
+See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp#configuration
+```
+
+That last line's link is stale — the anchor it points to was removed from `README.md` by this documentation restructure. Use [Configuration reference](configuration.md) instead. Like every startup error on this page, this one is logged rather than printed to the console directly, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file, which is exactly why this failure can look like nothing happened at all.
+
+### `Configuration must be an array of environments.`
+
+Your config file loaded and parsed, but its top level isn't a list — the commonest cause is writing a mapping keyed by alias instead of a list of environment entries:
+
+```yaml
+# Wrong: a mapping
+production:
+  apiEndpointUrl: https://abc123.dynatrace-managed.com:9999
+  environmentId: 01234567-89ab-cdef-abcd-ef0123456789
+  apiToken: dt0c01.ABC123...
+```
+
+```yaml
+# Right: a list, even with only one environment
+- alias: production
+  apiEndpointUrl: https://abc123.dynatrace-managed.com:9999
+  environmentId: 01234567-89ab-cdef-abcd-ef0123456789
+  apiToken: dt0c01.ABC123...
+```
+
+The full error names the file: `Configuration must be an array of environments.` followed by `File: <path>`.
+
 ### `Failed to get managed environments configurations:`
 
 Which message you see for a bad or missing field depends on how you supply configuration:
 
-**Using `DT_CONFIG_FILE`** — the method the rest of this documentation set teaches — a missing or empty required field is caught earlier than this message, while the file is still being loaded, and reported as:
+**Using `DT_CONFIG_FILE`** — the recommended method — a missing or empty required field is caught earlier than this message, while the file is still being loaded, and reported as:
 
 ```text
-Environment #1 in ~/.dynatrace/managed-mcp.yaml is missing required fields: apiToken
+Environment #1 in /home/alice/.dynatrace/managed-mcp.yaml is missing required fields: apiToken
 Found fields: apiEndpointUrl, environmentId, alias
 ```
 
-(or `Environment #N in <path> must be an object.` if an entry isn't a mapping at all). The required fields are `apiEndpointUrl`, `environmentId`, `alias`, and — in local/stdio mode only — `apiToken`; HTTP mode doesn't require `apiToken`. This is why a config-file user will rarely see the `Failed to get managed environments configurations:` / `error`-array form below. This early check is logged, not printed directly to the console, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file.
+(The path shown is the fully resolved, expanded absolute path — not the literal `~/...` you wrote in `DT_CONFIG_FILE` — since the server resolves it before this check runs.) Or `Environment #N in <path> must be an object.` if an entry isn't a mapping at all. The required fields are `apiEndpointUrl`, `environmentId`, `alias`, and — in local/stdio mode only — `apiToken`; HTTP mode doesn't require `apiToken`. This is why a config-file user will rarely see the `Failed to get managed environments configurations:` / `error`-array form below. This early check is logged, not printed directly to the console, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file.
 
 **Using `DT_ENVIRONMENT_CONFIGS`** — this path has no early field check of its own, so the same kind of problem instead reaches the later, per-entry validation and prints `Failed to get managed environments configurations:` together with an `error` array naming the exact field, entry index and alias. The process exits as soon as **any** entry fails this check, even if your other environments are perfectly valid — one bad entry stops the whole server. An alias containing a semicolon (`;`) is also rejected only at this later stage, regardless of which method you used to supply configuration.
 
 Either way, cross-check the field names against [Configuration fields](configuration.md#configuration-fields).
 
-A config file that can't be loaded at all fails differently again: `Configuration file not found:`, `Failed to parse <format> file:`, or, if a `${VAR}` interpolation references an unset variable, `Environment variable not found:`. Check the path passed to `DT_CONFIG_FILE`: relative paths resolve against your **client's** working directory, not your project or home directory, so prefer `~` or an absolute path. See [Configuration file](configuration.md#configuration-file).
+A config file that can't be loaded at all fails differently again: `Configuration file not found:`, `Failed to parse <format> file:`, or, if a `${VAR}` interpolation references an unset variable, `Environment variable not found:`. If the file's extension isn't `.json`, `.yaml`, or `.yml`, the `Failed to parse <format> file:` message wraps `Unsupported file format: <ext>` — the **extension**, not the content, selects the parser, so a `.txt` file or an extensionless path fails even if what's inside is perfectly valid YAML or JSON. See [Configuration file](configuration.md#configuration-file) — it now states this constraint too. Check the path passed to `DT_CONFIG_FILE`: relative paths resolve against your **client's** working directory, not your project or home directory, so prefer `~` or an absolute path.
 
 ### Exits with `No valid environments found, stopping.`
 
@@ -66,7 +110,7 @@ If every alias you configured is missing from that list — leaving only the pla
 The JSON-RPC error message is exactly `Unauthorized: no valid Dynatrace token supplied`; the `401` is the separate HTTP status code the response also carries — search on either. In remote (HTTP) mode this has two indistinguishable causes, and one is easy to overlook:
 
 - The alias on the left of `=` in your `X-Dynatrace-Tokens` header doesn't exactly match an `alias` in the server's configuration. When no alias matches, the server never gets far enough to check the token at all — it returns this same `401` even for a perfectly valid token. Check your aliases first; it's the cheaper thing to rule out.
-- The token itself is missing, malformed, or invalid for every environment it was supplied against.
+- The token itself is missing, malformed, or invalid for every environment it was supplied against. Validity is checked by calling Dynatrace's own token-lookup endpoint, which accepts a token carrying **any** scope — so this is about whether the token is enabled and real at all, not about which specific scopes it carries; see [Required scopes](api-token.md#required-scopes).
 
 See [How authentication works](setup-remote.md#how-authentication-works) for the header format and exactly why a mismatched alias produces this response. Token validity is cached for 60 seconds by default, so after fixing a token, either wait or lower `DT_MCP_TOKEN_VALIDATION_TTL_MS`.
 
@@ -96,7 +140,13 @@ Each caller's `X-Dynatrace-Tokens` header grows with the number of environments 
 
 ### A configured proxy appears to be ignored
 
-The standard `HTTP_PROXY` / `HTTPS_PROXY` environment variables are **not** read by this server, no matter how they're set. Proxies are configured per environment instead, with the `httpProxyUrl` / `httpsProxyUrl` config fields — see [Proxy](configuration.md#proxy). Setting both fields on the same environment disables the proxy for it entirely, so also check you set only one.
+The standard `HTTP_PROXY` / `HTTPS_PROXY` environment variables are **not** read by this server, no matter how they're set. Proxies are configured per environment instead, with the `httpProxyUrl` / `httpsProxyUrl` config fields — see [Proxy](configuration.md#proxy).
+
+Setting **both** fields on the same environment disables the proxy for it entirely — set only one. If you did set both, the server logs exactly this (note it names the variables the way most tooling would, not the config field names above):
+
+```text
+Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.
+```
 
 ### The assistant answers about the wrong environment
 

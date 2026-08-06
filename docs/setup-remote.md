@@ -18,9 +18,9 @@ The server uses the caller's token for the environment named by `environment_ali
 
 The alias on the left of each `=` must match an `alias` in the server's own configuration **exactly**. A mismatched alias is rejected with the same `401 Unauthorized` response as a missing or invalid token, even when the token itself is perfectly valid — the server never gets far enough to check the token, because it never finds a configured environment to check it against. If a request is unexpectedly unauthorized, check your aliases before assuming your token is bad.
 
-Three things the previous documentation never made clear:
+Three things worth knowing:
 
-- **There is no live-cluster check in HTTP mode.** Structural config validation still runs — a malformed config (a missing required field, or zero valid entries) still makes the server log the problem and exit `1`, exactly as in local mode. What HTTP mode skips is _contacting your cluster_ at startup, because tokens don't exist server-side yet to test with. A wrong `apiEndpointUrl` or a revoked token therefore isn't caught at launch — it surfaces on the first request against that environment, as `401 Unauthorized: no valid Dynatrace token supplied`. See [Smoke-test it](#smoke-test-it) below: it's the only way to confirm a remote deployment actually works.
+- **There is no live-cluster check in HTTP mode.** Structural config validation still runs — a malformed config (a missing required field, or zero valid entries) still makes the server log the problem and exit `1`, exactly as in local mode. What HTTP mode skips is _contacting your cluster_ at startup, because tokens don't exist server-side yet to test with. A wrong `apiEndpointUrl` or a revoked token therefore isn't caught at launch. If **every** token you supply in a request is invalid, that request is rejected outright with `401 Unauthorized: no valid Dynatrace token supplied` — see [Smoke-test it](#smoke-test-it) below, the only way to confirm a remote deployment actually works. But if you supply a **mix** — a valid token for one environment alongside a revoked one for another — that check passes on the valid token alone, and the problem instead surfaces later, per tool call, only when a request actually reaches the environment with the bad token.
 - **Token validity is cached for 60 seconds by default.** A revoked token can still be accepted for up to that long after revocation. Tune it with `DT_MCP_TOKEN_VALIDATION_TTL_MS` — see [Environment variables](configuration.md#environment-variables).
 - **Rate limiting buckets per caller**, keyed by the token header, not per server — see [Rate limiting](configuration.md#rate-limiting).
 
@@ -29,7 +29,7 @@ Three things the previous documentation never made clear:
 > [!IMPORTANT]
 > In HTTP mode, `apiToken` is ignored — the server never reads it here, because tokens arrive per request instead (see [How authentication works](#how-authentication-works) above). Nothing rejects a config that still includes it, but omit it anyway: with only non-secret connection details left, the file has no unused secret sitting at rest, and it's safe to commit.
 
-Create a config file with one entry per environment, no tokens. The alias is yours to choose — it's used below as `production`/`staging` to match the rest of this page's examples and the README's quickstart:
+Create a config file — for example `~/.dynatrace/managed-mcp-http.yaml`, the path this page's Docker examples below bind-mount — with one entry per environment, no tokens. The alias is yours to choose — it's used below as `production`/`staging` to match the rest of this page's examples and the README's quickstart:
 
 ```yaml
 # HTTP mode configuration: NO tokens here.
@@ -81,7 +81,7 @@ services:
       DT_CONFIG_FILE: /config/dt-config.yaml
 ```
 
-**Kubernetes.** A starting point to adapt to your cluster's own conventions (namespace, labels, resource limits, TLS setup) — it is not a verified deployment, and no cluster was available to test it against:
+**Kubernetes.** A starting point to adapt to your cluster's own conventions (namespace, labels, resource limits, TLS setup) — not verified against a live cluster; adapt before use:
 
 ```yaml
 apiVersion: v1
@@ -163,8 +163,11 @@ Because the config file carries no secrets, it's mounted from a `ConfigMap` — 
 **Without a container.** For a bare Node.js process — from a global install, `npx`, or a clone:
 
 ```bash
-npx -y @dynatrace-oss/dynatrace-managed-mcp-server@latest --http --host 0.0.0.0 --port 3000
+DT_CONFIG_FILE=~/.dynatrace/managed-mcp-http.yaml LOG_OUTPUT=stderr-all \
+  npx -y @dynatrace-oss/dynatrace-managed-mcp-server@latest --http --host 0.0.0.0 --port 3000
 ```
+
+`DT_CONFIG_FILE` is required — without it (and without `DT_ENVIRONMENT_CONFIGS`), the server exits `1` immediately. `LOG_OUTPUT=stderr-all` matters just as much: startup errors are invisible without it, because the default `LOG_OUTPUT=file` writes the only explanation to a log file instead of your terminal, leaving you with exit code `1` and a blank screen. See [Verify the server starts](#verify-the-server-starts) below.
 
 The flags, all defined on the same command:
 
@@ -178,6 +181,15 @@ The flags, all defined on the same command:
 | `--help`              | —           | Print usage and exit.                          |
 
 Every `npx` example on this page uses `@dynatrace-oss/dynatrace-managed-mcp-server`. Watch for the package name without "managed" in it — that one is the separate Dynatrace SaaS server and will not work against a Managed cluster.
+
+## Verify the server starts
+
+Before wiring the server into anything else, confirm it starts cleanly on its own — the same principle as [Verify the server starts](setup-local.md#verify-the-server-starts) in local mode, adapted for HTTP mode's different startup behavior. Run the bare-Node command from **Without a container** above and watch stderr:
+
+1. **Clean success.** The process starts and listens on its port, with no error printed. Structural configuration is valid — every entry has the required fields (`apiEndpointUrl`, `environmentId`, `alias`; `apiToken` is not required in HTTP mode). This does **not** mean your URLs or tokens are correct: HTTP mode has no live-cluster check at startup (see [How authentication works](#how-authentication-works) above), so a config with fake URLs starts up exactly as cleanly as a working one. [Smoke-test it](#smoke-test-it) below is the only real check.
+2. **Hard failure.** The process prints a configuration error and exits with code `1` before ever listening — a required field is missing, empty, or malformed, or the configuration resolves to zero entries, or the referenced config file couldn't be loaded at all. See [Configuration file](configuration.md#configuration-file) and [Troubleshooting](troubleshooting.md) for the exact error strings. This is invisible without `LOG_OUTPUT=stderr-all`, as shown in the command above — the default `LOG_OUTPUT=file` writes it only to a log file.
+
+Running in a container instead of bare Node? Apply the same check to its logs (`docker logs`, `kubectl logs`, or your platform's equivalent) rather than your own terminal.
 
 ## Put TLS in front
 
