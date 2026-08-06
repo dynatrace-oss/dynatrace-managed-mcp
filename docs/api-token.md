@@ -4,13 +4,9 @@ Dynatrace Managed uses API token-based authentication.
 
 ## Create the token
 
-1. In your Dynatrace Managed cluster, go to **Settings > Integration > Dynatrace API**.
-2. Click **Generate token**.
-3. Give the token a name you'll recognize later, for example `managed-mcp`.
-4. Select the scopes listed under [Required scopes](#required-scopes) below.
-5. Click **Generate token** and copy the value immediately — Dynatrace shows it only once.
+Create an API token in your Dynatrace Managed cluster, with the scopes listed under [Required scopes](#required-scopes) below.
 
-For more information about creating API tokens in Managed deployments, see the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
+For the exact steps in your cluster's UI, see the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
 
 ## Required scopes
 
@@ -41,9 +37,11 @@ The scopes above apply identically in both modes.
 
 Dynatrace Managed `1.328.0` or later is required.
 
-On older clusters, the server logs a message naming the affected environment and continues rather than stopping.
+**Local (stdio):** at startup, the server checks each configured environment's cluster version. An environment below the minimum version is logged by name and then excluded from that session's queryable environments — tool calls against its alias fail with "Environment alias(es) not valid" until the cluster is upgraded. This does not stop the server itself; other environments that pass the check remain usable.
 
-If the token lacks permission for `/api/v1/config/clusterversion`, the server assumes the minimum version and continues.
+**Remote (HTTP):** there is no automatic startup check. Call the `dynatrace_managed_get_environments_info` tool to check a cluster's version on demand; a below-minimum cluster is reported with a warning but is not blocked from use.
+
+In both modes, if the token lacks permission for `/api/v1/config/clusterversion`, the server assumes the minimum version and continues.
 
 ## Token problems
 
