@@ -470,8 +470,10 @@ Structure:
 
 - [ ] **Step 3: Verify**
 
-Run: `node scripts/check-docs.mjs 2>&1 | grep -c api-token`
-Expected: `0`
+Run: `node scripts/check-docs.mjs 2>&1 | grep "^  x" | grep -c api-token`
+Expected: `0` — no **hard error** mentions this page.
+
+Do not grep the whole output for `api-token`: pending-link lines name their _source_ file, so lines reading `docs/api-token.md: link target does not exist -> setup-local.md` legitimately contain the string. Those three forward links (`setup-local.md`, `setup-remote.md`, `troubleshooting.md`) are created by Tasks 5, 6 and 12 and are expected to be pending. Only hard errors, which the checker prefixes with ` x`, indicate a problem with this page.
 
 - [ ] **Step 4: Confirm the scope list is single-sourced**
 
