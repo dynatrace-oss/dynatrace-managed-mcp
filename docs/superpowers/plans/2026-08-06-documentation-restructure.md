@@ -1324,7 +1324,9 @@ Expected: every row names at least one file. An empty row is content lost in the
 
 - [ ] **Step 7: Full repository verification**
 
-Run: `npx prettier --check $(git ls-files '*.md') && npx markdownlint-cli2 $(git ls-files '*.md') && npm run check:docs --strict && npm run test:unit`
+Run: `npx prettier --check $(git ls-files '*.md') && npx markdownlint-cli2 $(git ls-files '*.md') && npm run check:docs -- --strict && npm run test:unit`
+
+The `--` before `--strict` is required: `npm run check:docs --strict` silently drops the flag (npm treats it as its own config and warns `Unknown cli config`), running the non-strict check and passing even with pending links outstanding — which would defeat this gate entirely.
 Expected: Prettier clean, `Summary: 0 issues`, docs checks passed, unit tests pass. The unit-test run confirms this documentation branch changed no behaviour.
 
 Prettier is scoped to tracked markdown rather than run as `npm run prettier` (`prettier --check .`) for two reasons, both pre-existing and outside this branch's scope:
