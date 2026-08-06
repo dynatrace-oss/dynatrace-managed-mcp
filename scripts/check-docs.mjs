@@ -50,11 +50,19 @@ const slugify = (heading) =>
     .trim()
     .replace(/\s+/g, '-');
 
+// Fenced code blocks (``` or ~~~, optionally carrying a language tag like ```markdown)
+// often contain illustrative headings and link syntax as example *content*, not real
+// document structure. Blank them out before scanning for headings/links so they can't
+// be mistaken for either. Line count is preserved in case of future line-based checks.
+function stripFences(text) {
+  return text.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n^\1[ \t]*$/gm, (block) => block.replace(/[^\n]/g, ''));
+}
+
 const anchorCache = new Map();
 function anchorsOf(file) {
   if (!anchorCache.has(file)) {
     const set = new Set();
-    for (const line of read(file).split('\n')) {
+    for (const line of stripFences(read(file)).split('\n')) {
       const m = /^#{1,6}\s+(.*)$/.exec(line);
       if (m) set.add(slugify(m[1]));
     }
@@ -64,7 +72,7 @@ function anchorsOf(file) {
 }
 
 for (const file of DOC_FILES) {
-  const text = read(file);
+  const text = stripFences(read(file));
   for (const match of text.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)) {
     const target = match[1];
     if (/^(https?:|mailto:|#)/.test(target)) {
@@ -75,7 +83,9 @@ for (const file of DOC_FILES) {
       continue;
     }
     const [path, anchor] = target.split('#');
-    const resolved = resolve(dirname(file), path);
+    // Root-relative paths ("/docs/x.md") are relative to the repo root, not the
+    // filesystem root that node:path's resolve() would otherwise anchor them to.
+    const resolved = path.startsWith('/') ? resolve(ROOT, path.slice(1)) : resolve(dirname(file), path);
     if (!existsSync(resolved)) {
       pendingLinks.push(`${rel(file)}: link target does not exist -> ${target}`);
       continue;
