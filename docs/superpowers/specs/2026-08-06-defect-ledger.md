@@ -27,11 +27,14 @@ Every defect found while grounding the documentation against `src/`. Two classes
 
 Defects introduced during this branch and caught by review, listed for completeness — all fixed before their task closed:
 
-| Location          | Defect                                                                                                                                                            | Caught by     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| `api-token.md`    | Claimed a below-minimum cluster "logs a message and continues"; the environment is excluded and its tool calls fail                                               | Task 3 review |
-| `setup-local.md`  | Verify step reported false success: the startup banner prints even when every environment fails the live check, and the default `LOG_OUTPUT=file` hid the warning | Task 5 review |
-| `setup-remote.md` | Config example used aliases `prod`/`staging` while the smoke test sent `production=`; an exact alias mismatch returns 401 regardless of token validity            | Task 6 review |
+| Location                 | Defect                                                                                                                                                                                                                    | Caught by      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `api-token.md`           | Claimed a below-minimum cluster "logs a message and continues"; the environment is excluded and its tool calls fail                                                                                                       | Task 3 review  |
+| `setup-local.md`         | Verify step reported false success: the startup banner prints even when every environment fails the live check, and the default `LOG_OUTPUT=file` hid the warning                                                         | Task 5 review  |
+| `setup-remote.md`        | Config example used aliases `prod`/`staging` while the smoke test sent `production=`; an exact alias mismatch returns 401 regardless of token validity                                                                    | Task 6 review  |
+| `clients/claude-code.md` | Local registration command's unquoted `~` (`-e DT_CONFIG_FILE=~/...`) is shell-expanded before `claude` sees it, baking the author's own home directory into a committed `.mcp.json` instead of the portable `~/...` path | Task 7 review  |
+| `clients/copilot-cli.md` | Claimed the `mcp-compat.ts`/`enableJsonResponse` fixes shipped in `1.0.1`; they actually shipped in `0.5.7` — `mcp-compat.ts` was only extracted, not introduced, in the 1.0.x refactor                                   | Task 8 review  |
+| `troubleshooting.md`     | Asserted a fixed client-side error string `Mcp error: -32002: connection closed`; no such code is defined in the vendored MCP SDK, and the wording varies per client's own bundled SDK                                    | Task 12 review |
 
 ## Code and repository defects — open, out of scope for this branch
 
@@ -43,11 +46,11 @@ Ordered by user impact.
 
 `MANAGED_API_SCOPES` lists eight legacy scope names: `DataExport`, `ReadConfig`, `ReadSyntheticData`, `ReadLogContent`, `ReadEvents`, `ReadProblems`, `ReadSecurityProblems`, `ReadSLO`.
 
-The scopes actually required by the v2 APIs this server calls are the ten dotted names documented in `docs/api-token.md`. **Only `DataExport` appears in both lists.**
+The scopes actually required by the v2 APIs this server calls are the eight dotted names documented in `docs/api-token.md` (revised during the 2026-08-06 fix wave: `auditLogs.read` and `networkZones.read` were dropped from that page — no code path calls an audit-log or network-zone endpoint). **Only `DataExport` appears in both lists.**
 
 This is not confined to logs. `environment-tools.ts:86` and `:98` inject the list into the MCP **tool response**, so an assistant asked "what scopes do I need?" reports `ReadProblems` when the answer is `problems.read`. `managed-auth-client.ts:212` also prints it on authentication failure — so the one moment a user is actively debugging a scope problem is the moment they are told the wrong scopes.
 
-Fix: reconcile the array with the ten scopes in `docs/api-token.md`, or remove it and link the documentation.
+Fix: reconcile the array with the scopes in `docs/api-token.md`, or remove it and link the documentation.
 
 ### C2. Standard proxy environment variables are ignored
 
@@ -88,3 +91,25 @@ Reproduce: `git show main:src/capabilities/__tests__/events-api.test.ts` and run
 `validateManagedClients` skips environments with no token (`if (!token) { … continue; }`), but in stdio mode `validateEnvironments` runs with `requireToken=true`, so a missing token is already a structural error that exits the process upstream. In HTTP mode `validateManagedClients` is never called. The branch is therefore dead through both real code paths.
 
 Cosmetic, listed only so the next reader of that function does not assume it is load-bearing.
+
+### C7. `docs/DEVELOPMENT.md` has a wrong error code, stale example, and the old indented-code-block style
+
+`docs/DEVELOPMENT.md:189-199`
+
+The "Development Troubleshooting" section asserts `Mcp error: -32002: connection closed: initialize response`. No such code exists in the vendored MCP SDK — it defines `ConnectionClosed = -32000` and `RequestTimeout = -32001` (`node_modules/@modelcontextprotocol/sdk/dist/*/types.d.ts:259-260`), and each client bundles its own SDK, so there is no single fixed code or wording to assert here (this is exactly the correction `troubleshooting.md`'s equivalent entry already received — see the "introduced during this branch" table above). The same section also still renders its two commands as indented code blocks rather than fenced ones — the same rendering defect fixed everywhere else as documentation defect 2 — and one example reads `npx /path/to/repos/dynatrace-oss/dynatrace-manage-mcp/dist/index.js`, missing the `d` in `managed`, and using `npx` where `node` is what actually runs a local file path. The design's non-goals keep `docs/DEVELOPMENT.md`'s content out of scope for this branch (only its cross-links were to change), so this is recorded rather than fixed here.
+
+### C8. The server's own error message points at a dead anchor
+
+`src/utils/environment.ts:84`
+
+When neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set, the thrown error tells the user `See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp#configuration`. This branch deleted the `#configuration` heading from `README.md` that anchor pointed to; the equivalent content now lives at `docs/configuration.md`. Out of scope for `src/`, but caused by this branch — the next `src/` change that touches this error string should point it at `docs/configuration.md` instead.
+
+### C9. `${VAR}` interpolation in the config **path** silently does nothing
+
+`src/utils/config-loader.ts:114`
+
+`resolvePath`'s path-interpolation regex is `filePath.replace(/\$\{(w+)}/g, ...)` — a bare `w`, not `\w+`. It therefore matches only the literal three characters `${w}` and never matches a real variable name, so any `${VAR_NAME}` written inside `DT_CONFIG_FILE` itself (as opposed to inside the file's _content_, which uses a separate, correct regex in `config-loader.ts:93`) is left untouched. Verified by reading the regex directly; not otherwise exercised by a test. The documentation is not misled by this — `docs/configuration.md` only ever documents `${VAR}` interpolation of file **content**, never of the path — so this is recorded for the code owner, not a documentation fix.
+
+## Further repository follow-up (not scope-relevant to this branch)
+
+`README.md`'s licence badge and closing section both say Apache 2.0, matching `LICENSE`. `package.json:57` says `"license": "MIT"`. One of the two is wrong; whichever it is should be corrected in a follow-up outside this documentation branch.
