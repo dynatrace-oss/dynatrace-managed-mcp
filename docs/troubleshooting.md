@@ -23,15 +23,26 @@ Your Node.js version is outside `>=26.5.1 <27`. Install a supported version and 
 
 ### `Failed to get managed environments configurations:`
 
-At least one configured environment failed field-level validation: a required field (`apiEndpointUrl`, `environmentId`, `alias`, and in local/stdio mode `apiToken`) is empty or missing, or an alias contains a semicolon. The process exits as soon as **any** entry fails this check, even if your other environments are perfectly valid — one bad entry stops the whole server. The `error` array printed alongside this message names the exact field, entry index and alias; start there. Cross-check the field names against [Configuration fields](configuration.md#configuration-fields).
+Which message you see for a bad or missing field depends on how you supply configuration:
 
-This check runs on every environment regardless of how you supply configuration, but `DT_ENVIRONMENT_CONFIGS` is the more common way to hit it: unlike a config file, it has no earlier field check of its own.
+**Using `DT_CONFIG_FILE`** — the method the rest of this documentation set teaches — a missing or empty required field is caught earlier than this message, while the file is still being loaded, and reported as:
 
-A config file that can't be loaded at all fails earlier, with a different message — `Configuration file not found:`, `Failed to parse <format> file:`, or, if a `${VAR}` interpolation references an unset variable, `Environment variable not found:`. In every case, check the path passed to `DT_CONFIG_FILE`: relative paths resolve against your **client's** working directory, not your project or home directory, so prefer `~` or an absolute path. See [Configuration file](configuration.md#configuration-file).
+```text
+Environment #1 in ~/.dynatrace/managed-mcp.yaml is missing required fields: apiToken
+Found fields: apiEndpointUrl, environmentId, alias
+```
+
+(or `Environment #N in <path> must be an object.` if an entry isn't a mapping at all). The required fields are `apiEndpointUrl`, `environmentId`, `alias`, and — in local/stdio mode only — `apiToken`; HTTP mode doesn't require `apiToken`. This is why a config-file user will rarely see the `Failed to get managed environments configurations:` / `error`-array form below. This early check is logged, not printed directly to the console, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file.
+
+**Using `DT_ENVIRONMENT_CONFIGS`** — this path has no early field check of its own, so the same kind of problem instead reaches the later, per-entry validation and prints `Failed to get managed environments configurations:` together with an `error` array naming the exact field, entry index and alias. The process exits as soon as **any** entry fails this check, even if your other environments are perfectly valid — one bad entry stops the whole server. An alias containing a semicolon (`;`) is also rejected only at this later stage, regardless of which method you used to supply configuration.
+
+Either way, cross-check the field names against [Configuration fields](configuration.md#configuration-fields).
+
+A config file that can't be loaded at all fails differently again: `Configuration file not found:`, `Failed to parse <format> file:`, or, if a `${VAR}` interpolation references an unset variable, `Environment variable not found:`. Check the path passed to `DT_CONFIG_FILE`: relative paths resolve against your **client's** working directory, not your project or home directory, so prefer `~` or an absolute path. See [Configuration file](configuration.md#configuration-file).
 
 ### Exits with `No valid environments found, stopping.`
 
-This is **structural** configuration validation, and it fires only when the parsed configuration contains zero environment entries at all — an empty list in the config file, or `DT_ENVIRONMENT_CONFIGS` set to `[]`. (A config with one or more entries that fail validation exits with the `Failed to get managed environments configurations:` message above instead, before this check is ever reached.) This runs before the server ever picks a mode, so it happens identically in local and remote setups, and nothing has contacted your cluster yet. It is **not** a connectivity or token-scope problem — don't spend time re-checking your token or network for this one. Check the required fields in [Configuration fields](configuration.md#configuration-fields).
+This is **structural** configuration validation, and it fires only when the parsed configuration contains zero environment entries at all — an empty list in the config file, or `DT_ENVIRONMENT_CONFIGS` set to `[]`. (A config with one or more entries that fail validation exits with the `Failed to get managed environments configurations:` message above instead, before this check is ever reached.) This runs before the server ever picks a mode, so it happens identically in local and remote setups, and nothing has contacted your cluster yet. It is **not** a connectivity or token-scope problem — don't spend time re-checking your token or network for this one. Check the array in your [configuration file](configuration.md#configuration-file) — it needs at least one entry.
 
 ### The success line prints, but tool calls fail anyway
 
@@ -40,7 +51,7 @@ This is **structural** configuration validation, and it fires only when the pars
 
 In local (stdio) mode, the server prints `Dynatrace Managed MCP Server running on stdio` even when the live-cluster check failed for **every** configured environment. Nothing in the code checks whether any environment actually survived that check before printing the success line — so a totally broken deployment looks, from the terminal alone, identical to a working one.
 
-With the default `LOG_OUTPUT=file`, the per-environment warning that would explain this goes only to the log file, not your terminal, so you see no warning at all. The symptom shows up later, when the assistant tries to use a tool and gets back:
+With the default `LOG_OUTPUT=file`, the per-environment diagnostic that would explain this — logged via `logger.error` for a connection failure, or `logger.info` for a below-minimum cluster version — goes only to the log file, not your terminal, so you see nothing at all. The symptom shows up later, when the assistant tries to use a tool and gets back:
 
 ```text
 Environment alias(es) not valid. Options are: ALL_ENVIRONMENTS
@@ -50,9 +61,9 @@ If every alias you configured is missing from that list — leaving only the pla
 
 **Fix:** re-run the standalone command from [Start here](#start-here) with `LOG_OUTPUT=stderr-all` and read the warning printed for each alias. The cause is one of: a bad or revoked token, a wrong `apiEndpointUrl` or `environmentId`, an unreachable cluster, or a cluster version below the minimum — see [Minimum cluster version](api-token.md#minimum-cluster-version). This matches the third outcome in [Verify the server starts](setup-local.md#verify-the-server-starts).
 
-### `401 Unauthorized: no valid Dynatrace token supplied`
+### `Unauthorized: no valid Dynatrace token supplied` (HTTP 401)
 
-In remote (HTTP) mode this has two indistinguishable causes, and one is easy to overlook:
+The JSON-RPC error message is exactly `Unauthorized: no valid Dynatrace token supplied`; the `401` is the separate HTTP status code the response also carries — search on either. In remote (HTTP) mode this has two indistinguishable causes, and one is easy to overlook:
 
 - The alias on the left of `=` in your `X-Dynatrace-Tokens` header doesn't exactly match an `alias` in the server's configuration. When no alias matches, the server never gets far enough to check the token at all — it returns this same `401` even for a perfectly valid token. Check your aliases first; it's the cheaper thing to rule out.
 - The token itself is missing, malformed, or invalid for every environment it was supplied against.
@@ -67,9 +78,9 @@ You've hit the per-caller tool-call limit. In HTTP mode this is scoped per calle
 
 HTTP mode only, returned with status `413`: the request body exceeded `DT_MCP_MAX_BODY_SIZE` (1 MB / `1048576` bytes by default). Raise the limit if your client legitimately sends larger payloads — see [Environment variables](configuration.md#environment-variables).
 
-### `Mcp error: -32002: connection closed`
+### Client reports "connection closed" during initialization
 
-This is your client's own MCP error, reported when the server process failed to start or died immediately after. It carries no detail because the connection never got far enough to say why. Run the server standalone — see [Start here](#start-here) — and read the actual error there instead of guessing from the client's generic message.
+Your AI client — not this server — reports that the MCP connection closed before it finished initializing, usually because the server process failed to start or died immediately after. The exact wording and error code vary by client, since each bundles its own MCP SDK version, so there's no single string to search for here. The diagnostic step is the same regardless: run the server standalone — see [Start here](#start-here) — and read the actual error there instead of guessing from the client's generic message.
 
 ### `Transport closed` on a tool call
 
