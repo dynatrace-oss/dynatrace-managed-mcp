@@ -76,6 +76,7 @@ In this example, you have multiple Dynatrace Managed environments set up. This m
 - Be careful of which environment to use.
   If it is unclear, ask which environment to use.
 - Must make it very clear to the user which environment data has come from.
+
 ```
 
 ## Per-environment proxies
