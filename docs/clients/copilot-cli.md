@@ -26,7 +26,7 @@ Edit `~/.copilot/mcp-config.json`:
 }
 ```
 
-`type` also accepts `"local"`, but use `"stdio"` as shown: it is the standard MCP protocol type name, so the same server block stays compatible with VS Code, the Copilot cloud agent, and other MCP clients, instead of a value specific to Copilot CLI.
+`type` also accepts `"local"`, but use `"stdio"` as shown: it is the standard MCP protocol type name, so the same server block stays compatible with VS Code, the Copilot coding agent, and other MCP clients, instead of a value specific to Copilot CLI.
 
 You can also add a server interactively from inside a `copilot` session with `/mcp add`, and manage existing ones with `/mcp show`, `/mcp show SERVER-NAME`, `/mcp edit SERVER-NAME`, `/mcp delete SERVER-NAME`, `/mcp disable SERVER-NAME`, and `/mcp enable SERVER-NAME` (`/mcp search` is experimental).
 
@@ -58,6 +58,6 @@ Ask Dynatrace to list problems
 
 ## Notes and logs
 
-- Copilot CLI's model API rejects tool schemas that contain `$schema` or `additionalProperties: false`, so this server strips both from `tools/list` responses (`src/utils/mcp-compat.ts`). Versions before this workaround shipped failed against Copilot CLI with a `400 Bad Request` — run `@latest`, or at least `1.0.1`.
+- Copilot CLI's model API rejects tool schemas that contain `$schema` or `additionalProperties: false`, so this server strips both from `tools/list` responses (`src/utils/mcp-compat.ts`). Versions before this workaround shipped failed against Copilot CLI with a `400 Bad Request` — run `@latest`, or at least `0.5.7`.
 - In HTTP mode the server sets `enableJsonResponse`, returning a plain JSON response instead of keeping an SSE stream open, so clients that cannot hold a persistent SSE connection still work (`src/index.ts`).
 - Registered but Copilot CLI still can't reach the server? See [Troubleshooting](../troubleshooting.md).
