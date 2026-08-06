@@ -250,9 +250,16 @@ Defect 7 is the most damaging: a customer behind a corporate proxy who exports `
 
 ### Code observations for separate follow-up (out of scope here)
 
+**Every defect found is tracked in [`2026-08-06-defect-ledger.md`](2026-08-06-defect-ledger.md)** — ten documentation defects with the task that fixes each and how it is verified, plus six code and repository defects that this branch deliberately does not touch. Task 13 audits the documentation half before the branch can close. The code half needs owners.
+
+The highest-impact code defect, found after this spec was first written: `MANAGED_API_SCOPES` (`src/authentication/managed-auth-client.ts:7-16`, `src/tools/environment-tools.ts:6-15`) lists eight legacy scope names against the ten dotted v2 names this server actually requires — only `DataExport` overlaps — and `environment-tools.ts:86,98` returns that list in the MCP **tool response**, so users are actively told the wrong scopes at the moment they are debugging a scope failure.
+
+Also open:
+
 - The server does not honour `HTTP_PROXY`/`HTTPS_PROXY`, which most tooling treats as standard. Supporting them as a fallback would be a code change, not a documentation change.
 - Setting both proxy fields on one environment silently disables the proxy rather than failing fast.
 - `server.json` marks `DT_ENVIRONMENT_CONFIGS` as `isRequired: true` and does not list `DT_CONFIG_FILE`. Once the config file is the recommended method, this misrepresents the server to the MCP registry.
+- `src/capabilities/__tests__/events-api.test.ts` already fails `prettier --check` on `main`, and `npm run prettier` is a release-workflow gate.
 
 ## Verification
 

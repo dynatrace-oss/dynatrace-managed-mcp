@@ -1343,6 +1343,42 @@ At the top, one line: `Setup instructions live in the [documentation index](../d
 Run: `node scripts/check-docs.mjs --strict`
 Expected: exit 0 and `Documentation checks passed (N files checked).` with **no pending links and no hard errors**. Any remaining pending link means a page references a path that was never created — fix the link or create the page.
 
+- [ ] **Step 5b: Harden the checker against the two defects it cannot yet catch**
+
+Add two entries to the `FORBIDDEN` array in `scripts/check-docs.mjs`, so defects 7 and 9 cannot silently return:
+
+```js
+  ['honors system proxy', 'false: HTTP_PROXY/HTTPS_PROXY are never read; only the per-environment httpProxyUrl/httpsProxyUrl fields work'],
+  ['default: `dynatrace-managed-mcp`', 'wrong: DT_MCP_TELEMETRY_APPLICATION_ID defaults to the UUID in telemetry-openkit.ts:38'],
+```
+
+Run `node scripts/check-docs.mjs` afterwards and confirm it still exits 0 — neither string should be present. If either fires, a defect regressed and must be fixed before this task closes.
+
+- [ ] **Step 5c: Audit every defect in the defect ledger**
+
+Read [`docs/superpowers/specs/2026-08-06-defect-ledger.md`](../specs/2026-08-06-defect-ledger.md). For each of the **ten** documentation defects, confirm it is actually gone from the shipped documentation — do not take the ledger's "fixed by" column on trust, verify it:
+
+```bash
+# Defects 1, 3, 7, 8, 9 — forbidden strings, all guarded by the checker
+node scripts/check-docs.mjs
+# Defect 2 — the broken fence
+npx markdownlint-cli2 docs/troubleshooting.md
+# Defect 4 — every advertised client has instructions
+for c in Cursor Windsurf Kiro Gemini ChatGPT; do printf '%s: ' "$c"; grep -c "$c" docs/clients/other-clients.md; done
+# Defect 5 — Node engines constraint
+grep -c '>=26.5.1 <27' README.md
+# Defect 6 — the published image
+grep -rc 'ghcr.io/dynatrace-oss/dynatrace-managed-mcp' docs/setup-remote.md
+# Defect 10 — the stateless transport is not described as stateful
+grep -rn 'stateful' README.md docs/*.md docs/clients/*.md | grep -v superpowers
+```
+
+Expected: the checker clean, markdownlint clean, a non-zero count for every client, `1` or more for the engines string and the image, and **no output** for `stateful` (or, if present, only an accurate statement that the transport is stateless).
+
+Record the result of each check in your report. If any defect is not actually fixed, fix it in the owning page before this task closes — the ledger's documentation half must be fully true when this branch merges.
+
+The **code and repository** defects (C1-C6) in that ledger are deliberately **out of scope**: do not change anything under `src/`, `server.json`, or unrelated test files. Confirm in your report that you left them alone.
+
 - [ ] **Step 6: Audit the migration map**
 
 Confirm every legacy section reached a destination. For each of the fourteen headings below, verify the content exists somewhere in the new set:
