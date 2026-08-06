@@ -1324,8 +1324,15 @@ Expected: every row names at least one file. An empty row is content lost in the
 
 - [ ] **Step 7: Full repository verification**
 
-Run: `npm run prettier && npx markdownlint-cli2 "**/*.md" "!node_modules" && npm run check:docs && npm run test:unit`
+Run: `npx prettier --check $(git ls-files '*.md') && npx markdownlint-cli2 $(git ls-files '*.md') && npm run check:docs --strict && npm run test:unit`
 Expected: Prettier clean, `Summary: 0 issues`, docs checks passed, unit tests pass. The unit-test run confirms this documentation branch changed no behaviour.
+
+Prettier is scoped to tracked markdown rather than run as `npm run prettier` (`prettier --check .`) for two reasons, both pre-existing and outside this branch's scope:
+
+- The SDD workspace under `.superpowers/sdd/` is git-ignored scratch, but Prettier does not read `.gitignore`, so `--check .` reports its files.
+- `src/capabilities/__tests__/events-api.test.ts` already fails `prettier --check` on `main`. Confirm this independently with `git show main:src/capabilities/__tests__/events-api.test.ts`, and do **not** fix it here — it belongs in its own commit, since `npm run prettier` is a gate in `.github/workflows/release.yml`.
+
+`git ls-files` covers every file this branch adds once staged, so the scoping loses no coverage of our own work.
 
 - [ ] **Step 8: Confirm the README target**
 
