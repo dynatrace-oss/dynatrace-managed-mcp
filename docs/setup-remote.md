@@ -2,17 +2,21 @@
 
 Remote (HTTP) mode is for one server shared by a team: it runs once, keeps listening, and each person's AI client connects to it over the network instead of launching their own copy. The server holds no Dynatrace API tokens of its own — every caller supplies their own per request — so many people with different levels of access can share the same deployment safely.
 
-Reach for this mode when you want stateful, always-on hosting, load balancing across replicas, or a backend for web clients, not just a single person's editor. For a single person running the server on their own machine, see [Set up local (stdio) mode](setup-local.md) instead.
+Reach for this mode when you want always-on, shared hosting, load balancing across replicas, or a backend for web clients, not just a single person's editor. The server itself is stateless — it builds a fresh instance per request instead of keeping session state — which is exactly what makes it safe to run behind a load balancer with multiple replicas. For a single person running the server on their own machine, see [Set up local (stdio) mode](setup-local.md) instead.
+
+Each caller needs their own Dynatrace Managed API token with the required scopes before any of this works — see [Create an API token](api-token.md#required-scopes).
 
 ## How authentication works
 
 There is no server-side token at all. Every request carries the caller's own per-environment tokens in one header:
 
 ```text
-X-Dynatrace-Tokens: prod=dt0c01.AAA;staging=dt0c01.BBB
+X-Dynatrace-Tokens: production=dt0c01.AAA;staging=dt0c01.BBB
 ```
 
 The server uses the caller's token for the environment named by `environment_alias`, so each user sees only the data their own token permits — two people talking to the same server can have completely different access. A request that targets an environment the caller didn't supply a token for is rejected, naming the missing alias.
+
+The alias on the left of each `=` must match an `alias` in the server's own configuration **exactly**. A mismatched alias is rejected with the same `401 Unauthorized` response as a missing or invalid token, even when the token itself is perfectly valid — the server never gets far enough to check the token, because it never finds a configured environment to check it against. If a request is unexpectedly unauthorized, check your aliases before assuming your token is bad.
 
 Three things the previous documentation never made clear:
 
@@ -25,14 +29,14 @@ Three things the previous documentation never made clear:
 > [!IMPORTANT]
 > In HTTP mode, `apiToken` is ignored — the server never reads it here, because tokens arrive per request instead (see [How authentication works](#how-authentication-works) above). Nothing rejects a config that still includes it, but omit it anyway: with only non-secret connection details left, the file has no unused secret sitting at rest, and it's safe to commit.
 
-Create a config file with one entry per environment, no tokens:
+Create a config file with one entry per environment, no tokens. The alias is yours to choose — it's used below as `production`/`staging` to match the rest of this page's examples and the README's quickstart:
 
 ```yaml
 # HTTP mode configuration: NO tokens here.
 # Each user supplies their own per-environment tokens at request time via the
 # X-Dynatrace-Tokens header (alias=token;alias=token). Only non-secret connection
 # details live in this file, so it is safe to commit to version control.
-- alias: prod
+- alias: production
   apiEndpointUrl: https://prod-api.company.com/
   environmentId: abc-123
   dynatraceUrl: https://prod-dashboard.company.com/
@@ -43,7 +47,7 @@ Create a config file with one entry per environment, no tokens:
   dynatraceUrl: https://staging-dashboard.company.com/
 ```
 
-Full file: [`examples/dt-config-http.yaml`](../examples/dt-config-http.yaml). Point the server at it with `DT_CONFIG_FILE`, or supply the same entries as `DT_ENVIRONMENT_CONFIGS` — see [Configuration file](configuration.md#configuration-file) for path resolution and `${VAR}` interpolation, and [Configuration fields](configuration.md#configuration-fields) for the full field reference.
+A further example, using different alias names (`prod`/`staging`) to underline that the choice is yours: [`examples/dt-config-http.yaml`](../examples/dt-config-http.yaml). Whichever aliases you pick, the `X-Dynatrace-Tokens` header you send must use the same ones — see [How authentication works](#how-authentication-works) above. Point the server at your file with `DT_CONFIG_FILE`, or supply the same entries as `DT_ENVIRONMENT_CONFIGS` — see [Configuration file](configuration.md#configuration-file) for path resolution and `${VAR}` interpolation, and [Configuration fields](configuration.md#configuration-fields) for the full field reference.
 
 ## Run the server
 
@@ -86,7 +90,7 @@ metadata:
   name: dt-managed-mcp-config
 data:
   dt-config.yaml: |
-    - alias: prod
+    - alias: production
       apiEndpointUrl: https://prod-api.company.com/
       environmentId: abc-123
 ---
@@ -216,7 +220,7 @@ Both headers are required — `Accept` must list both `application/json` and `te
 Two diagnostic cases worth knowing:
 
 - **Omit `X-Dynatrace-Tokens` entirely** (or supply only invalid tokens) and the response is `401` with `Unauthorized: no valid Dynatrace token supplied` — this is the same response a real client gets if its token expired or was never configured.
-- **Send an unparseable body** and the response is a JSON-RPC parse error, code `-32700`.
+- **Keep the same, valid token header, but corrupt only the body** (truncate the JSON, for example) and the response is a JSON-RPC parse error, code `-32700`. The token is checked before the body is even read, so an invalid or missing token still short-circuits to `401` first — testing this case with a bad token would only show you the `401` above again.
 
 If neither of those matches what you see, see [Troubleshooting](troubleshooting.md).
 
