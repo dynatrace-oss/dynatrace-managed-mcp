@@ -718,7 +718,7 @@ Structure:
    - Token validity is cached for 60 s by default; tune with `DT_MCP_TOKEN_VALIDATION_TTL_MS`.
    - Rate limiting buckets per caller, keyed by the token header — link `configuration.md#rate-limiting`.
 
-3. `## 1. Write the environment configuration` — a `[!IMPORTANT]` callout: in HTTP mode the config must **omit `apiToken`**; only non-secret connection details belong in it, which is why it is safe to commit [`src/index.ts:111`]. Show `examples/dt-config-http.yaml` content and link the file.
+3. `## 1. Write the environment configuration` — a `[!IMPORTANT]` callout: in HTTP mode `apiToken` is **ignored** — the server never reads it (`startupTokens` is unconditionally empty, `src/index.ts:138-142`), because tokens arrive per request instead. Omit it so you are not storing an unused secret; with only non-secret connection details left, the file is safe to commit. Do **not** write that omitting it is a hard requirement — nothing validates or rejects a config that includes it, and `docs/configuration.md` states it the accurate way. Show `examples/dt-config-http.yaml` content and link the file.
 4. `## 2. Run the server` — three subsections.
    - **Docker (recommended).** The published image, which the legacy README never mentioned — multi-arch `linux/amd64` and `linux/arm64`, cosign-signed:
 
