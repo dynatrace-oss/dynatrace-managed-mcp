@@ -110,6 +110,20 @@ When neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set, the thrown er
 
 `resolvePath`'s path-interpolation regex is `filePath.replace(/\$\{(w+)}/g, ...)` — a bare `w`, not `\w+`. It therefore matches only the literal three characters `${w}` and never matches a real variable name, so any `${VAR_NAME}` written inside `DT_CONFIG_FILE` itself (as opposed to inside the file's _content_, which uses a separate, correct regex in `config-loader.ts:93`) is left untouched. Verified by reading the regex directly; not otherwise exercised by a test. The documentation is not misled by this — `docs/configuration.md` only ever documents `${VAR}` interpolation of file **content**, never of the path — so this is recorded for the code owner, not a documentation fix.
 
+## Open documentation defect — found by the final re-review, not yet fixed
+
+### D1. Two statements over-generalise when startup errors reach the terminal
+
+`docs/troubleshooting.md:44` and `docs/setup-remote.md:190`
+
+Both say a startup error is invisible without `LOG_OUTPUT=stderr-all`. That is true only for errors thrown by `src/utils/config-loader.ts` (bad path, parse failure, unsupported extension), which reach the terminal solely through `main().catch` → `logErrorObject` → `logger.error`.
+
+It is **false** for the two validation-stage exits, which call `console.error` **unconditionally** alongside `logger.error` (`src/index.ts:117-129`): `Failed to get managed environments configurations:` and `No valid environments found, stopping.` print regardless of `LOG_OUTPUT`.
+
+`docs/troubleshooting.md`'s own dedicated section for the first of those strings already draws the distinction correctly, so the branch contradicts itself. No reader following the guide is misled operationally — every documented invocation already sets `LOG_OUTPUT=stderr-all` — which is why the final re-review rated it non-blocking.
+
+Fix: narrow both sentences to the config-loader class of errors. Two-line prose change.
+
 ## Further repository follow-up (not scope-relevant to this branch)
 
 `README.md`'s licence badge and closing section both say Apache 2.0, matching `LICENSE`. `package.json:57` says `"license": "MIT"`. One of the two is wrong; whichever it is should be corrected in a follow-up outside this documentation branch.
