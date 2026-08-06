@@ -6,10 +6,11 @@ Every environment variable and configuration-file field the server reads, with d
 
 The recommended way to configure one or more Dynatrace Managed environments is a YAML or JSON file, referenced by `DT_CONFIG_FILE`.
 
+- **The file extension selects the parser, not the content.** Only `.json`, `.yaml`, and `.yml` are accepted; any other extension (or none) fails with `Unsupported file format: <ext>`, regardless of what's actually inside the file. See [Troubleshooting](troubleshooting.md#failed-to-get-managed-environments-configurations) for the exact error text.
 - **Relative paths** are resolved against the working directory of the process that starts the server — in practice, that's the AI client (Claude Desktop, VS Code, etc.), not this repository. Prefer an absolute path or a `~` path so the file resolves the same way regardless of how the client launches the server.
 - **Absolute paths** are used as-is.
 - **`~` expansion**: a leading `~` is expanded by the server itself, checking `HOME` then `USERPROFILE` — it does not rely on the shell having expanded it first.
-- **`${VAR_NAME}` interpolation**: any `${VAR_NAME}` in the file's content is substituted from the process environment before the file is parsed, so tokens can be kept out of the file itself.
+- **`${VAR_NAME}` interpolation**: any `${VAR_NAME}` in the file's **content** is substituted from the process environment before the file is parsed, so tokens can be kept out of the file itself. The name must be all uppercase letters, digits and underscores, and can't start with a digit (`[A-Z_][A-Z0-9_]*`) — a lowercase or mixed-case `${var_name}` is left in the file literally, unsubstituted.
 
 By convention, the file lives at `~/.dynatrace/managed-mcp.yaml`.
 
@@ -58,7 +59,7 @@ The same structure as JSON:
 ]
 ```
 
-Full examples: [`../examples/dt-config.yaml`](../examples/dt-config.yaml) and [`../examples/dt-config.json`](../examples/dt-config.json) (local/stdio mode, tokens interpolated), and [`../examples/dt-config-http.yaml`](../examples/dt-config-http.yaml) (HTTP mode — no tokens in the file at all).
+Full examples: [`../examples/dt-config.yaml`](../examples/dt-config.yaml) and [`../examples/dt-config.json`](../examples/dt-config.json) (local/stdio mode, tokens interpolated), [`../examples/dt-config-http.yaml`](../examples/dt-config-http.yaml) (HTTP mode — no tokens in the file at all), and [`../examples/mcp-config-with-file.json`](../examples/mcp-config-with-file.json) (a complete client `mcpServers` entry using `DT_CONFIG_FILE` alongside `${VAR}`-interpolated tokens).
 
 ## Configuration fields
 
@@ -73,6 +74,8 @@ One table for every field, however you supply it — config file or `DT_ENVIRONM
 | `dynatraceUrl`   | no                                          | Base URL for the dashboard. If omitted, falls back to the `apiEndpointUrl` field of the same entry                                                                                        |
 | `httpProxyUrl`   | no                                          | Per-environment HTTP proxy — see [Proxy](#proxy)                                                                                                                                          |
 | `httpsProxyUrl`  | no                                          | Per-environment HTTPS proxy — see [Proxy](#proxy)                                                                                                                                         |
+
+**Finding `apiEndpointUrl` and `environmentId`:** split them out of the environment URL you already use in a browser — `https://<cluster-host>:9999/e/<environmentId>/...`. Everything up to and including the host and port is `apiEndpointUrl`; the segment right after `/e/` is `environmentId`. The server reassembles that same URL internally (`apiEndpointUrl` + `/e/` + `environmentId`) to reach the API.
 
 ## Environment variables
 
@@ -187,7 +190,7 @@ Proxies are configured **per environment**, with the `httpProxyUrl` / `httpsProx
 
 The server sends anonymous usage telemetry to Dynatrace via OpenKit: server-start events, tool usage (which tools, success/failure, duration), and error tracking. No data from your Dynatrace Managed environment — entities, logs, metrics, tokens — is included; only information about how the MCP server itself is used.
 
-- `DT_MCP_DISABLE_TELEMETRY` — set to `true` to disable telemetry entirely. Default `false` (enabled).
+- `DT_MCP_DISABLE_TELEMETRY` — set to exactly `true` (lowercase) to disable telemetry entirely; the value is compared as a literal string, so `TRUE` or `1` are not recognized and leave telemetry enabled. Default `false` (enabled).
 - `DT_MCP_TELEMETRY_APPLICATION_ID` — overrides the OpenKit application ID. Default `5e2dbb56-076b-412e-8ffc-7babb7ae7c5d`, owned by Dynatrace.
 - `DT_MCP_TELEMETRY_ENDPOINT_URL` — overrides the OpenKit beacon endpoint the data is sent to. Default `https://bf96767wvv.bf.dynatrace.com/mbeacon`, Dynatrace's analytics endpoint — allowlist this hostname if your egress controls require it.
 - `DT_MCP_TELEMETRY_DEVICE_ID` — overrides the per-install device identifier. Default: auto-generated from the hostname and random bytes at startup.

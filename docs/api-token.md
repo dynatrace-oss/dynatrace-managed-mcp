@@ -10,20 +10,25 @@ For the exact steps in your cluster's UI, see the [Dynatrace Managed documentati
 
 ## Required scopes
 
-Your API token must include the following scopes for full functionality:
+Your API token must include the following scopes for full functionality — this list is grounded directly in the API paths the server calls (`src/capabilities/*.ts`), not carried over from an older list:
 
 - Access problem and event feed, metrics, and topology (`DataExport`)
-- Read audit logs (`auditLogs.read`)
 - Read entities (`entities.read`)
 - Read events (`events.read`)
 - Read logs (`logs.read`)
 - Read metrics (`metrics.read`)
-- Read network zones (`networkZones.read`)
 - Read problems (`problems.read`)
 - Read security problems (`securityProblems.read`)
 - Read SLO (`slo.read`)
 
+Two scopes that appeared on earlier versions of this list, `auditLogs.read` and `networkZones.read`, are **not required**: no code path in this server calls an audit-log or network-zone endpoint. Don't grant them — a security-sensitive token should carry no more access than it needs.
+
+**HTTP mode also needs a token that validates.** Every HTTP-mode request checks the caller's supplied token by calling `POST /api/v2/apiTokens/lookup` (`validateAPIToken`). Per Dynatrace's own API documentation, that endpoint accepts a token carrying **any** scope — it isn't gated on a specific one — so any token built from the list above already satisfies it; no additional scope is needed. This check does not run in local (stdio) mode.
+
 API token scopes in Managed deployments differ from SaaS Platform tokens. Ensure you select the correct scopes for your Managed cluster version.
+
+> [!NOTE]
+> The server's own `dynatrace_managed_get_environments_info` tool currently reports a different, legacy set of scope names (`ReadProblems`, `ReadSLO`, and similar) — this is a known code-side inconsistency, not a second valid list. This page is authoritative; if the tool and this page disagree, trust this page.
 
 ## Where the token goes
 
