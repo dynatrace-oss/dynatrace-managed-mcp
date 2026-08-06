@@ -1354,6 +1354,8 @@ Add two entries to the `FORBIDDEN` array in `scripts/check-docs.mjs`, so defects
 
 Run `node scripts/check-docs.mjs` afterwards and confirm it still exits 0 — neither string should be present. If either fires, a defect regressed and must be fixed before this task closes.
 
+Then make the link resolver tolerate query strings. It currently splits a target on `#` only (`scripts/check-docs.mjs:85`), so a link like `../assets/diagram.png?raw=true` resolves to a path containing `?raw=true`, does not exist, and is reported as a false pending link. Strip a `?…` suffix before the existence check, keeping the anchor handling as it is. Verify both ways afterwards: a real path with a query string resolves, and a genuinely missing path is still reported.
+
 - [ ] **Step 5c: Audit every defect in the defect ledger**
 
 Read [`docs/superpowers/specs/2026-08-06-defect-ledger.md`](../specs/2026-08-06-defect-ledger.md). For each of the **ten** documentation defects, confirm it is actually gone from the shipped documentation — do not take the ledger's "fixed by" column on trust, verify it:
