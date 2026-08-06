@@ -9,13 +9,15 @@
 
 ```bash
 claude mcp add dynatrace-managed --scope project \
-  -e DT_CONFIG_FILE=~/.dynatrace/managed-mcp.yaml \
+  -e 'DT_CONFIG_FILE=~/.dynatrace/managed-mcp.yaml' \
   -- npx -y @dynatrace-oss/dynatrace-managed-mcp-server@latest
 ```
 
+Quote the `-e` value as shown. An unquoted `~` is expanded by your shell before `claude` ever sees it, so `.mcp.json` ends up with your own absolute home directory baked in instead of the portable `~/...` path. The server expands `~` itself at startup, which is what makes the literal string safe to commit and portable across machines.
+
 `--scope` controls where the registration is stored:
 
-- `local` (default) — this project only, visible to you alone.
+- `local` (default) — this project only, visible to you alone. Stick with this if you're just trying the server out.
 - `project` — committed to `.mcp.json`, shared with your team.
 - `user` — all your projects, on this machine.
 
@@ -27,6 +29,7 @@ The equivalent `.mcp.json`, for hand-editing or committing directly:
 {
   "mcpServers": {
     "dynatrace-managed": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
@@ -50,7 +53,7 @@ The header carries `alias=token` pairs, semicolon-separated for more than one en
 
 ## Verify
 
-Run `/mcp` inside Claude Code — `dynatrace-managed` should appear with its tools listed. Then ask:
+Run `/mcp` inside Claude Code — `dynatrace-managed` should appear in the server list; select it to see its tools listed. Then ask:
 
 ```text
 Ask Dynatrace to list problems
@@ -63,3 +66,4 @@ Ask Dynatrace to list problems
 - Remove the registration with `claude mcp remove dynatrace-managed`.
 - Claude Code does not pick up configuration changes on a running server — reconnect the server after editing `~/.dynatrace/managed-mcp.yaml` or the `env` block.
 - For server-side diagnostics, add `LOG_OUTPUT=stderr-all` and `LOG_LEVEL=debug` to the `env` block; see [Logging](../configuration.md#logging).
+- Registration succeeds but the assistant still can't reach the server? See [Troubleshooting](../troubleshooting.md).
