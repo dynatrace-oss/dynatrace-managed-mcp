@@ -1,5 +1,7 @@
 # Examples
 
+Setup instructions live in the [documentation index](../docs/README.md).
+
 ## Prompts
 
 Use these example prompts as a starting point. You can copy them into your AI Assistant chat, and adapt them to your use-case,

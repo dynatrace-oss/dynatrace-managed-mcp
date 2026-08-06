@@ -133,6 +133,8 @@ Tips:
 
 ### Docker
 
+A signed, published multi-arch image is also available and does not require a local build — see [Run the server](setup-remote.md#run-the-server) in the remote setup guide.
+
 You can build the Docker container locally, for example:
 
 ```bash

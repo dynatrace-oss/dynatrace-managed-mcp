@@ -82,7 +82,11 @@ for (const file of DOC_FILES) {
       }
       continue;
     }
-    const [path, anchor] = target.split('#');
+    const [rawPath, anchor] = target.split('#');
+    // Strip a query string (e.g. "diagram.png?raw=true") before checking existence;
+    // it is not part of the filesystem path and the anchor handling above is unaffected
+    // since '#' always splits before '?' in a URL.
+    const path = rawPath.split('?')[0];
     // Root-relative paths ("/docs/x.md") are relative to the repo root, not the
     // filesystem root that node:path's resolve() would otherwise anchor them to.
     const resolved = path.startsWith('/') ? resolve(ROOT, path.slice(1)) : resolve(dirname(file), path);
@@ -138,6 +142,8 @@ const FORBIDDEN = [
   ['@dynatrace-oss/dynatrace-mcp-server', 'that is the SaaS package; use @dynatrace-oss/dynatrace-managed-mcp-server'],
   ['DT_API_ENDPOINT_URL', 'no such variable; dynatraceUrl falls back to the apiEndpointUrl field'],
   ['gemini extensions install', 'this repo ships no gemini-extension.json'],
+  ['honors system proxy', 'false: HTTP_PROXY/HTTPS_PROXY are never read; only the per-environment httpProxyUrl/httpsProxyUrl fields work'],
+  ['default: `dynatrace-managed-mcp`', 'wrong: DT_MCP_TELEMETRY_APPLICATION_ID defaults to the UUID in telemetry-openkit.ts:38'],
 ];
 for (const file of DOC_FILES) {
   const text = read(file);
