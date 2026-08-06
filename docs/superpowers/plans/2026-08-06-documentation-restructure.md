@@ -25,7 +25,7 @@ Every task's requirements implicitly include this section. Values are copied ver
 - **The 13 documentable environment variables** [`grep process.env src/ --include=*.ts`, excluding `__tests__`]: `DT_CONFIG_FILE`, `DT_ENVIRONMENT_CONFIGS`, `LOG_LEVEL`, `LOG_OUTPUT`, `LOG_FILE`, `DT_MCP_RATE_LIMIT_MAX_CALLS`, `DT_MCP_RATE_LIMIT_WINDOW_MS`, `DT_MCP_MAX_BODY_SIZE`, `DT_MCP_TOKEN_VALIDATION_TTL_MS`, `DT_MCP_DISABLE_TELEMETRY`, `DT_MCP_TELEMETRY_APPLICATION_ID`, `DT_MCP_TELEMETRY_ENDPOINT_URL`, `DT_MCP_TELEMETRY_DEVICE_ID`. `HOME` and `USERPROFILE` are internal and are not documented as configuration.
 - **`DT_API_ENDPOINT_URL` does not exist.** It must never appear in documentation.
 - **No changes to `src/`.** Where docs and code disagree, the docs are corrected.
-- **Every task ends green:** `npm run prettier`, `npx markdownlint-cli2 <changed files>`, and `node scripts/check-docs.mjs` all pass.
+- **Every task ends green:** `npm run prettier` and `npx markdownlint-cli2 <changed files>` pass, and `node scripts/check-docs.mjs` reports no hard errors — **except** where a task's own steps name the exact errors it is permitted to leave open (Task 1, which must fail by design, and Task 2, which may leave exactly the two named environment-variable errors for Task 4 to close). No task may leave an error its own steps do not name. Pending links are expected until Task 13.
 - **Migration source:** the old 778-line README is on the base branch. Retrieve any range with `git show main:README.md | sed -n 'A,Bp'`.
 
 ---
