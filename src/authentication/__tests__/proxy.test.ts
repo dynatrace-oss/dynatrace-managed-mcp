@@ -60,12 +60,13 @@ describe('proxy-config', () => {
       expect(response).toBeUndefined();
     });
 
-    it('should return undefined if set HTTP_PROXY and HTTPS_PROXY', () => {
-      process.env.HTTP_PROXY = 'http://myuser:mypass@myhost.com:1234';
-      process.env.HTTPS_PROXY = 'https://myuser:mypass@myhost.com:4321';
+    it('should throw if both httpProxyUrl and httpsProxyUrl are set, naming the config fields (not env vars)', () => {
+      const httpProxy = 'http://myuser:mypass@myhost.com:1234';
+      const httpsProxy = 'https://myuser:mypass@myhost.com:4321';
 
-      const response = setAxiosProxy();
-      expect(response).toBeUndefined();
+      expect(() => setAxiosProxy(httpProxy, httpsProxy)).toThrow(
+        'Cannot specify both httpsProxyUrl and httpProxyUrl for the same environment; configure only one.',
+      );
     });
 
     it('should fail if invalid URL', () => {

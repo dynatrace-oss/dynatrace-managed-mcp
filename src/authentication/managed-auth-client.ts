@@ -321,8 +321,12 @@ function buildProxyConfig(proxyUrl: string, defaultPort: string): AxiosProxyConf
 
 export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig | undefined {
   if (httpsProxy && httpProxy) {
-    logger.error('Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.');
-    return undefined;
+    // Silently disabling the proxy here would be worse than failing loudly: an administrator who
+    // set both fields "to be safe" would otherwise get direct (unproxied) requests with only a log
+    // line as a clue. Fail fast instead, consistent with how validateEnvironments() treats other
+    // structurally invalid environment configuration (missing required fields, invalid alias) -
+    // by stopping startup rather than continuing in a silently degraded state.
+    throw new Error('Cannot specify both httpsProxyUrl and httpProxyUrl for the same environment; configure only one.');
   }
   if (!httpsProxy && !httpProxy) {
     // No proxy configured, nothing to do
