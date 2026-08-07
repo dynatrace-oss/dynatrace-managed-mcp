@@ -232,7 +232,15 @@ export function buildManagedAuthClients(configs: ManagedEnvironmentConfig[]): Ma
   );
 }
 
-/** stdio startup validation using config-provided tokens. Returns the reachable subset. */
+/**
+ * stdio startup validation using config-provided tokens. Returns the reachable subset.
+ *
+ * `tokens` is not guaranteed to hold an entry per client: `buildConfigTokenMap` only maps
+ * environments that carry an `apiToken`. The server's own stdio path loads its configuration with
+ * `requireToken=true`, so a missing token is already rejected before this runs - but this function
+ * is exported and does not own that precondition, so an alias with no token is skipped rather than
+ * validated with `undefined`.
+ */
 export async function validateManagedClients(
   clients: ManagedAuthClient[],
   tokens: Map<string, string>,
@@ -242,6 +250,7 @@ export async function validateManagedClients(
   for (const client of clients) {
     const token = tokens.get(client.alias);
     if (!token) {
+      // defensive: unreachable via the server's stdio startup, which requires a token per environment
       logger.warn(`[Alias: ${client.alias}] No token found; skipping startup validation`);
       continue;
     }

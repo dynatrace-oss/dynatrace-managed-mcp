@@ -309,4 +309,20 @@ describe('validateManagedClients', () => {
     expect(validClients).toEqual([]);
     expect(validAliases).toEqual(['ALL_ENVIRONMENTS']);
   });
+
+  it('skips only the untokenized clients of a partial token map', async () => {
+    // buildConfigTokenMap omits environments without an apiToken, so the map may cover
+    // a subset of the clients; the tokenized ones must still be validated.
+    const tokenized = fakeAuthClient('prod', true);
+    const untokenized = fakeAuthClient('staging', true);
+    const { validClients, validAliases } = await validateManagedClients(
+      [tokenized, untokenized],
+      new Map([['prod', 't1']]),
+    );
+    expect(tokenized.isConfigured).toHaveBeenCalledWith('t1');
+    expect(untokenized.isConfigured).not.toHaveBeenCalled();
+    expect(untokenized.isValid).toBe(false);
+    expect(validClients).toEqual([tokenized]);
+    expect(validAliases).toEqual(['ALL_ENVIRONMENTS', 'prod']);
+  });
 });
