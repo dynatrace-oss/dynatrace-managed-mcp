@@ -41,7 +41,9 @@ Example with JSON string:
 See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp#configuration
 ```
 
-That last line's link is stale — the anchor it points to was removed from `README.md` by this documentation restructure. Use [Configuration reference](configuration.md) instead. Like every startup error on this page, this one is logged rather than printed to the console directly, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file, which is exactly why this failure can look like nothing happened at all.
+That last line's link is stale — the anchor it points to was removed from `README.md` by this documentation restructure. Use [Configuration reference](configuration.md) instead.
+
+This error is logged rather than printed to the console directly, so it needs `LOG_OUTPUT=stderr-all` (as in [Start here](#start-here)) to be visible on a terminal — the default `LOG_OUTPUT=file` writes it only to the log file, which is exactly why this failure can look like nothing happened at all. The same is true of the other errors raised while loading the configuration file: `Configuration must be an array of environments.`, `Unsupported file format`, and the parse and missing-file errors below. The two later validation errors — `Failed to get managed environments configurations:` and `No valid environments found, stopping.` — behave differently: they are written to stderr unconditionally and appear whatever `LOG_OUTPUT` is set to.
 
 ### `Configuration must be an array of environments.`
 
