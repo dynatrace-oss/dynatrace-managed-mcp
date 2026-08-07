@@ -111,19 +111,16 @@ describe('EventsApiClient', () => {
 
     it('should show all retrieved events', () => {
       // Create 75 mock events to test that all are shown
-      const mockEvents: Event[] = Array.from(
-        { length: 75 },
-        (_, i): Event => ({
-          eventId: `event-${i}`,
-          eventType: 'CUSTOM_INFO',
-          title: `Event ${i}`,
-          startTime: 1640995200000 + i * 1000,
-          entityName: `service-${i}`,
-          properties: [],
-          managementZones: [],
-          status: EventStatus.CLOSED,
-        }),
-      );
+      const mockEvents: Event[] = Array.from({ length: 75 }, (_, i): Event => ({
+        eventId: `event-${i}`,
+        eventType: 'CUSTOM_INFO',
+        title: `Event ${i}`,
+        startTime: 1640995200000 + i * 1000,
+        entityName: `service-${i}`,
+        properties: [],
+        managementZones: [],
+        status: EventStatus.CLOSED,
+      }));
 
       const response = new Map<string, ListEventsResponse>([
         [
