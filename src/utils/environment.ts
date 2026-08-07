@@ -81,7 +81,7 @@ export function getManagedEnvironmentConfigs(requireToken = true): ManagedEnviro
         '  DT_CONFIG_FILE=./dt-config.yaml\n\n' +
         'Example with JSON string:\n' +
         '  DT_ENVIRONMENT_CONFIGS=\'[{"apiEndpointUrl":"...","environmentId":"..."}]\'\n\n' +
-        'See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp#configuration',
+        'See documentation: https://github.com/dynatrace-oss/dynatrace-managed-mcp/blob/main/docs/configuration.md',
     );
   }
 
