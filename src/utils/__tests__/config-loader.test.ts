@@ -316,6 +316,38 @@ describe('ConfigFileLoader', () => {
 
       expect(() => loadFromFile(configPath)).toThrow(/Configuration file not found/);
     });
+
+    it('should expand ${VAR_NAME} environment variables in the path itself', () => {
+      process.env.TEST_CONFIG_DIR = testDir;
+
+      const configPath = path.join(testDir, 'config.json');
+      const config = [
+        {
+          apiEndpointUrl: 'https://api.example.com/',
+          environmentId: 'test-123',
+          alias: 'production',
+          apiToken: 'token',
+        },
+      ];
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      try {
+        const result = loadFromFile('${TEST_CONFIG_DIR}/config.json');
+        expect(result).toHaveLength(1);
+        expect(result[0].alias).toBe('production');
+      } finally {
+        delete process.env.TEST_CONFIG_DIR;
+      }
+    });
+
+    it('should throw when a ${VAR_NAME} in the path is not set, matching the content-interpolation behavior', () => {
+      delete process.env.TEST_UNDEFINED_PATH_VAR;
+
+      expect(() => loadFromFile('${TEST_UNDEFINED_PATH_VAR}/config.json')).toThrow(
+        /Environment variable not found: TEST_UNDEFINED_PATH_VAR/,
+      );
+    });
   });
 
   describe('Configuration validation', () => {

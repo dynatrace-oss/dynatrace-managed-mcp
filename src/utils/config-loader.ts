@@ -110,12 +110,18 @@ function interpolateEnvVars(content: string): string {
  * Resolve path with cross-platform support
  */
 function resolvePath(filePath: string): string {
-  // Expand environment variables in path (e.g., ${HOME}/config.json)
-  let resolved = filePath.replace(/\$\{(w+)}/g, (_, varName) => {
+  // Expand environment variables in path (e.g., ${HOME}/config.json). Uses the same character
+  // class as the file-content interpolation above, so a ${VAR} written in DT_CONFIG_FILE itself
+  // behaves identically to one written inside the file's content: undefined throws, rather than
+  // silently resolving to an empty string.
+  let resolved = filePath.replace(/\$\{([A-Z_][A-Z0-9_]*)}/g, (match, varName) => {
     const value = process.env[varName];
-    if (!value) {
-      logger.warn(`Environment variable ${varName} not found in path, using empty string`);
-      return '';
+    if (value === undefined) {
+      throw new Error(
+        `Environment variable not found: ${varName}\n` +
+          `Referenced as: ${match}\n` +
+          `Make sure ${varName} is set in your environment.`,
+      );
     }
     return value;
   });
