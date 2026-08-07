@@ -318,8 +318,6 @@ describe('ConfigFileLoader', () => {
     });
 
     it('should expand ${VAR_NAME} environment variables in the path itself', () => {
-      process.env.TEST_CONFIG_DIR = testDir;
-
       const configPath = path.join(testDir, 'config.json');
       const config = [
         {
@@ -332,7 +330,10 @@ describe('ConfigFileLoader', () => {
 
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
+      // Set the env var inside the try so a throw (from loadFromFile, or anything else in here)
+      // can't skip the finally and leak TEST_CONFIG_DIR into later tests.
       try {
+        process.env.TEST_CONFIG_DIR = testDir;
         const result = loadFromFile('${TEST_CONFIG_DIR}/config.json');
         expect(result).toHaveLength(1);
         expect(result[0].alias).toBe('production');
