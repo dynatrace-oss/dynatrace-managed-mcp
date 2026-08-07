@@ -38,8 +38,9 @@
         },
         {
           "name": "DT_ENVIRONMENT_CONFIGS",
-          "description": "An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. Used only if DT_CONFIG_FILE is not set. One of DT_CONFIG_FILE or DT_ENVIRONMENT_CONFIGS must be set. See README file for contents of this.",
+          "description": "An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to, including each environment's API token in local (stdio) mode. Used only if DT_CONFIG_FILE is not set. One of DT_CONFIG_FILE or DT_ENVIRONMENT_CONFIGS must be set. See README file for contents of this.",
           "isRequired": false,
+          "isSecret": true,
           "format": "string"
         },
         {
@@ -61,6 +62,20 @@
           "description": "Logging level (e.g. debug, info, warning, error)",
           "isRequired": false,
           "format": "string"
+        },
+        {
+          "name": "LOG_OUTPUT",
+          "description": "Log destination: file, console, stdout, stderr, stderr-all, file+console, file+stdout, file+stderr, or disabled. Defaults to file, which prints nothing to the terminal - startup errors are otherwise invisible; set to stderr-all to see them while troubleshooting.",
+          "isRequired": false,
+          "format": "string",
+          "default": "file"
+        },
+        {
+          "name": "LOG_FILE",
+          "description": "Log file path, used when LOG_OUTPUT includes file. Defaults to dynatrace-managed-mcp.log.",
+          "isRequired": false,
+          "format": "filepath",
+          "default": "dynatrace-managed-mcp.log"
         },
         {
           "name": "DT_MCP_DISABLE_TELEMETRY",
