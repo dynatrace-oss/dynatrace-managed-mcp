@@ -44,11 +44,15 @@ Defects introduced during this branch and caught by review, listed for completen
 | `clients/copilot-cli.md` | Claimed the `mcp-compat.ts`/`enableJsonResponse` fixes shipped in `1.0.1`; they actually shipped in `0.5.7` — `mcp-compat.ts` was only extracted, not introduced, in the 1.0.x refactor                                   | Task 8 review  |
 | `troubleshooting.md`     | Asserted a fixed client-side error string `Mcp error: -32002: connection closed`; no such code is defined in the vendored MCP SDK, and the wording varies per client's own bundled SDK                                    | Task 12 review |
 
-## Code and repository defects — open, out of scope for this branch
+## Code and repository defects — out of scope for this branch, tracked as issues
+
+Every item below has a GitHub issue. Eight are fixed by [#215](https://github.com/dynatrace-oss/dynatrace-managed-mcp/pull/215); [#224](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/224) (the proxy model) and [#226](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/226) remain open. C2 and C10 are two faces of the same tangle and share issue #224.
 
 Ordered by user impact.
 
 ### C1. The server tells users the wrong API token scopes
+
+**[#216](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/216) — fixed in #215.**
 
 `src/authentication/managed-auth-client.ts:7-16`, `src/tools/environment-tools.ts:6-15`
 
@@ -62,6 +66,8 @@ Fix: reconcile the array with the scopes in `docs/api-token.md`, or remove it an
 
 ### C2. The server has two uncoordinated proxy mechanisms
 
+**[#224](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/224) — open.**
+
 `src/authentication/managed-auth-client.ts`
 
 `HTTP_PROXY` / `HTTPS_PROXY` are not read directly by name anywhere in `src/` (`process.env.HTTP_PROXY` / `HTTPS_PROXY` appear only in `src/authentication/__tests__/proxy.test.ts`), but they **are** read transitively, on every request that doesn't carry an explicit per-environment proxy: the shared axios client falls through to the `proxy-from-env` package, which reads them (and `NO_PROXY`) straight from the process environment. Of the five outbound calls in `managed-auth-client.ts`, only `makeRequest` (`:171-183`, tool/data requests) passes an explicit `proxy` built from `httpProxyUrl` / `httpsProxyUrl` (`setAxiosProxy`, `:60`); `validateAPIToken` (`:85`), `validateConnection` (`:100`/`:111`), and `getClusterVersion` (`:125`) do not, so they always take the environment-variable path — see C10.
@@ -72,6 +78,8 @@ Fix: pick one coherent proxy model — e.g. resolve a single effective proxy per
 
 ### C3. Setting both proxy fields silently disables the proxy
 
+**[#217](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/217) — fixed in #215.**
+
 `src/authentication/managed-auth-client.ts:332-336`
 
 When both `httpProxyUrl` and `httpsProxyUrl` are set on one environment, `setAxiosProxy` logs an error and returns `undefined` — so **neither** proxy is configured and requests go direct. An administrator filling in both "to be safe" gets the opposite of what they intended, and the only signal is a log line.
@@ -79,6 +87,8 @@ When both `httpProxyUrl` and `httpsProxyUrl` are set on one environment, `setAxi
 Fix: fail fast at startup, or pick one deterministically and warn.
 
 ### C4. `server.json` misrepresents the server to the MCP registry
+
+**[#219](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/219) — fixed in #215.**
 
 `server.json`
 
@@ -88,6 +98,8 @@ Fix: add `DT_CONFIG_FILE`, mark neither as unconditionally required (either sati
 
 ### C5. `prettier --check` fails on `main`
 
+**[#220](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/220) — fixed in #215.**
+
 `src/capabilities/__tests__/events-api.test.ts`
 
 The file fails `prettier --check` on `main`, independently of this branch. `npm run prettier` is a gate in `.github/workflows/release.yml`, so this can fail a release. Deliberately not fixed here to keep the documentation diff clean — it wants its own one-line commit.
@@ -95,6 +107,8 @@ The file fails `prettier --check` on `main`, independently of this branch. `npm 
 Reproduce: `git show main:src/capabilities/__tests__/events-api.test.ts` and run `prettier --check` on it.
 
 ### C6. Unreachable branch in the live-cluster check
+
+**[#226](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/226) — open.**
 
 `src/authentication/managed-auth-client.ts:242-247`
 
@@ -104,11 +118,15 @@ Cosmetic, listed only so the next reader of that function does not assume it is 
 
 ### C7. `docs/DEVELOPMENT.md` has a wrong error code, stale example, and the old indented-code-block style
 
+**[#221](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/221) — fixed in #215.**
+
 `docs/DEVELOPMENT.md:189-199`
 
 The "Development Troubleshooting" section asserts `Mcp error: -32002: connection closed: initialize response`. No such code exists in the vendored MCP SDK — it defines `ConnectionClosed = -32000` and `RequestTimeout = -32001` (`node_modules/@modelcontextprotocol/sdk/dist/*/types.d.ts:259-260`), and each client bundles its own SDK, so there is no single fixed code or wording to assert here (this is exactly the correction `troubleshooting.md`'s equivalent entry already received — see the "introduced during this branch" table above). The same section also still renders its two commands as indented code blocks rather than fenced ones — the same rendering defect fixed everywhere else as documentation defect 2 — and one example reads `npx /path/to/repos/dynatrace-oss/dynatrace-manage-mcp/dist/index.js`, missing the `d` in `managed`, and using `npx` where `node` is what actually runs a local file path. The design's non-goals keep `docs/DEVELOPMENT.md`'s content out of scope for this branch (only its cross-links were to change), so this is recorded rather than fixed here.
 
 ### C8. The server's own error message points at a dead anchor
+
+**[#222](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/222) — fixed in #215.**
 
 `src/utils/environment.ts:84`
 
@@ -116,11 +134,15 @@ When neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set, the thrown er
 
 ### C9. `${VAR}` interpolation in the config **path** silently does nothing
 
+**[#218](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/218) — fixed in #215.**
+
 `src/utils/config-loader.ts:114`
 
 `resolvePath`'s path-interpolation regex is `filePath.replace(/\$\{(w+)}/g, ...)` — a bare `w`, not `\w+`. It therefore matches only the literal three characters `${w}` and never matches a real variable name, so any `${VAR_NAME}` written inside `DT_CONFIG_FILE` itself (as opposed to inside the file's _content_, which uses a separate, correct regex in `config-loader.ts:93`) is left untouched. Verified by reading the regex directly; not otherwise exercised by a test. The documentation is not misled by this — `docs/configuration.md` only ever documents `${VAR}` interpolation of file **content**, never of the path — so this is recorded for the code owner, not a documentation fix.
 
 ### C10. A customer whose only egress is the per-environment proxy cannot pass startup validation
+
+**[#224](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/224) — open.**
 
 `src/authentication/managed-auth-client.ts:75`, `:90`, `:101`, `:115` (line numbers as cited when this defect was recorded; current file has them at `:85`, `:100`, `:111`, `:125` respectively — `validateAPIToken`, `validateConnection`'s primary call, its fallback call, and `getClusterVersion`)
 
@@ -146,4 +168,6 @@ Fixed in `a545b41`. Both pages now distinguish the config-loader errors (logger-
 
 ## Further repository follow-up (not scope-relevant to this branch)
 
-`README.md`'s licence badge and closing section both say Apache 2.0, matching `LICENSE`. `package.json:57` says `"license": "MIT"`. One of the two is wrong; whichever it is should be corrected in a follow-up outside this documentation branch.
+**Licence — [#223](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/223), fixed in #215.** `README.md` and `LICENSE` both say Apache 2.0; `package.json` declared MIT. Apache-2.0 confirmed correct by the repository owner, so `package.json` was the oversight.
+
+**Invisible startup errors — [#225](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/225), open.** Every fatal configuration error reaches the terminal only via `logger.error`, so under the default `LOG_OUTPUT=file` the process exits `1` with a blank terminal — unlike the two validation exits at `src/index.ts:117-129`, which `console.error` unconditionally.
