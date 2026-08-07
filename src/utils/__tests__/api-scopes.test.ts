@@ -32,6 +32,11 @@ describe('MANAGED_API_SCOPES', () => {
     }
   });
 
+  // A source-text drift guard, not a behavioral test: it is brittle to reformatting (e.g. reordered
+  // import specifiers) and does not exercise any user-visible output. The user-visible check - that
+  // dynatrace_managed_get_environments_info's response actually emits the corrected scopes and not
+  // the legacy ones - lives in src/tools/__tests__/environment-tools.test.ts instead, since that is
+  // where the real tool response is produced.
   it('is imported (not re-declared) by both consumers, so they cannot drift apart again', () => {
     const managedAuthClientSource = fs.readFileSync(
       path.join(__dirname, '../../authentication/managed-auth-client.ts'),
