@@ -47,7 +47,7 @@ export class ManagedAuthClient {
     this.apiBaseUrl = params.apiBaseUrl;
     this.dashboardBaseUrl = params.dashboardBaseUrl;
     this.alias = params.alias;
-    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy);
+    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy, params.alias);
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
@@ -319,14 +319,24 @@ function buildProxyConfig(proxyUrl: string, defaultPort: string): AxiosProxyConf
   };
 }
 
-export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig | undefined {
+export function setAxiosProxy(httpProxy = '', httpsProxy = '', alias = ''): AxiosProxyConfig | undefined {
   if (httpsProxy && httpProxy) {
-    // Silently disabling the proxy here would be worse than failing loudly: an administrator who
-    // set both fields "to be safe" would otherwise get direct (unproxied) requests with only a log
-    // line as a clue. Fail fast instead, consistent with how validateEnvironments() treats other
-    // structurally invalid environment configuration (missing required fields, invalid alias) -
-    // by stopping startup rather than continuing in a silently degraded state.
-    throw new Error('Cannot specify both httpsProxyUrl and httpProxyUrl for the same environment; configure only one.');
+    // The defect was the silence, not the ambiguity: the pre-fix code returned `undefined` here,
+    // leaving requests unproxied with only a log line as evidence. Throwing would fix the silence
+    // but introduce a breaking change for exactly the deployments this defect already affects -
+    // the old documentation presented httpProxyUrl and httpsProxyUrl as interchangeable
+    // alternatives, with no warning against setting both, so "both set" configs that run today
+    // (silently proxy-less) would start failing outright after this fix. Worse, this function runs
+    // from the ManagedAuthClient constructor at startup (see buildManagedAuthClients()), so a throw
+    // here propagates to main().catch -> logErrorObject -> logger.error only - invisible under the
+    // default LOG_OUTPUT=file, which has no console transport. So: keep running, deterministically
+    // prefer httpsProxyUrl, and warn through console.warn (Node's global console, which writes to
+    // stderr directly and is not routed through Winston) so the misconfiguration is visible in the
+    // terminal regardless of LOG_OUTPUT.
+    const aliasLabel = alias ? `[Alias: ${alias}] ` : '';
+    const message = `${aliasLabel}Both httpsProxyUrl and httpProxyUrl are set; using httpsProxyUrl and ignoring httpProxyUrl. Configure only one.`;
+    logger.warn(message);
+    console.warn(message);
   }
   if (!httpsProxy && !httpProxy) {
     // No proxy configured, nothing to do
