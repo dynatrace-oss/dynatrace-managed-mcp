@@ -161,15 +161,22 @@ The limiter buckets **per caller**: in HTTP mode the bucket key is derived from 
 
 ## Proxy
 
-Proxies are configured **per environment**, with the `httpProxyUrl` / `httpsProxyUrl` [config fields](#configuration-fields). This is the only mechanism the server supports.
+The server has two separate proxy mechanisms, and which one governs a given outbound request depends on which code path makes that request — not on any deliberate two-tier design:
+
+- **Per-environment**: the `httpProxyUrl` / `httpsProxyUrl` [config fields](#configuration-fields), set per entry in your [configuration file](#configuration-file).
+- **Standard environment variables**: `HTTP_PROXY` / `HTTPS_PROXY` (and `NO_PROXY`), read by the server's underlying HTTP client (axios, via the `proxy-from-env` package) for any request that wasn't given a per-environment proxy explicitly.
+
+**Tool and data requests** — the calls that answer an assistant's questions — use an environment's `httpProxyUrl` / `httpsProxyUrl` when it's set. If it isn't set, they fall back to the environment variables, same as everything else.
+
+**Startup validation, the cluster-version check, and — in HTTP mode — the per-request token lookup always use the environment variables**, never `httpProxyUrl` / `httpsProxyUrl`. Those calls never pass a per-environment proxy to the HTTP client, so they defer entirely to `HTTP_PROXY` / `HTTPS_PROXY`, regardless of what's configured for that environment.
 
 > [!WARNING]
-> The standard `HTTP_PROXY` and `HTTPS_PROXY` environment variables are **not** read by this server. Setting them has no effect on outbound requests.
+> `NO_PROXY` is honored only on the environment-variable path. Once an environment has `httpProxyUrl` / `httpsProxyUrl` set, its tool/data requests use that proxy unconditionally — `NO_PROXY` has no effect on them, and there is no per-environment equivalent of it.
 
 <!-- -->
 
 > [!WARNING]
-> Set at most one of `httpProxyUrl` / `httpsProxyUrl` per environment. Setting **both** on the same environment logs an error and disables the proxy for that environment entirely — neither proxy is used.
+> Set at most one of `httpProxyUrl` / `httpsProxyUrl` per environment. Setting **both** on the same environment logs an error and configures neither field — but that does **not** make the environment proxy-less: its tool/data requests still fall back to `HTTP_PROXY` / `HTTPS_PROXY`, exactly as if neither field had been set.
 
 ```yaml
 - alias: production
@@ -184,7 +191,9 @@ Proxies are configured **per environment**, with the `httpProxyUrl` / `httpsProx
   apiToken: ${DT_STAGING_TOKEN}
 ```
 
-`production` routes through the proxy; `staging` does not — `httpProxyUrl`/`httpsProxyUrl` apply only to the entry they're set on.
+`production`'s tool/data requests route through `http://proxy.company.com:8080`. `staging`'s tool/data requests use `HTTP_PROXY` / `HTTPS_PROXY` if those are set in the server's own process environment, or go direct if not. Startup validation and the cluster-version check behave the same way for **both** environments — `httpProxyUrl` never reaches them, even for `production`.
+
+If the only network path to your cluster runs through the proxy named in `httpProxyUrl` / `httpsProxyUrl`, also set `HTTPS_PROXY` (or `HTTP_PROXY`) in the server's own process environment — otherwise startup validation and the cluster-version check can't reach the cluster, even though the per-environment field is configured correctly. See [Startup validation fails even though a per-environment proxy is set](troubleshooting.md#startup-validation-fails-even-though-a-per-environment-proxy-is-set).
 
 ## Telemetry
 

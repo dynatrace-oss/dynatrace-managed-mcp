@@ -142,13 +142,27 @@ Each caller's `X-Dynatrace-Tokens` header grows with the number of environments 
 
 ### A configured proxy appears to be ignored
 
-The standard `HTTP_PROXY` / `HTTPS_PROXY` environment variables are **not** read by this server, no matter how they're set. Proxies are configured per environment instead, with the `httpProxyUrl` / `httpsProxyUrl` config fields — see [Proxy](configuration.md#proxy).
+The server has two proxy mechanisms that don't coordinate with each other — see [Proxy](configuration.md#proxy) for the full breakdown. Two distinct symptoms fall under this heading:
 
-Setting **both** fields on the same environment disables the proxy for it entirely — set only one. If you did set both, the server logs exactly this (note it names the variables the way most tooling would, not the config field names above):
+- **You set `HTTP_PROXY` / `HTTPS_PROXY` and a tool/data request didn't use it.** That environment has `httpProxyUrl` / `httpsProxyUrl` configured, which takes precedence over the environment variables for tool/data requests — see [Configuration fields](configuration.md#configuration-fields). Startup validation and the cluster-version check still use the environment variables regardless.
+- **You set `httpProxyUrl` / `httpsProxyUrl` and it appears to have no effect at all.** Check whether you set **both** fields on the same environment — that logs an error and configures neither, and the environment falls back to `HTTP_PROXY` / `HTTPS_PROXY` (or goes direct) for its tool/data requests too. Set only one. If you did set both, the server logs exactly this (note it names the variables the way most tooling would, not the config field names above):
 
-```text
-Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.
-```
+  ```text
+  Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.
+  ```
+
+### Startup validation fails even though a per-environment proxy is set
+
+If your only egress path to the cluster is the proxy configured via `httpProxyUrl` / `httpsProxyUrl`, the server can still fail to reach that cluster — because startup validation, the cluster-version check, and (in HTTP mode) the per-request token lookup never use those fields; they only ever use the standard `HTTP_PROXY` / `HTTPS_PROXY` environment variables. See [Proxy](configuration.md#proxy) for why.
+
+Symptoms:
+
+- **Local (stdio) mode**: the environment is silently dropped at startup — same terminal output as [The success line prints, but tool calls fail anyway](#the-success-line-prints-but-tool-calls-fail-anyway), because the connection check behind it can't reach the cluster.
+- **Remote (HTTP) mode**: every request against that environment returns `401 Unauthorized: no valid Dynatrace token supplied`, even with a valid token — because the token-lookup call that validates it can't reach the cluster either.
+
+In both cases the per-environment proxy looks configured correctly and is not the problem.
+
+**Fix:** also set `HTTPS_PROXY` (or `HTTP_PROXY`) in the server's own process environment, matching the same proxy `httpProxyUrl` / `httpsProxyUrl` points at. Tool/data requests will keep using the per-environment field once it's set; the calls above will start working because they now have an environment variable to fall back to.
 
 ### The assistant answers about the wrong environment
 

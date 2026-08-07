@@ -81,7 +81,7 @@ In this example, you have multiple Dynatrace Managed environments set up. This m
 
 ## Per-environment proxies
 
-Proxies are configured per environment: one environment can route through a proxy while another does not need to. See [Proxy](configuration.md#proxy) for the `httpProxyUrl` / `httpsProxyUrl` fields and the two warnings about how they interact.
+Tool and data requests can be proxied per environment: one environment can route through a proxy while another does not need to. This is one of two proxy mechanisms the server has — see [Proxy](configuration.md#proxy) for the `httpProxyUrl` / `httpsProxyUrl` fields, how they relate to the standard `HTTP_PROXY` / `HTTPS_PROXY` environment variables, and the two warnings about how they interact.
 
 ## Also running the SaaS MCP?
 

@@ -20,10 +20,18 @@ Every defect found while grounding the documentation against `src/`. Two classes
 | 4   | README L38        | Advertised Cursor, Windsurf, ChatGPT, Copilot with no instructions for any of them                 | Task 9 (`other-clients.md`)    | Task 9 per-client presence check                                            |
 | 5   | absent            | Node `engines` constraint `>=26.5.1 <27` documented nowhere                                        | Task 2 (`README.md`)           | `scripts/check-docs.mjs` engines check                                      |
 | 6   | absent            | Signed multi-arch image `ghcr.io/dynatrace-oss/dynatrace-managed-mcp` undocumented                 | Task 6 (`setup-remote.md`)     | Task 6 review, image name confirmed against `.github/workflows/release.yml` |
-| 7   | README L583       | "The MCP server honors system proxy settings" — false; `HTTP_PROXY`/`HTTPS_PROXY` are never read   | Task 4 (`configuration.md`)    | Task 13 forbidden-string guard for `honors system proxy`                    |
+| 7   | README L583       | "The MCP server honors system proxy settings" — vague and unqualified; see note below              | Task 4 (`configuration.md`)    | Task 13 forbidden-string guard for `honors system proxy`                    |
 | 8   | README L185, L573 | `DT_API_ENDPOINT_URL` named as the `dynatraceUrl` fallback; no such variable exists                | Task 4 (`configuration.md`)    | `scripts/check-docs.mjs` forbidden-string guard                             |
 | 9   | README L770       | `DT_MCP_TELEMETRY_APPLICATION_ID` default given as `dynatrace-managed-mcp`; real default is a UUID | Task 4 (`configuration.md`)    | Task 4 review, values confirmed against `telemetry-openkit.ts:38-39`        |
 | 10  | README L410       | Recommended HTTP mode for "stateful sessions"; the transport is explicitly stateless               | Task 6 (`setup-remote.md`)     | Task 6 fix round 1                                                          |
+
+### Amendment to defect 7: the replacement text was itself false
+
+The original fix for defect 7 replaced the README's vague, unqualified "honors system proxy settings" with a different, equally false claim: that the per-environment `httpProxyUrl` / `httpsProxyUrl` fields are "the only mechanism the server supports" and that `HTTP_PROXY` / `HTTPS_PROXY` are "not read by this server."
+
+They are read — transitively. `src/authentication/managed-auth-client.ts` makes five outbound calls through its shared axios instance. Only one of them (`makeRequest`, `:171-183`, used for tool/data requests) passes an explicit `proxy` option built from `httpProxyUrl` / `httpsProxyUrl` (`setAxiosProxy`, constructed at `:60`). The other four — `validateAPIToken` (`:85`), `validateConnection` (`:100`, with fallback `:111`), and `getClusterVersion` (`:125`) — pass no `proxy` option at all, so axios (`node_modules/axios/dist/node/axios.cjs`, `setProxy`, ~`:2984`) falls through to `proxy-from-env`, which reads `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` from the process environment. Confirmed by reading both files directly; axios version `1.16.0` (`node_modules/axios/package.json:3`).
+
+The accurate description — now in `docs/configuration.md`'s `## Proxy` section — is that the server has two uncoordinated proxy mechanisms, split by which code path a given request takes rather than by design: tool/data requests prefer the per-environment fields and fall back to the environment variables; startup validation, the cluster-version check, and the HTTP-mode token lookup always use the environment variables and never the per-environment fields; `NO_PROXY` applies only on the environment-variable path; and setting both per-environment fields configures neither, which means falling back to the environment variables, not going proxy-less.
 
 Defects introduced during this branch and caught by review, listed for completeness — all fixed before their task closed:
 
@@ -52,13 +60,15 @@ This is not confined to logs. `environment-tools.ts:86` and `:98` inject the lis
 
 Fix: reconcile the array with the scopes in `docs/api-token.md`, or remove it and link the documentation.
 
-### C2. Standard proxy environment variables are ignored
+### C2. The server has two uncoordinated proxy mechanisms
 
-`src/authentication/managed-auth-client.ts` (`setAxiosProxy`)
+`src/authentication/managed-auth-client.ts`
 
-`HTTP_PROXY` and `HTTPS_PROXY` are read nowhere in shipped code — they appear only in `src/authentication/__tests__/proxy.test.ts`. The only working mechanism is the per-environment `httpProxyUrl`/`httpsProxyUrl` config fields.
+`HTTP_PROXY` / `HTTPS_PROXY` are not read directly by name anywhere in `src/` (`process.env.HTTP_PROXY` / `HTTPS_PROXY` appear only in `src/authentication/__tests__/proxy.test.ts`), but they **are** read transitively, on every request that doesn't carry an explicit per-environment proxy: the shared axios client falls through to the `proxy-from-env` package, which reads them (and `NO_PROXY`) straight from the process environment. Of the five outbound calls in `managed-auth-client.ts`, only `makeRequest` (`:171-183`, tool/data requests) passes an explicit `proxy` built from `httpProxyUrl` / `httpsProxyUrl` (`setAxiosProxy`, `:60`); `validateAPIToken` (`:85`), `validateConnection` (`:100`/`:111`), and `getClusterVersion` (`:125`) do not, so they always take the environment-variable path — see C10.
 
-The documentation now states this accurately (defect 7), so nobody is misled any more. But these variables are the ecosystem convention, and self-hosted customers behind corporate egress are this product's core audience. Honouring them as a fallback would be a genuine improvement.
+The real issue is not that the environment variables are ignored — it's that the server has **two separate proxy mechanisms that don't coordinate**, split by which call site happens to pass a `proxy` option rather than by any coherent design: one governs tool/data requests only (and prefers the per-environment field), the other governs everything else unconditionally. A customer whose whole proxy answer is "I set `httpProxyUrl`" is only half covered. The documentation (`docs/configuration.md#proxy`) now describes this split accurately, but describing a quirk isn't the same as fixing it.
+
+Fix: pick one coherent proxy model — e.g. resolve a single effective proxy per environment (per-environment field, falling back to the environment variables) and pass it explicitly to every outbound call, including the four that currently skip it.
 
 ### C3. Setting both proxy fields silently disables the proxy
 
@@ -109,6 +119,16 @@ When neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set, the thrown er
 `src/utils/config-loader.ts:114`
 
 `resolvePath`'s path-interpolation regex is `filePath.replace(/\$\{(w+)}/g, ...)` — a bare `w`, not `\w+`. It therefore matches only the literal three characters `${w}` and never matches a real variable name, so any `${VAR_NAME}` written inside `DT_CONFIG_FILE` itself (as opposed to inside the file's _content_, which uses a separate, correct regex in `config-loader.ts:93`) is left untouched. Verified by reading the regex directly; not otherwise exercised by a test. The documentation is not misled by this — `docs/configuration.md` only ever documents `${VAR}` interpolation of file **content**, never of the path — so this is recorded for the code owner, not a documentation fix.
+
+### C10. A customer whose only egress is the per-environment proxy cannot pass startup validation
+
+`src/authentication/managed-auth-client.ts:75`, `:90`, `:101`, `:115` (line numbers as cited when this defect was recorded; current file has them at `:85`, `:100`, `:111`, `:125` respectively — `validateAPIToken`, `validateConnection`'s primary call, its fallback call, and `getClusterVersion`)
+
+None of `validateAPIToken`, `validateConnection`, or `getClusterVersion` pass the per-environment proxy (`this.proxy`, built from `httpProxyUrl` / `httpsProxyUrl`) to the HTTP client — only `makeRequest` does (`:171-183`, the one used for tool/data requests, after this client is already considered "valid"). So a customer whose corporate egress policy only permits traffic through the proxy named in `httpProxyUrl` / `httpsProxyUrl`, and who has not separately set `HTTP_PROXY` / `HTTPS_PROXY` in the server's process environment, cannot reach the cluster for any of: the live-cluster check in `isConfigured` (stdio startup validation), the cluster-version check, or — in HTTP mode — the per-request token lookup. The per-environment proxy field is doing nothing for exactly the requests that decide whether the environment is usable at all.
+
+Symptom: in stdio mode the environment is silently dropped at startup (see documentation defect D1 and the "success line prints but tool calls fail anyway" failure mode); in HTTP mode every request against that environment returns `401 Unauthorized`. In both cases the per-environment proxy is configured correctly and is not the cause.
+
+This is a code defect — the fix is to make the same proxy resolution used by `makeRequest` apply to all five outbound call sites, or to have all of them share one resolved proxy config. Out of scope for this documentation branch; `docs/configuration.md#proxy` and `docs/troubleshooting.md` now describe the resulting behavior and the workaround (also set `HTTP_PROXY` / `HTTPS_PROXY`) so customers aren't misled while this is open.
 
 ## Documentation defect found by the final re-review — fixed
 
