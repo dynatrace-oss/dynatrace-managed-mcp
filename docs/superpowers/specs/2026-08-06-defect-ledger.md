@@ -46,7 +46,7 @@ Defects introduced during this branch and caught by review, listed for completen
 
 ## Code and repository defects — out of scope for this branch, tracked as issues
 
-Every item below has a GitHub issue. Eight are fixed by [#215](https://github.com/dynatrace-oss/dynatrace-managed-mcp/pull/215); [#224](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/224) (the proxy model) and [#226](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/226) remain open. C2 and C10 are two faces of the same tangle and share issue #224.
+Every item below has a GitHub issue. Seven are fixed by [#215](https://github.com/dynatrace-oss/dynatrace-managed-mcp/pull/215), one (C5) was withdrawn as not a defect,; [#224](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/224) (the proxy model) and [#226](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/226) remain open. C2 and C10 are two faces of the same tangle and share issue #224.
 
 Ordered by user impact.
 
@@ -96,15 +96,24 @@ Fix: fail fast at startup, or pick one deterministically and warn.
 
 Fix: add `DT_CONFIG_FILE`, mark neither as unconditionally required (either satisfies the server), and add the two missing variables.
 
-### C5. `prettier --check` fails on `main`
+### C5. ~~`prettier --check` fails on `main`~~ — WITHDRAWN, not a defect
 
-**[#220](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/220) — fixed in #215.**
+**[#220](https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues/220) — closed as invalid.**
 
 `src/capabilities/__tests__/events-api.test.ts`
 
-The file fails `prettier --check` on `main`, independently of this branch. `npm run prettier` is a gate in `.github/workflows/release.yml`, so this can fail a release. Deliberately not fixed here to keep the documentation diff clean — it wants its own one-line commit.
+This entry was wrong. The file's formatting on `main` **passes** the prettier version CI installs, so the release gate was never at risk.
 
-Reproduce: `git show main:src/capabilities/__tests__/events-api.test.ts` and run `prettier --check` on it.
+The reported failure was an artefact of the environment this work was done in: `node_modules` held prettier **3.8.1** while `package-lock.json` pins **3.9.6**, and the two disagree about how to wrap the `Array.from` generic in that file — in opposite directions.
+
+|                                    | prettier 3.8.1 (stale local) | prettier 3.9.6 (lockfile, `npm ci`) |
+| ---------------------------------- | ---------------------------- | ----------------------------------- |
+| `main`'s existing formatting       | fails                        | **passes**                          |
+| the formatting applied to "fix" it | passes                       | **fails**                           |
+
+So the fix commit is what broke CI on #215; it was reverted, and the file is byte-identical to `main` again.
+
+**The transferable lesson, which is why this entry is kept rather than deleted:** every local verification in this repository is only as good as `node_modules` matching `package-lock.json`, and in this sandbox it did not — `prettier`, `axios`, `jest`, `@modelcontextprotocol/sdk` and `commander` all drifted. Any claim in this ledger that was checked against an installed dependency rather than against repository source should be re-checked with `npm ci` first. The claims about `src/` are unaffected: they were read from source, not from a dependency.
 
 ### C6. Unreachable branch in the live-cluster check
 
