@@ -1,18 +1,7 @@
 import { ToolContext } from './context';
 import { logger } from '../utils/logger';
 import { ManagedAuthClient } from '../authentication/managed-auth-client';
-
-// Required API scopes for Managed deployment
-const MANAGED_API_SCOPES = [
-  'DataExport', // Read metrics and topology
-  'ReadConfig', // Read configuration and cluster version
-  'ReadSyntheticData', // Read synthetic monitoring data
-  'ReadLogContent', // Read log content
-  'ReadEvents', // Read events
-  'ReadProblems', // Read problems and root cause analysis
-  'ReadSecurityProblems', // Read security problems
-  'ReadSLO', // Read Service Level Objectives
-];
+import { MANAGED_API_SCOPES } from '../utils/api-scopes';
 
 export function registerEnvironmentTools(ctx: ToolContext): void {
   ctx.tool(
@@ -83,7 +72,7 @@ function stdioModeVersionResponse(authClient: ManagedAuthClient) {
     resp += `- Version: ${authClient.clusterVersion}\n`;
     resp += `- Minimum Version Check: PASSED\n`;
   }
-  resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+  resp += `- Required API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
   return resp;
 }
 
@@ -95,7 +84,7 @@ async function httpModeVersionResponse(authClient: ManagedAuthClient, ctx: ToolC
     resp += `- Valid Environment: Yes\n`;
     resp += `- Version: ${clusterVersion.version}\n`;
     resp += `- Minimum Version Check: ${isValidVersion ? 'PASSED' : 'WARNING - Version may not be fully compatible and may not support all features'}\n`;
-    resp += `- Available API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
+    resp += `- Required API Scopes: ${MANAGED_API_SCOPES.join(', ')}\n\n\n`;
   } catch (error) {
     resp += errorMessageForResponse(error, authClient.alias);
   }
