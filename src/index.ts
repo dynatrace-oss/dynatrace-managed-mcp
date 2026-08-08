@@ -31,7 +31,7 @@ import { patchToolsListSchema } from './utils/mcp-compat';
 import { registerAllTools, ToolContext } from './tools';
 
 // Import logger after environment is loaded
-import { logger, flushLogger, logErrorObject } from './utils/logger';
+import { logger, flushLogger, logErrorObject, logFatalErrorObject } from './utils/logger';
 
 logger.info('Starting Dynatrace Managed MCP');
 
@@ -458,7 +458,7 @@ const main = async () => {
 };
 
 main().catch(async (error) => {
-  logErrorObject(error, 'Fatal error in main()');
+  logFatalErrorObject(error, 'Fatal error in main()');
   try {
     // report error in main
     const telemetry = await createAndInitializeTelemetry();

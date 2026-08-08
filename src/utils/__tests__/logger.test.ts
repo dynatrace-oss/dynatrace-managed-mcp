@@ -1,6 +1,6 @@
 import winston from 'winston';
 import axios, { AxiosError, AxiosHeaders, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { createLogger, sanitizeErrors } from '../logger';
+import { createLogger, logger, logFatalErrorObject, sanitizeErrors } from '../logger';
 import { TransformableInfo } from 'logform';
 
 function buildAxiosError(): AxiosError {
@@ -62,6 +62,80 @@ describe('sanitizeErrors', () => {
     ) as Record<string, unknown>;
 
     expect(info.data).toEqual({ rows: [1, 2, 3] });
+  });
+});
+
+describe('logFatalErrorObject', () => {
+  let originalEnv: NodeJS.ProcessEnv;
+
+  beforeEach(() => {
+    originalEnv = { ...process.env };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    jest.restoreAllMocks();
+  });
+
+  it('writes a safe single-line reason to stderr when logs go to a file', () => {
+    process.env.LOG_OUTPUT = 'file';
+    const loggerError = jest.spyOn(logger, 'error').mockImplementation(() => logger);
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const parserError = new Error(
+      'Failed to parse .yaml file: /tmp/config.yaml\n' +
+        'Error: bad indentation\n' +
+        'apiToken: dt0c01.SUPER_SECRET_VALUE',
+    );
+
+    logFatalErrorObject(parserError, 'Fatal error in main()');
+
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith('Fatal error in main(): Failed to parse .yaml file: /tmp/config.yaml');
+    expect(consoleError.mock.calls.flat().join(' ')).not.toContain('SUPER_SECRET_VALUE');
+  });
+
+  it('retains a safe unsupported-format cause without exposing file content', () => {
+    process.env.LOG_OUTPUT = 'file';
+    jest.spyOn(logger, 'error').mockImplementation(() => logger);
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const parserError = new Error('Failed to parse .toml file: /tmp/config.toml', {
+      cause: new Error('Unsupported file format: .toml\nfile content: SUPER_SECRET_VALUE'),
+    });
+
+    logFatalErrorObject(parserError, 'Fatal error in main()');
+
+    expect(consoleError).toHaveBeenCalledWith(
+      'Fatal error in main(): Failed to parse .toml file: /tmp/config.toml: Unsupported file format: .toml',
+    );
+    expect(consoleError.mock.calls.flat().join(' ')).not.toContain('SUPER_SECRET_VALUE');
+  });
+
+  it.each(['stderr', 'stderr-all', 'file+stderr'])(
+    'does not duplicate the error when LOG_OUTPUT=%s already writes errors to stderr',
+    (logOutput) => {
+      process.env.LOG_OUTPUT = logOutput;
+      const loggerError = jest.spyOn(logger, 'error').mockImplementation(() => logger);
+      const consoleError = jest.spyOn(console, 'error').mockImplementation();
+
+      logFatalErrorObject(new Error('Configuration not found'), 'Fatal error in main()');
+
+      expect(loggerError).toHaveBeenCalledWith('Fatal error in main(): Configuration not found');
+      expect(consoleError).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not expose Axios request metadata on stderr', () => {
+    process.env.LOG_OUTPUT = 'file';
+    jest.spyOn(logger, 'error').mockImplementation(() => logger);
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+
+    logFatalErrorObject(buildAxiosError(), 'Fatal error in main()');
+
+    expect(consoleError).toHaveBeenCalledWith(
+      'ERR_BAD_REQUEST Fatal error in main(): Request failed with status code 401',
+    );
+    expect(consoleError.mock.calls.flat().join(' ')).not.toContain('super-secret-value');
+    expect(consoleError.mock.calls.flat().join(' ')).not.toContain('abc123');
   });
 });
 
@@ -192,6 +266,7 @@ describe('Logger Configuration', () => {
     const testLogger = createLogger();
 
     expect(testLogger.transports).toHaveLength(0);
+    expect(testLogger.silent).toBe(true);
   });
 
   it('should default to info log level', () => {
