@@ -430,6 +430,9 @@ npx -y @dynatrace-oss/dynatrace-mcp-server@latest --http --host 192.168.0.1 # re
 npx -y @dynatrace-oss/dynatrace-managed-mcp-server@latest --version
 ```
 
+> [!WARNING]
+> In HTTP mode the server validates the `Host` header to protect against DNS rebinding attacks. With `--host 0.0.0.0` (or `--host ::`) that validation cannot be derived automatically and is **disabled** unless you set `DT_MCP_ALLOWED_HOSTS`. See [DNS Rebinding Protection](#dns-rebinding-protection-http-mode).
+
 **Configuration for MCP clients that support HTTP transport:**
 
 ```json
@@ -563,6 +566,21 @@ LOG_OUTPUT=disabled node dist/index.js
 ```bash
 DT_MCP_RATE_LIMIT_MAX_CALLS=50
 DT_MCP_RATE_LIMIT_WINDOW_MS=30000
+```
+
+### DNS Rebinding Protection (HTTP mode)
+
+- **`DT_MCP_ALLOWED_HOSTS`** (optional): Comma-separated list of hostnames the server accepts in the `Host` header. Ports are ignored, so list hostnames only (use the bracketed form for IPv6, e.g. `[::1]`).
+
+When this variable is **not** set, the allowlist is derived from `--host`: the bound address plus `localhost`, `127.0.0.1` and `[::1]`. Requests whose `Host` header is not on the list are rejected with `403 Forbidden`, as are requests carrying an `Origin` header for a hostname that is not on the list. This is what prevents [DNS rebinding attacks](https://en.wikipedia.org/wiki/DNS_rebinding), where a malicious web page rebinds its own domain to `127.0.0.1` to reach your local MCP server from the victim's browser.
+
+> [!WARNING]
+> When bound to a wildcard address (`--host 0.0.0.0` or `--host ::`), the bound address does not identify which hostnames are legitimate, so **`Host` validation is disabled unless you set `DT_MCP_ALLOWED_HOSTS` explicitly**. The server logs a warning at startup in this case. If you run in a container or expose the server on a network, always set `DT_MCP_ALLOWED_HOSTS` to the hostnames your clients actually use.
+
+**Example:** container bound to all interfaces, reached as `mcp.internal.example.com`:
+
+```bash
+DT_MCP_ALLOWED_HOSTS=mcp.internal.example.com node dist/index.js --http --host 0.0.0.0
 ```
 
 ### Multienvironment Config Fields
