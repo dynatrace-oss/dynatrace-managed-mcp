@@ -316,13 +316,9 @@ const main = async () => {
 
   // HTTP server mode (Stateless)
   if (httpMode) {
-    // DNS rebinding protection. Derived from the bound host unless the operator overrides it with
-    // DT_MCP_ALLOWED_HOSTS. Empty means "not determinable" (wildcard bind, no override).
     const allowedHostnames = buildAllowedHostnames(host, process.env.DT_MCP_ALLOWED_HOSTS);
 
     const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-      // Reject before reading the body or touching tokens: this is the cheapest possible rejection
-      // and keeps unvalidated requests from reaching any MCP tool.
       const rejection = validateRequestHeaders(req.headers.host, req.headers.origin, allowedHostnames);
       if (rejection) {
         logger.warn(`Rejected request failing DNS rebinding protection: ${rejection.message}`);
