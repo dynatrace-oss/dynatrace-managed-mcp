@@ -85,7 +85,12 @@ describe('get_environments_info (HTTP mode)', () => {
     expect(result).toContain('- Valid Environment: Yes');
     expect(result).toContain('- Version: 1.345.0');
     expect(result).toContain('- Minimum Version Check: PASSED');
-    expect(result).toContain('DataExport');
+    // C1 regression guard: 'DataExport' alone is common to both the legacy and corrected scope
+    // lists, so it would pass even with the pre-fix bug. Assert the actual user-visible change -
+    // a corrected v2 dotted scope is reported, and the corresponding legacy v1-style name is not.
+    expect(result).toContain('- Required API Scopes:');
+    expect(result).toContain('entities.read');
+    expect(result).not.toContain('ReadProblems');
     expect(result).not.toContain('Invalid token supplied');
   });
 

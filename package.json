@@ -52,7 +52,7 @@
     "prettier:fix": "prettier --write ."
   },
   "author": "Dynatrace",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@dynatrace/openkit-js": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.21.2",

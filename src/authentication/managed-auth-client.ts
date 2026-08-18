@@ -1,19 +1,9 @@
 import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
 import { logErrorObject, logger } from '../utils/logger';
 import { ManagedEnvironmentConfig } from '../utils/environment';
+import { MANAGED_API_SCOPES } from '../utils/api-scopes';
 
 export const MINIMUM_VERSION = '1.328.0';
-
-const MANAGED_API_SCOPES = [
-  'DataExport', // Read metrics and topology
-  'ReadConfig', // Read configuration and cluster version
-  'ReadSyntheticData', // Read synthetic monitoring data
-  'ReadLogContent', // Read log content
-  'ReadEvents', // Read events
-  'ReadProblems', // Read problems and root cause analysis
-  'ReadSecurityProblems', // Read security problems
-  'ReadSLO', // Read Service Level Objectives
-];
 
 export interface ClusterVersion {
   version: string;
@@ -57,7 +47,7 @@ export class ManagedAuthClient {
     this.apiBaseUrl = params.apiBaseUrl;
     this.dashboardBaseUrl = params.dashboardBaseUrl;
     this.alias = params.alias;
-    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy);
+    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy, params.alias);
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
@@ -329,10 +319,46 @@ function buildProxyConfig(proxyUrl: string, defaultPort: string): AxiosProxyConf
   };
 }
 
-export function setAxiosProxy(httpProxy = '', httpsProxy = ''): AxiosProxyConfig | undefined {
+export function setAxiosProxy(httpProxy = '', httpsProxy = '', alias = ''): AxiosProxyConfig | undefined {
   if (httpsProxy && httpProxy) {
-    logger.error('Cannot specify both HTTPS_PROXY and HTTP_PROXY, use only one.');
-    return undefined;
+    // The defect was the silence, not the ambiguity - and the pre-fix "silent" behaviour was NOT
+    // "direct". setAxiosProxy returned `undefined` here, so makeRequest()'s per-request
+    // `proxy: this.proxy ?? undefined` was itself undefined. When configProxy is falsy, axios's own
+    // setProxy() (node_modules/axios/dist/node/axios.cjs, axios 1.16.0) falls back to
+    // getProxyForUrl() - the proxy-from-env package's read of HTTP_PROXY/HTTPS_PROXY - and only
+    // applies it if shouldBypassProxy() (i.e. NO_PROXY) does not exclude the target host. So tool
+    // requests were going through whichever proxy those environment variables specified, with
+    // NO_PROXY exclusions honoured - not unconditionally direct. An admin who set HTTPS_PROXY plus
+    // NO_PROXY=*.corp.internal on the container, and also filled in both fields "to be safe" per the
+    // old documentation (which presented httpProxyUrl and httpsProxyUrl as interchangeable, with no
+    // warning against setting both), has their internal cluster correctly excluded from the proxy
+    // today. Throwing on both-set would fix the silence but break that deployment outright - both
+    // by exiting where today it runs, and (once running) by forcing every tool request through
+    // httpsProxyUrl regardless of NO_PROXY, since an explicitly configured `proxy` skips axios's
+    // getProxyForUrl/shouldBypassProxy branch entirely. Worse, this function runs from the
+    // ManagedAuthClient constructor at startup (see buildManagedAuthClients()), so a throw here
+    // propagates to main().catch -> logErrorObject -> logger.error only - invisible under the
+    // default LOG_OUTPUT=file, which has no console transport.
+    //
+    // So: keep running, deterministically prefer httpsProxyUrl, and warn - through console.warn,
+    // which writes to stderr directly and is not routed through Winston, so it is visible in the
+    // terminal regardless of LOG_OUTPUT - that tool requests for this environment now go through
+    // this explicit proxy instead of any HTTP_PROXY/HTTPS_PROXY environment variable, and that
+    // NO_PROXY exclusions do not apply to it, so a host previously excluded may now be proxied too.
+    const aliasLabel = alias ? `[Alias: ${alias}] ` : '';
+    const message =
+      `${aliasLabel}Both httpsProxyUrl and httpProxyUrl are set; using httpsProxyUrl and ignoring ` +
+      `httpProxyUrl - configure only one. Tool requests for this environment now go through this ` +
+      `explicit proxy instead of any HTTP_PROXY/HTTPS_PROXY environment variable, and NO_PROXY ` +
+      `exclusions do not apply to it, so a host you previously excluded may now be proxied too.`;
+    // Deliberately logs through both: logger.warn keeps the warning in the structured log/file
+    // record like everything else at this level, while console.warn is what actually guarantees
+    // terminal visibility under the default LOG_OUTPUT=file. Under LOG_OUTPUT=stderr*, where
+    // Winston's own Console transport would already print it, the operator sees the line twice -
+    // an acceptable, known trade-off for never silently dropping it under the far more common
+    // default.
+    logger.warn(message);
+    console.warn(message);
   }
   if (!httpsProxy && !httpProxy) {
     // No proxy configured, nothing to do

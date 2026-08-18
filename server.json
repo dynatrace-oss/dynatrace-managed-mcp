@@ -31,16 +31,51 @@
           "format": "number"
         },
         {
+          "name": "DT_CONFIG_FILE",
+          "description": "Path to a YAML or JSON file defining the Dynatrace Managed environment(s) to connect to. Recommended over DT_ENVIRONMENT_CONFIGS. Used if set, taking priority over DT_ENVIRONMENT_CONFIGS. One of DT_CONFIG_FILE or DT_ENVIRONMENT_CONFIGS must be set. See README file for contents of this.",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
           "name": "DT_ENVIRONMENT_CONFIGS",
-          "description": "An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to. See README file for contents of this.",
-          "isRequired": true,
+          "description": "An escaped JSON array that defines the Dynatrace Managed environment(s) to connect to, including each environment's API token in local (stdio) mode. Used only if DT_CONFIG_FILE is not set. One of DT_CONFIG_FILE or DT_ENVIRONMENT_CONFIGS must be set. See README file for contents of this.",
+          "isRequired": false,
+          "isSecret": true,
           "format": "string"
+        },
+        {
+          "name": "DT_MCP_MAX_BODY_SIZE",
+          "description": "Maximum accepted HTTP request body size, in bytes. HTTP mode only. Larger requests receive a 413 error. Defaults to 1048576 (1 MiB).",
+          "isRequired": false,
+          "format": "number",
+          "default": "1048576"
+        },
+        {
+          "name": "DT_MCP_TOKEN_VALIDATION_TTL_MS",
+          "description": "How long a validated API token is cached, in milliseconds. HTTP mode only. Set to 0 to disable caching. Defaults to 60000 (60 seconds).",
+          "isRequired": false,
+          "format": "number",
+          "default": "60000"
         },
         {
           "name": "LOG_LEVEL",
           "description": "Logging level (e.g. debug, info, warning, error)",
           "isRequired": false,
           "format": "string"
+        },
+        {
+          "name": "LOG_OUTPUT",
+          "description": "Log destination: file, console, stdout, stderr, stderr-all, file+console, file+stdout, file+stderr, or disabled. Defaults to file, which prints nothing to the terminal - startup errors are otherwise invisible; set to stderr-all to see them while troubleshooting.",
+          "isRequired": false,
+          "format": "string",
+          "default": "file"
+        },
+        {
+          "name": "LOG_FILE",
+          "description": "Log file path, used when LOG_OUTPUT includes file. Defaults to dynatrace-managed-mcp.log.",
+          "isRequired": false,
+          "format": "filepath",
+          "default": "dynatrace-managed-mcp.log"
         },
         {
           "name": "DT_MCP_DISABLE_TELEMETRY",

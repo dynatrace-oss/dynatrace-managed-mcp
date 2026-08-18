@@ -186,15 +186,15 @@ and make sure that you are using Agent Mode in Copilot.
 
 ## Development Troubleshooting
 
-### Mcp error: -32002: connection closed: initialize response
+### Client reports "connection closed" during initialization
 
-The error below can occur when there is an error invoking the MCP:
+Your AI client may report that the MCP connection closed before it finished initializing. The exact wording and error code vary by client, since each bundles its own MCP SDK version — there is no single fixed code to expect here.
 
-    `Mcp error: -32002: connection closed: initialize response`
+Check that you can execute the MCP server directly, as per your configuration for local testing, e.g. with:
 
-Check that you can execute the MCP, as per your configuration for local testing, e,g, with:
-
-    `npx /path/to/repos/dynatrace-oss/dynatrace-manage-mcp/dist/index.js`
+```bash
+node /path/to/repos/dynatrace-oss/dynatrace-managed-mcp/dist/index.js
+```
 
 ### MCP tool execution fails with 'Transport closed'
 

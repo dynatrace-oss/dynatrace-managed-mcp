@@ -1,5 +1,17 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased
+
+### Breaking changes
+
+- Proxy routing: an environment with both `httpProxyUrl` and `httpsProxyUrl` set no longer silently disables the proxy. Previously, tool requests for that environment fell back to whatever `HTTP_PROXY`/`HTTPS_PROXY` environment variables were set on the process, with `NO_PROXY` exclusions honoured, because axios only consults those variables (and `NO_PROXY`) when no proxy is explicitly configured. Now the server deterministically uses `httpsProxyUrl` and warns to the terminal (regardless of `LOG_OUTPUT`) that it is doing so. This is a real routing change, not just a warning: `NO_PROXY` exclusions do not apply to an explicitly configured proxy, so a host you previously excluded from proxying may now be routed through `httpsProxyUrl`. If you have both fields set on any environment, review whether that environment relies on `NO_PROXY`, and configure only one field.
+
+### Fixes
+
+- Corrected the API token scopes reported by the `dynatrace_managed_get_environments_info` tool and logged on a failed connection. The server was reporting eight legacy scope names (`ReadProblems`, `ReadSLO`, `ReadConfig`, and others) that don't match the v2 API endpoints this server actually calls; it now reports the correct `entities.read`, `events.read`, `logs.read`, `metrics.read`, `problems.read`, `securityProblems.read`, `slo.read`, and `DataExport`. The tool response label also changed from "Available API Scopes" to "Required API Scopes," since the server is stating what a token needs, not what it has. See `docs/api-token.md` for the authoritative list.
+- `${VAR_NAME}` environment-variable interpolation now works when the variable is written inside the `DT_CONFIG_FILE` path itself (e.g. `DT_CONFIG_FILE='${HOME}/dt-config.yaml'`) — a regex typo previously made this silently a no-op, leaving the literal, unexpanded path to fail instead. An undefined variable referenced this way now throws the same `Environment variable not found` error already used for variables inside the file's content, instead of silently resolving to an empty string.
+- The "Configuration not found" startup error (thrown when neither `DT_CONFIG_FILE` nor `DT_ENVIRONMENT_CONFIGS` is set) now points to `docs/configuration.md` instead of a README anchor that no longer exists.
+
 ## 1.0.1
 
 ### Dependencies
