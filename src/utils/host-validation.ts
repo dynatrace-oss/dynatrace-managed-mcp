@@ -48,17 +48,25 @@ function normalizeOriginHostname(origin: string): string | undefined {
   }
 }
 
-export function buildAllowedHostnames(boundHost: string | undefined, override?: string): string[] {
-  const fromOverride = (override ?? '')
+function parseAllowlistOverride(override: string | undefined): string[] {
+  return (override ?? '')
     .split(',')
     .map((entry) => normalizeHostname(entry))
     .filter((entry): entry is string => entry !== undefined);
+}
+
+export function hasExplicitAllowlist(override: string | undefined): boolean {
+  return parseAllowlistOverride(override).length > 0;
+}
+
+export function buildAllowedHostnames(boundHost: string | undefined, override?: string): string[] {
+  const fromOverride = parseAllowlistOverride(override);
   if (fromOverride.length > 0) {
     return [...new Set(fromOverride)];
   }
 
   if (isWildcardBindAddress(boundHost)) {
-    return [];
+    return [...LOOPBACK_HOSTNAMES];
   }
 
   const bound = normalizeHostname(boundHost);
@@ -76,7 +84,7 @@ export function validateRequestHeaders(
   allowedHostnames: string[],
 ): HostValidationRejection | undefined {
   if (allowedHostnames.length === 0) {
-    return undefined;
+    return { status: 403, message: 'Host validation is not configured' };
   }
 
   if (!hostHeader || hostHeader.trim() === '') {

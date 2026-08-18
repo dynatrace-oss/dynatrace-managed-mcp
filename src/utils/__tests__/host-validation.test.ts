@@ -1,5 +1,6 @@
 import {
   buildAllowedHostnames,
+  hasExplicitAllowlist,
   isWildcardBindAddress,
   normalizeHostname,
   validateRequestHeaders,
@@ -52,9 +53,16 @@ describe('buildAllowedHostnames', () => {
     expect(buildAllowedHostnames('192.168.0.1')).toEqual(['192.168.0.1', 'localhost', '127.0.0.1', '[::1]']);
   });
 
-  it('returns an empty list for a wildcard bind with no override', () => {
-    expect(buildAllowedHostnames('0.0.0.0')).toEqual([]);
-    expect(buildAllowedHostnames('::')).toEqual([]);
+  it('falls back to loopback only for a wildcard bind with no override', () => {
+    expect(buildAllowedHostnames('0.0.0.0')).toEqual(['localhost', '127.0.0.1', '[::1]']);
+    expect(buildAllowedHostnames('::')).toEqual(['localhost', '127.0.0.1', '[::1]']);
+  });
+
+  it('never returns an empty list, so validation can never be silently disabled', () => {
+    for (const boundHost of ['0.0.0.0', '::', '[::]', '127.0.0.1', '192.168.0.1', undefined, '', 'nonsense/host']) {
+      expect(buildAllowedHostnames(boundHost, undefined).length).toBeGreaterThan(0);
+      expect(buildAllowedHostnames(boundHost, '  ,  ').length).toBeGreaterThan(0);
+    }
   });
 
   it('lets an override win, including for wildcard binds', () => {
@@ -113,15 +121,38 @@ describe('validateRequestHeaders', () => {
     expect(validateRequestHeaders('localhost:3000', 'http://localhost:3000', allowed)).toBeUndefined();
   });
 
-  it('treats an empty allowlist as validation disabled', () => {
-    expect(
-      validateRequestHeaders('local.firstnamelastname.com', 'http://local.firstnamelastname.com', []),
-    ).toBeUndefined();
+  it('fails closed on an empty allowlist rather than allowing the request', () => {
+    const rejection = validateRequestHeaders('local.firstnamelastname.com', 'http://local.firstnamelastname.com', []);
+    expect(rejection?.status).toBe(403);
+    expect(rejection?.message).toBe('Host validation is not configured');
+    // Even an otherwise-legitimate request is refused, so the misconfiguration cannot go unnoticed.
+    expect(validateRequestHeaders('127.0.0.1:3000', undefined, [])?.status).toBe(403);
+  });
+
+  it('blocks the reported attack on a wildcard bind with no override', () => {
+    const wildcard = buildAllowedHostnames('0.0.0.0', undefined);
+    expect(validateRequestHeaders('local.attacker.example', undefined, wildcard)?.status).toBe(403);
+    expect(validateRequestHeaders('127.0.0.1:3000', 'http://local.attacker.example:3000', wildcard)?.status).toBe(403);
+    // Loopback access still works, so running with --host 0.0.0.0 locally is unaffected.
+    expect(validateRequestHeaders('localhost:3000', undefined, wildcard)).toBeUndefined();
   });
 
   it('truncates and flattens attacker-controlled values in the message', () => {
     const rejection = validateRequestHeaders(`evil${'a'.repeat(200)}.com`, undefined, allowed);
     expect(rejection?.message.length).toBeLessThan(140);
     expect(rejection?.message).not.toMatch(/[\r\n]/);
+  });
+});
+
+describe('hasExplicitAllowlist', () => {
+  it('is true only when the override contains a usable hostname', () => {
+    expect(hasExplicitAllowlist('mcp.example.com')).toBe(true);
+    expect(hasExplicitAllowlist(' a.example.com , b.example.com ')).toBe(true);
+  });
+
+  it('is false for absent or unusable overrides', () => {
+    expect(hasExplicitAllowlist(undefined)).toBe(false);
+    expect(hasExplicitAllowlist('')).toBe(false);
+    expect(hasExplicitAllowlist('  ,  ')).toBe(false);
   });
 });

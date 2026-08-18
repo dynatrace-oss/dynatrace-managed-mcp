@@ -15,7 +15,12 @@ import {
 } from './authentication/managed-auth-client';
 import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from './utils/environment';
 import { parseTokenHeader, deriveUserKey } from './utils/token-header';
-import { buildAllowedHostnames, validateRequestHeaders } from './utils/host-validation';
+import {
+  buildAllowedHostnames,
+  hasExplicitAllowlist,
+  isWildcardBindAddress,
+  validateRequestHeaders,
+} from './utils/host-validation';
 import { createAndInitializeTelemetry } from './utils/telemetry-openkit';
 import { MetricsApiClient } from './capabilities/metrics-api';
 import { LogsApiClient } from './capabilities/logs-api';
@@ -317,6 +322,8 @@ const main = async () => {
   // HTTP server mode (Stateless)
   if (httpMode) {
     const allowedHostnames = buildAllowedHostnames(host, process.env.DT_MCP_ALLOWED_HOSTS);
+    const needsExplicitAllowlist =
+      isWildcardBindAddress(host) && !hasExplicitAllowlist(process.env.DT_MCP_ALLOWED_HOSTS);
 
     const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       const rejection = validateRequestHeaders(req.headers.host, req.headers.origin, allowedHostnames);
@@ -412,14 +419,13 @@ const main = async () => {
     // Start HTTP Server on the specified host and port
     httpServer.listen(httpPort, host, () => {
       logger.info(`Dynatrace Managed MCP Server running on HTTP at http://${host}:${httpPort}`);
-      if (allowedHostnames.length > 0) {
-        logger.info(`DNS rebinding protection active; allowed Host headers: ${allowedHostnames.join(', ')}`);
-      } else {
+      logger.info(`DNS rebinding protection active; allowed Host headers: ${allowedHostnames.join(', ')}`);
+      if (needsExplicitAllowlist) {
         const warning =
           `WARNING: the server is bound to a wildcard address (${host}) without DT_MCP_ALLOWED_HOSTS set, ` +
-          `so Host header validation is DISABLED and the server is exposed to DNS rebinding attacks. ` +
-          `Set DT_MCP_ALLOWED_HOSTS to a comma-separated list of the hostnames clients use ` +
-          `(e.g. DT_MCP_ALLOWED_HOSTS=mcp.internal.example.com).`;
+          `so only loopback Host headers (${allowedHostnames.join(', ')}) are accepted and requests using ` +
+          `any other hostname will be rejected with 403. Set DT_MCP_ALLOWED_HOSTS to a comma-separated list ` +
+          `of the hostnames clients actually use (e.g. DT_MCP_ALLOWED_HOSTS=mcp.internal.example.com).`;
         logger.warn(warning);
         console.error(warning);
       }
