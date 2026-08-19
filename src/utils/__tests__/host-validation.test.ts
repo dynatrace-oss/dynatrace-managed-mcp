@@ -128,7 +128,6 @@ describe('validateRequestHeaders', () => {
     );
     expect(rejection?.status).toBe(403);
     expect(rejection?.message).toBe('Host validation is not configured');
-    // Even an otherwise-legitimate request is refused, so the misconfiguration cannot go unnoticed.
     expect(validateRequestHeaders('127.0.0.1:3000', undefined, new Set())?.status).toBe(403);
   });
 
@@ -136,8 +135,17 @@ describe('validateRequestHeaders', () => {
     const wildcard = buildAllowedHostnames('0.0.0.0', undefined);
     expect(validateRequestHeaders('local.attacker.example', undefined, wildcard)?.status).toBe(403);
     expect(validateRequestHeaders('127.0.0.1:3000', 'http://local.attacker.example:3000', wildcard)?.status).toBe(403);
-    // Loopback access still works, so running with --host 0.0.0.0 locally is unaffected.
     expect(validateRequestHeaders('localhost:3000', undefined, wildcard)).toBeUndefined();
+  });
+
+  it('rejects the comma-joined value Node produces for duplicate headers', () => {
+    expect(validateRequestHeaders('127.0.0.1:3000, evil.example', undefined, allowed)?.status).toBe(403);
+    expect(
+      validateRequestHeaders('127.0.0.1:3000', 'http://127.0.0.1:3000, http://evil.example', allowed)?.status,
+    ).toBe(403);
+    expect(
+      validateRequestHeaders('127.0.0.1:3000', 'http://evil.example, http://127.0.0.1:3000', allowed)?.status,
+    ).toBe(403);
   });
 
   it('truncates and flattens attacker-controlled values in the message', () => {
