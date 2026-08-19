@@ -46,39 +46,38 @@ describe('isWildcardBindAddress', () => {
 
 describe('buildAllowedHostnames', () => {
   it('derives loopback names for the default bind', () => {
-    expect(buildAllowedHostnames('127.0.0.1')).toEqual(['127.0.0.1', 'localhost', '[::1]']);
+    expect(buildAllowedHostnames('127.0.0.1')).toEqual(new Set(['127.0.0.1', 'localhost', '[::1]']));
   });
 
   it('includes a LAN bind address alongside loopback names', () => {
-    expect(buildAllowedHostnames('192.168.0.1')).toEqual(['192.168.0.1', 'localhost', '127.0.0.1', '[::1]']);
+    expect(buildAllowedHostnames('192.168.0.1')).toEqual(new Set(['192.168.0.1', 'localhost', '127.0.0.1', '[::1]']));
   });
 
   it('falls back to loopback only for a wildcard bind with no override', () => {
-    expect(buildAllowedHostnames('0.0.0.0')).toEqual(['localhost', '127.0.0.1', '[::1]']);
-    expect(buildAllowedHostnames('::')).toEqual(['localhost', '127.0.0.1', '[::1]']);
+    expect(buildAllowedHostnames('0.0.0.0')).toEqual(new Set(['localhost', '127.0.0.1', '[::1]']));
+    expect(buildAllowedHostnames('::')).toEqual(new Set(['localhost', '127.0.0.1', '[::1]']));
   });
 
   it('never returns an empty list, so validation can never be silently disabled', () => {
     for (const boundHost of ['0.0.0.0', '::', '[::]', '127.0.0.1', '192.168.0.1', undefined, '', 'nonsense/host']) {
-      expect(buildAllowedHostnames(boundHost, undefined).length).toBeGreaterThan(0);
-      expect(buildAllowedHostnames(boundHost, '  ,  ').length).toBeGreaterThan(0);
+      expect(buildAllowedHostnames(boundHost, undefined).size).toBeGreaterThan(0);
+      expect(buildAllowedHostnames(boundHost, '  ,  ').size).toBeGreaterThan(0);
     }
   });
 
   it('lets an override win, including for wildcard binds', () => {
-    expect(buildAllowedHostnames('0.0.0.0', 'mcp.example.com')).toEqual(['mcp.example.com']);
-    expect(buildAllowedHostnames('127.0.0.1', 'mcp.example.com')).toEqual(['mcp.example.com']);
+    expect(buildAllowedHostnames('0.0.0.0', 'mcp.example.com')).toEqual(new Set(['mcp.example.com']));
+    expect(buildAllowedHostnames('127.0.0.1', 'mcp.example.com')).toEqual(new Set(['mcp.example.com']));
   });
 
   it('parses, normalizes and dedupes override lists', () => {
-    expect(buildAllowedHostnames('0.0.0.0', ' A.example.com:3000 , b.example.com , a.example.com ')).toEqual([
-      'a.example.com',
-      'b.example.com',
-    ]);
+    const deduped = buildAllowedHostnames('0.0.0.0', ' A.example.com:3000 , b.example.com , a.example.com ');
+    expect(deduped).toEqual(new Set(['a.example.com', 'b.example.com']));
+    expect(deduped.size).toBe(2);
   });
 
   it('ignores an override that contains nothing usable', () => {
-    expect(buildAllowedHostnames('127.0.0.1', '  ,  ')).toEqual(['127.0.0.1', 'localhost', '[::1]']);
+    expect(buildAllowedHostnames('127.0.0.1', '  ,  ')).toEqual(new Set(['127.0.0.1', 'localhost', '[::1]']));
   });
 });
 
@@ -122,11 +121,15 @@ describe('validateRequestHeaders', () => {
   });
 
   it('fails closed on an empty allowlist rather than allowing the request', () => {
-    const rejection = validateRequestHeaders('local.firstnamelastname.com', 'http://local.firstnamelastname.com', []);
+    const rejection = validateRequestHeaders(
+      'local.firstnamelastname.com',
+      'http://local.firstnamelastname.com',
+      new Set(),
+    );
     expect(rejection?.status).toBe(403);
     expect(rejection?.message).toBe('Host validation is not configured');
     // Even an otherwise-legitimate request is refused, so the misconfiguration cannot go unnoticed.
-    expect(validateRequestHeaders('127.0.0.1:3000', undefined, [])?.status).toBe(403);
+    expect(validateRequestHeaders('127.0.0.1:3000', undefined, new Set())?.status).toBe(403);
   });
 
   it('blocks the reported attack on a wildcard bind with no override', () => {
