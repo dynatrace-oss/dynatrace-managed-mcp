@@ -12,12 +12,14 @@ export function isWildcardBindAddress(host: string | undefined): boolean {
   return normalized !== undefined && WILDCARD_BIND_ADDRESSES.has(normalized);
 }
 
+const NON_AUTHORITY_CHARACTERS = /[@/\\?#\s]/;
+
 export function normalizeHostname(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
   }
   const trimmed = value.trim();
-  if (trimmed === '') {
+  if (trimmed === '' || NON_AUTHORITY_CHARACTERS.test(trimmed)) {
     return undefined;
   }
 
@@ -40,12 +42,19 @@ export function normalizeHostname(value: string | undefined): string | undefined
 }
 
 function normalizeOriginHostname(origin: string): string | undefined {
+  let url: URL;
   try {
-    const { hostname } = new URL(origin.trim());
-    return hostname === '' ? undefined : hostname.toLowerCase();
+    url = new URL(origin.trim());
   } catch {
     return undefined;
   }
+  if (url.username !== '' || url.password !== '' || url.search !== '' || url.hash !== '') {
+    return undefined;
+  }
+  if (url.pathname !== '/' && url.pathname !== '') {
+    return undefined;
+  }
+  return url.hostname === '' ? undefined : url.hostname.toLowerCase();
 }
 
 function parseAllowlistOverride(override: string | undefined): string[] {

@@ -6,6 +6,8 @@ import {
   validateRequestHeaders,
 } from '../host-validation';
 
+const BACKSLASH = String.fromCharCode(92);
+
 describe('normalizeHostname', () => {
   it('strips the port', () => {
     expect(normalizeHostname('127.0.0.1:3000')).toBe('127.0.0.1');
@@ -20,6 +22,26 @@ describe('normalizeHostname', () => {
 
   it('lowercases and trims', () => {
     expect(normalizeHostname('  LocalHost:3000 ')).toBe('localhost');
+  });
+
+  it('rejects anything that is not a bare authority', () => {
+    expect(normalizeHostname('evil.example@127.0.0.1')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1@evil.example')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1/evil.example')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1?x=evil')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1#evil')).toBeUndefined();
+    expect(normalizeHostname(`127.0.0.1${BACKSLASH}evil.example`)).toBeUndefined();
+    expect(normalizeHostname('http://127.0.0.1')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1 evil')).toBeUndefined();
+    expect(normalizeHostname('127.0.0.1	evil')).toBeUndefined();
+  });
+
+  it('still accepts every legitimate authority form', () => {
+    expect(normalizeHostname('127.0.0.1')).toBe('127.0.0.1');
+    expect(normalizeHostname('localhost:3000')).toBe('localhost');
+    expect(normalizeHostname('mcp.internal.example.com:8080')).toBe('mcp.internal.example.com');
+    expect(normalizeHostname('[::1]:3000')).toBe('[::1]');
+    expect(normalizeHostname('::1')).toBe('[::1]');
   });
 
   it('returns undefined for unusable values', () => {
@@ -109,6 +131,31 @@ describe('validateRequestHeaders', () => {
     const rejection = validateRequestHeaders('127.0.0.1:3000', 'http://local.firstnamelastname.com:3000', allowed);
     expect(rejection?.status).toBe(403);
     expect(rejection?.message).toContain('Invalid Origin');
+  });
+
+  it('rejects a Host that smuggles the allowed name into another URL component', () => {
+    for (const host of [
+      'evil.example@127.0.0.1',
+      '127.0.0.1/evil.example',
+      '127.0.0.1?x=evil',
+      '127.0.0.1#evil',
+      `127.0.0.1${BACKSLASH}evil.example`,
+    ]) {
+      expect(validateRequestHeaders(host, undefined, allowed)?.status).toBe(403);
+    }
+  });
+
+  it('rejects an Origin that is not a bare origin', () => {
+    for (const origin of [
+      'http://evil.example@127.0.0.1:3000',
+      'http://127.0.0.1:3000/evil',
+      'http://127.0.0.1:3000?x=1',
+      'http://127.0.0.1:3000#f',
+    ]) {
+      expect(validateRequestHeaders('127.0.0.1:3000', origin, allowed)?.status).toBe(403);
+    }
+    expect(validateRequestHeaders('127.0.0.1:3000', 'http://127.0.0.1:3000', allowed)).toBeUndefined();
+    expect(validateRequestHeaders('127.0.0.1:3000', 'http://127.0.0.1:3000/', allowed)).toBeUndefined();
   });
 
   it('rejects a null / unparseable Origin', () => {
