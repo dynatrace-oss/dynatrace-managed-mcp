@@ -6,5 +6,5 @@
 * @christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
 
 # allow updates for markdown files and server.json
-*.md @krisdyna @dt-benedict
-server.json @krisdyna @dt-benedict
+*.md @krismuhi @dt-benedict
+server.json @krismuhi @dt-benedict
