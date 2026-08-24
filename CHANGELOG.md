@@ -2,13 +2,14 @@
 
 ## Unreleased
 
-### Changes
+### Security
 
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
+- Pinned SHA of remaining github actions in workflow files
 
 ### Fixes
 
-- Fixed status filter not being applied in `list_problems` tool - @jasssonpet
+- Fixed status filter not being applied in `list_problems` tool by @jasssonpet in #236
 
 ## 1.0.1
 
