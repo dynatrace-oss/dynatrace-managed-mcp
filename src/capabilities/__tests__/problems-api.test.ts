@@ -42,7 +42,7 @@ describe('ProblemsApiClient', () => {
           pageSize: 25,
           from: 'now-24h',
           to: 'now',
-          status: 'OPEN',
+          problemSelector: 'status("OPEN")',
           impactLevel: 'SERVICE',
           sort: '-startTime',
         },

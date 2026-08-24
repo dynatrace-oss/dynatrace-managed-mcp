@@ -6,6 +6,10 @@
 
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
 
+### Fixes
+
+- Fixed status filter not being applied in `list_problems` tool - @jasssonpet
+
 ## 1.0.1
 
 ### Dependencies
