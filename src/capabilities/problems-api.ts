@@ -79,7 +79,7 @@ export class ProblemsApiClient {
       pageSize: params.pageSize || ProblemsApiClient.API_PAGE_SIZE,
       ...(params.from && { from: params.from }),
       ...(params.to && { to: params.to }),
-      ...(params.status && { status: params.status }),
+      ...(params.status && { problemSelector: `status("${params.status}")` }),
       ...(params.impactLevel && { impactLevel: params.impactLevel }),
       ...(params.entitySelector && { entitySelector: params.entitySelector }),
       ...(params.sort && { sort: params.sort }),
