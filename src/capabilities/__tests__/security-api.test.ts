@@ -78,7 +78,6 @@ describe('SecurityApiClient', () => {
         await client.listSecurityProblems('testAlias');
         fail('Should have propagated exception');
       } catch (error) {
-        console.log(error);
         const axiosError = error as AxiosError<{ message: string }>;
         expect(axiosError.response?.data?.message).toEqual('Request failed with status code 404');
       }
@@ -105,7 +104,6 @@ describe('SecurityApiClient', () => {
         await client.getSecurityProblemDetails('SP-999', 'testAlias');
         fail('Should have propagated exception');
       } catch (error) {
-        console.log(error);
         const axiosError = error as AxiosError<{ message: string }>;
         expect(axiosError.response?.data?.message).toEqual('Request failed with status code 404');
       }
