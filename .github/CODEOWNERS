@@ -3,8 +3,8 @@
 # Each line is a file pattern followed by one or more owners.
 
 # core maintainers
-* @christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
+@christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
 
 # allow updates for markdown files and server.json
-*.md @krismuhi @dt-benedict
+.md @krismuhi @dt-benedict
 server.json @krismuhi @dt-benedict
