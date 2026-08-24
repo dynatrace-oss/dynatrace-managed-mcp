@@ -8,7 +8,7 @@
 
 ### Fixes
 
-- Fixed status filter not being applies in `list_problems` tool by @jasssonpet
+- Fixed status filter not being applied in `list_problems` tool - @jasssonpet
 
 ## 1.0.1
 
