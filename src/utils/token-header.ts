@@ -13,20 +13,20 @@ export function parseTokenHeader(headerValue: string | string[] | undefined): Ma
   }
   const raw = Array.isArray(headerValue) ? headerValue.join(';') : headerValue;
 
-  for (const pair of raw.split(';')) {
+  for (const [index, pair] of raw.split(';').entries()) {
     const trimmed = pair.trim();
     if (trimmed === '') {
       continue;
     }
     const eq = trimmed.indexOf('=');
     if (eq <= 0) {
-      logger.warn('Skipping malformed X-Dynatrace-Tokens entry (expected alias=token): [REDACTED]');
+      logger.warn(`Skipping malformed X-Dynatrace-Tokens entry for alias #${index}`);
       continue;
     }
     const alias = trimmed.slice(0, eq).trim();
     const token = trimmed.slice(eq + 1).trim();
     if (alias === '' || token === '') {
-      logger.warn(`Skipping malformed X-Dynatrace-Tokens entry for alias "${alias || '?'}": [REDACTED]`);
+      logger.warn(`Skipping malformed X-Dynatrace-Tokens entry for alias #${index}`);
       continue;
     }
     tokens.set(alias, token); // duplicate alias -> last value wins
