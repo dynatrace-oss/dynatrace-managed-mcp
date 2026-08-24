@@ -1,0 +1,209 @@
+# Configuration reference
+
+Every environment variable and configuration-file field the server reads, with defaults, precedence and known pitfalls. For step-by-step setup see [local mode](setup-local.md) or [remote mode](setup-remote.md).
+
+## Configuration file
+
+The recommended way to configure one or more Dynatrace Managed environments is a YAML or JSON file, referenced by `DT_CONFIG_FILE`.
+
+- **The file extension selects the parser, not the content.** Only `.json`, `.yaml`, and `.yml` are accepted; any other extension (or none) fails with `Unsupported file format: <ext>`, regardless of what's actually inside the file. See [Troubleshooting](troubleshooting.md#failed-to-get-managed-environments-configurations) for the exact error text.
+- **Relative paths** are resolved against the working directory of the process that starts the server — in practice, that's the AI client (Claude Desktop, VS Code, etc.), not this repository. Prefer an absolute path or a `~` path so the file resolves the same way regardless of how the client launches the server.
+- **Absolute paths** are used as-is.
+- **`~` expansion**: a leading `~` is expanded by the server itself, checking `HOME` then `USERPROFILE` — it does not rely on the shell having expanded it first.
+- **`${VAR_NAME}` interpolation**: any `${VAR_NAME}` in the file's **content** is substituted from the process environment before the file is parsed, so tokens can be kept out of the file itself. The name must be all uppercase letters, digits and underscores, and can't start with a digit (`[A-Z_][A-Z0-9_]*`) — a lowercase or mixed-case `${var_name}` is left in the file literally, unsubstituted.
+
+By convention, the file lives at `~/.dynatrace/managed-mcp.yaml`.
+
+```yaml
+# Production environment
+- alias: production
+  apiEndpointUrl: https://my-api.company.com/
+  environmentId: abc-123
+  dynatraceUrl: https://my-dashboard.company.com/
+  apiToken: dt0c01.ABC123...
+  httpProxyUrl: http://proxy.company.com:8080
+
+# Staging environment
+- alias: staging
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  apiToken: dt0c01.XYZ789...
+```
+
+To commit this file without embedding tokens, interpolate them from the environment instead:
+
+```yaml
+- alias: production
+  apiEndpointUrl: https://my-api.company.com/
+  environmentId: abc-123
+  apiToken: ${DT_PROD_TOKEN}
+
+- alias: staging
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  apiToken: ${DT_STAGING_TOKEN}
+```
+
+`DT_PROD_TOKEN` and `DT_STAGING_TOKEN` are ordinary environment variables you name yourself and set before starting the server — the server never reads them directly, it only substitutes them into the file content.
+
+The same structure as JSON:
+
+```json
+[
+  {
+    "alias": "production",
+    "apiEndpointUrl": "https://my-api.company.com/",
+    "environmentId": "abc-123",
+    "apiToken": "dt0c01.ABC123..."
+  }
+]
+```
+
+Full examples: [`../examples/dt-config.yaml`](../examples/dt-config.yaml) and [`../examples/dt-config.json`](../examples/dt-config.json) (local/stdio mode, tokens interpolated), [`../examples/dt-config-http.yaml`](../examples/dt-config-http.yaml) (HTTP mode — no tokens in the file at all), and [`../examples/mcp-config-with-file.json`](../examples/mcp-config-with-file.json) (a complete client `mcpServers` entry using `DT_CONFIG_FILE` alongside `${VAR}`-interpolated tokens).
+
+## Configuration fields
+
+One table for every field, however you supply it — config file or `DT_ENVIRONMENT_CONFIGS`:
+
+| Field            | Required                                    | Notes                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiEndpointUrl` | yes                                         | Base URL for the Managed API; the environment ID is appended. Example `https://abc123.dynatrace-managed.com:9999`                                                                         |
+| `environmentId`  | yes                                         | e.g. `01234567-89ab-cdef-abcd-ef0123456789`                                                                                                                                               |
+| `apiToken`       | yes in local mode, **ignored in HTTP mode** | In HTTP mode the server never reads this field — tokens arrive per request instead. Omit it so the file has no unused secret at rest. See [required scopes](api-token.md#required-scopes) |
+| `alias`          | yes                                         | Human-readable name; how you refer to the environment when talking to the assistant                                                                                                       |
+| `dynatraceUrl`   | no                                          | Base URL for the dashboard. If omitted, falls back to the `apiEndpointUrl` field of the same entry                                                                                        |
+| `httpProxyUrl`   | no                                          | Per-environment HTTP proxy — see [Proxy](#proxy)                                                                                                                                          |
+| `httpsProxyUrl`  | no                                          | Per-environment HTTPS proxy — see [Proxy](#proxy)                                                                                                                                         |
+
+**Finding `apiEndpointUrl` and `environmentId`:** split them out of the environment URL you already use in a browser — `https://<cluster-host>:9999/e/<environmentId>/...`. Everything up to and including the host and port is `apiEndpointUrl`; the segment right after `/e/` is `environmentId`. The server reassembles that same URL internally (`apiEndpointUrl` + `/e/` + `environmentId`) to reach the API.
+
+## Environment variables
+
+| Variable                          | Category       | Default                                       | Notes                                                                                                                 |
+| --------------------------------- | -------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DT_CONFIG_FILE`                  | Configuration  | none                                          | Path to the config file. See [Configuration file](#configuration-file).                                               |
+| `DT_ENVIRONMENT_CONFIGS`          | Configuration  | none                                          | JSON-array string, used only when `DT_CONFIG_FILE` is unset. See [`DT_ENVIRONMENT_CONFIGS`](#dt_environment_configs). |
+| `LOG_LEVEL`                       | Logging        | `info`                                        | Log verbosity. See [Logging](#logging).                                                                               |
+| `LOG_OUTPUT`                      | Logging        | `file`                                        | Log destination. See [Logging](#logging) for the full transport matrix.                                               |
+| `LOG_FILE`                        | Logging        | `dynatrace-managed-mcp.log`                   | Log file path, used when `LOG_OUTPUT` includes `file`.                                                                |
+| `DT_MCP_RATE_LIMIT_MAX_CALLS`     | Rate limiting  | `20`                                          | Max tool calls per window, per caller. See [Rate limiting](#rate-limiting).                                           |
+| `DT_MCP_RATE_LIMIT_WINDOW_MS`     | Rate limiting  | `20000`                                       | Rate-limit window size, in milliseconds.                                                                              |
+| `DT_MCP_MAX_BODY_SIZE`            | HTTP transport | `1048576`                                     | Maximum accepted POST body size in bytes, HTTP mode only. Larger requests get `413 Request Entity Too Large`.         |
+| `DT_MCP_TOKEN_VALIDATION_TTL_MS`  | HTTP transport | `60000`                                       | How long a validated token is cached, HTTP mode only. `0` disables caching.                                           |
+| `DT_MCP_DISABLE_TELEMETRY`        | Telemetry      | `false`                                       | Set to `true` to disable telemetry. See [Telemetry](#telemetry).                                                      |
+| `DT_MCP_TELEMETRY_APPLICATION_ID` | Telemetry      | `5e2dbb56-076b-412e-8ffc-7babb7ae7c5d`        | Dynatrace-owned OpenKit application ID; overrides it.                                                                 |
+| `DT_MCP_TELEMETRY_ENDPOINT_URL`   | Telemetry      | `https://bf96767wvv.bf.dynatrace.com/mbeacon` | Dynatrace-owned OpenKit beacon endpoint the data is sent to; overrides it.                                            |
+| `DT_MCP_TELEMETRY_DEVICE_ID`      | Telemetry      | auto-generated                                | Overrides the per-install device identifier.                                                                          |
+
+## Configuration precedence
+
+1. `DT_CONFIG_FILE` — used if set, regardless of anything else.
+2. `DT_ENVIRONMENT_CONFIGS` — used only if `DT_CONFIG_FILE` is unset.
+3. Neither set — the server exits with an error describing both options.
+
+Setting both is allowed but discouraged: the server logs a warning and uses `DT_CONFIG_FILE`, without erroring, and `DT_ENVIRONMENT_CONFIGS` is ignored.
+
+## `DT_ENVIRONMENT_CONFIGS`
+
+For Kubernetes ConfigMaps/Secrets, Docker containers and CI/CD pipelines, set `DT_ENVIRONMENT_CONFIGS` to a JSON array of environment objects as a single string, instead of pointing at a file:
+
+```bash
+DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"https://api.example.com/","environmentId":"abc-123","alias":"production","apiToken":"dt0c01.ABC123"}]'
+```
+
+The fields are the same as [Configuration fields](#configuration-fields). Quote escaping makes this awkward for local, interactive use — prefer [the config file](#configuration-file) there; this method suits Kubernetes, Docker and CI better than local development.
+
+A `.env` file can hold `DT_ENVIRONMENT_CONFIGS` too, but multiline values don't survive reliably in `.env` files — use the config file for anything beyond a short, single-line value.
+
+## Logging
+
+- `LOG_LEVEL` — log verbosity: `error`, `warn`, `info`, `http`, `verbose`, `debug`, `silly`. Default `info`.
+- `LOG_OUTPUT` — log destination:
+
+  | Value                          | Behavior                                              |
+  | ------------------------------ | ----------------------------------------------------- |
+  | `file` (default)               | Write logs to `LOG_FILE`.                             |
+  | `stdout` / `console`           | Write all logs to stdout.                             |
+  | `stderr`                       | Write only `error`/`warn` to stderr.                  |
+  | `stderr-all`                   | Write all log levels to stderr.                       |
+  | `file+console` / `file+stdout` | Write to both the log file and stdout.                |
+  | `file+stderr`                  | Write to the log file, plus `error`/`warn` to stderr. |
+  | `disabled`                     | Disable logging entirely.                             |
+
+- `LOG_FILE` — path to the log file, used whenever `LOG_OUTPUT` includes `file`. Default `dynatrace-managed-mcp.log` in the current working directory.
+
+> [!IMPORTANT]
+> In stdio mode, stdout is the MCP protocol channel — anything else written there corrupts it. Use `stderr-all` or `file`; the stdout-writing values above (`stdout`, `console`, `file+console`, `file+stdout`) only make sense with `--http`. If `LOG_OUTPUT` is set to one of them while running stdio, the server prints a startup warning.
+
+```bash
+# stdio: see everything in the client's Output/log panel
+LOG_OUTPUT=stderr-all LOG_LEVEL=debug
+
+# stdio: write to a file, then tail it
+LOG_LEVEL=debug
+tail -f dynatrace-managed-mcp.log
+
+# HTTP: log to console
+LOG_OUTPUT=console LOG_LEVEL=debug node dist/index.js --http
+```
+
+## Rate limiting
+
+- `DT_MCP_RATE_LIMIT_MAX_CALLS` — maximum tool calls allowed per window. Default `20`.
+- `DT_MCP_RATE_LIMIT_WINDOW_MS` — window size in milliseconds. Default `20000` (20 seconds).
+
+```bash
+DT_MCP_RATE_LIMIT_MAX_CALLS=50
+DT_MCP_RATE_LIMIT_WINDOW_MS=30000
+```
+
+The limiter buckets **per caller**: in HTTP mode the bucket key is derived from the token(s) supplied in the request's token header, so each user gets an independent bucket; in stdio mode there is a single, constant key, so the limit applies to that one connection as a whole. When sizing this for a shared HTTP deployment, remember the limit is per user, not a total budget for the server.
+
+## Proxy
+
+The server has two separate proxy mechanisms, and which one governs a given outbound request depends on which code path makes that request — not on any deliberate two-tier design:
+
+- **Per-environment**: the `httpProxyUrl` / `httpsProxyUrl` [config fields](#configuration-fields), set per entry in your [configuration file](#configuration-file).
+- **Standard environment variables**: `HTTP_PROXY` / `HTTPS_PROXY` (and `NO_PROXY`), read by the server's underlying HTTP client (axios, via the `proxy-from-env` package) for any request that wasn't given a per-environment proxy explicitly.
+
+**Tool and data requests** — the calls that answer an assistant's questions — use an environment's `httpProxyUrl` / `httpsProxyUrl` when it's set. If it isn't set, they fall back to the environment variables, same as everything else.
+
+**Startup validation, the cluster-version check, and — in HTTP mode — the per-request token lookup always use the environment variables**, never `httpProxyUrl` / `httpsProxyUrl`. Those calls never pass a per-environment proxy to the HTTP client, so they defer entirely to `HTTP_PROXY` / `HTTPS_PROXY`, regardless of what's configured for that environment.
+
+> [!WARNING]
+> `NO_PROXY` is honored only on the environment-variable path. Once an environment has `httpProxyUrl` / `httpsProxyUrl` set, its tool/data requests use that proxy unconditionally — `NO_PROXY` has no effect on them, and there is no per-environment equivalent of it.
+
+<!-- -->
+
+> [!WARNING]
+> Set at most one of `httpProxyUrl` / `httpsProxyUrl` per environment. Setting **both** on the same environment logs an error and configures neither field — but that does **not** make the environment proxy-less: its tool/data requests still fall back to `HTTP_PROXY` / `HTTPS_PROXY`, exactly as if neither field had been set.
+
+```yaml
+- alias: production
+  apiEndpointUrl: https://prod-api.company.com/
+  environmentId: abc-123
+  apiToken: ${DT_PROD_TOKEN}
+  httpProxyUrl: http://proxy.company.com:8080
+
+- alias: staging
+  apiEndpointUrl: https://staging-api.company.com/
+  environmentId: xyz-789
+  apiToken: ${DT_STAGING_TOKEN}
+```
+
+`production`'s tool/data requests route through `http://proxy.company.com:8080`. `staging`'s tool/data requests use `HTTP_PROXY` / `HTTPS_PROXY` if those are set in the server's own process environment, or go direct if not. Startup validation and the cluster-version check behave the same way for **both** environments — `httpProxyUrl` never reaches them, even for `production`.
+
+If the only network path to your cluster runs through the proxy named in `httpProxyUrl` / `httpsProxyUrl`, also set `HTTPS_PROXY` (or `HTTP_PROXY`) in the server's own process environment — otherwise startup validation and the cluster-version check can't reach the cluster, even though the per-environment field is configured correctly. See [Startup validation fails even though a per-environment proxy is set](troubleshooting.md#startup-validation-fails-even-though-a-per-environment-proxy-is-set).
+
+## Telemetry
+
+The server sends anonymous usage telemetry to Dynatrace via OpenKit: server-start events, tool usage (which tools, success/failure, duration), and error tracking. No data from your Dynatrace Managed environment — entities, logs, metrics, tokens — is included; only information about how the MCP server itself is used.
+
+- `DT_MCP_DISABLE_TELEMETRY` — set to exactly `true` (lowercase) to disable telemetry entirely; the value is compared as a literal string, so `TRUE` or `1` are not recognized and leave telemetry enabled. Default `false` (enabled).
+- `DT_MCP_TELEMETRY_APPLICATION_ID` — overrides the OpenKit application ID. Default `5e2dbb56-076b-412e-8ffc-7babb7ae7c5d`, owned by Dynatrace.
+- `DT_MCP_TELEMETRY_ENDPOINT_URL` — overrides the OpenKit beacon endpoint the data is sent to. Default `https://bf96767wvv.bf.dynatrace.com/mbeacon`, Dynatrace's analytics endpoint — allowlist this hostname if your egress controls require it.
+- `DT_MCP_TELEMETRY_DEVICE_ID` — overrides the per-install device identifier. Default: auto-generated from the hostname and random bytes at startup.
+
+```bash
+DT_MCP_DISABLE_TELEMETRY=true
+```

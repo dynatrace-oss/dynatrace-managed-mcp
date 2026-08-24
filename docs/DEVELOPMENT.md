@@ -32,8 +32,8 @@ Integration tests run against a real Dynatrace Managed environment with alias se
 It is assumed that this environment has sufficient data to be able to sensibly test the API
 calls and processing of responses. A second environment with alias `invalidApiToken` needs to be set up, with working credentials but a wrong apiToken, used to check error responses.
 
-Configure both environments in the `.env` file with the URL and [an API token with the required scopes](../README.md#api-scopes-for-managed-deployment). See `.env.template` as a starting point.
-See [main README](../README.md#environment-variables) for description of Environment Variables.
+Configure both environments in the `.env` file with the URL and [an API token with the required scopes](api-token.md#required-scopes). See `.env.template` as a starting point.
+See [Configuration reference](configuration.md#environment-variables) for description of Environment Variables.
 
 Some useful example testing commands:
 
@@ -132,6 +132,8 @@ Tips:
 - Check the log file `dynatrace-managed-mcp.log`, written to the current working directory.
 
 ### Docker
+
+A signed, published multi-arch image is also available and does not require a local build — see [Run the server](setup-remote.md#run-the-server) in the remote setup guide.
 
 You can build the Docker container locally, for example:
 
