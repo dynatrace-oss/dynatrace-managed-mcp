@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Security
+
+- Added Host and Origin headers validation. To configure it use `DT_MCP_ALLOWED_HOSTS`, by default it will allow localhost hosts (`localhost`, `127.0.0.1` and `[::1]`)
+
 ### Changes
 
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
