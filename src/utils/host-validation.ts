@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 const LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]'];
 
 const WILDCARD_BIND_ADDRESSES = new Set(['0.0.0.0', '::', '[::]']);
@@ -30,9 +32,16 @@ export function normalizeHostname(value: string | undefined): string | undefined
 
   for (const candidate of candidates) {
     try {
-      const { hostname } = new URL(`http://${candidate}`);
-      if (hostname !== '') {
-        return hostname.toLowerCase();
+      const url = new URL(`http://${candidate}`);
+      if (
+        url.hostname !== '' &&
+        url.username === '' &&
+        url.password === '' &&
+        url.pathname === '/' &&
+        url.search === '' &&
+        url.hash === ''
+      ) {
+        return url.hostname.toLowerCase();
       }
     } catch {
       // Not a parseable authority in this form — fall through to the next candidate.
@@ -73,6 +82,7 @@ export function buildAllowedHostnames(boundHost: string | undefined, override?: 
   if (fromOverride.length > 0) {
     return new Set(fromOverride);
   }
+  logger.warn('DT_MCP_ALLOWED_HOSTS is empty or not set. Falling back to default allowed hosts.');
 
   if (isWildcardBindAddress(boundHost)) {
     return new Set(LOOPBACK_HOSTNAMES);
