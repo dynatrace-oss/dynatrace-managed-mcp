@@ -14,6 +14,12 @@
 
 - Fixed status filter not being applied in `list_problems` tool - @jasssonpet
 
+### Dependencies
+
+| Type | Name     | Old   | New   |
+| ---- | -------- | ----- | ----- |
+| deps | fast-uri | 3.1.5 | 3.1.6 |
+
 ## 1.0.1
 
 ### Dependencies
