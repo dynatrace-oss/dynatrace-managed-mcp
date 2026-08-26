@@ -3,11 +3,13 @@
 ## Unreleased
 
 ### Security
+
 - Added Host and Origin headers validation. To configure it use `DT_MCP_ALLOWED_HOSTS`, by default it will allow localhost hosts (`localhost`, `127.0.0.1` and `[::1]`)
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
 - Pinned SHA of remaining github actions in workflow files
 
 ### Fixes
+
 - Fixed status filter not being applied in `list_problems` tool by @jasssonpet in #236
 
 ### Dependencies
