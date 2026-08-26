@@ -18,6 +18,37 @@
   </a>
 </h4>
 
+<details>
+  <summary>Use cases</summary>
+
+> 1. Your Dynatrace Managed environment(s) is/are the primary Observability system, containing all live data; or
+> 2. There has been a migration from a Dynatrace Managed environment to a Dynatrace Saas environment; however, historical observability data has not been migrated and can still be accessed via a Dynatrace Managed environment.
+>    The Dynatrace Managed MCP is used to access historical data, and a separate Dynatrace SaaS MCP is used to access live and more recent data.
+
+> Specific use cases for the Dynatrace Managed MCP include:
+>
+> - **Real-time observability** - Fetch production-level data for early detection and proactive monitoring
+> - **Contextual debugging** - Fix issues with full context from monitored exceptions, logs, and anomalies
+> - **Security insights** - Get detailed vulnerability analysis and security problem tracking. This can include multicloud compliance assessment with evidence-based investigation.
+> - **Natural language queries** - Queries are mapped to MCP tool usage, and thus API queries, with guidance for the next step
+> - **Multiphase incident investigation** - Systematic impact assessment and troubleshooting
+> - **Multienvironment support** - Query multiple Dynatrace Managed environments from the same MCP server
+
+</details>
+
+<details>
+  <summary>Capabilities</summary>
+
+> - **Problems** - List and get [problem](https://www.dynatrace.com/hub/detail/problems/) details from your services (for example Kubernetes)
+> - **Security** - List and get security problems / [vulnerability](https://www.dynatrace.com/hub/detail/vulnerabilities/) details
+> - **Entities** - Get more information about a monitored entity, including relationship mappings
+> - **SLO** - List and get Service Level Objective details, including evaluation and error budgets
+> - **Event Tracking** - List and get system events
+> - **Log Investigation** - Search and filter logs with advanced content and time-based queries
+> - **Metrics Analysis** - Query and analyze performance metrics using V2 Metrics API
+
+</details>
+
 The local _Dynatrace Managed MCP server_ allows AI Assistants to interact with one or more self-hosted [Dynatrace Managed](https://www.dynatrace.com/) deployments, bringing observability data directly into your AI-assisted workflow.
 
 This MCP server supports **two modes**:
@@ -37,18 +68,18 @@ This MCP server supports **two modes**:
 
 You can add this MCP server to your AI Assistant, such as VSCode, Claude, Cursor, Kiro, Windsurf, ChatGPT, or GitHub Copilot.
 
-To configure and run this MCP server to have to configure 3 things:
+To run this MCP server to have to configure 3 things:
 
-- _**Dynatrace API token**_
+- _**Dynatrace Managed API token**_
 - _**Configuration file**_: `dt-config.yaml` or `dt-config.json` file which is responsible for defining list of environments you intend to use
 - _**MCP Server connection configuration file:**_ local mcp configuration, which is dependent on tools you are using
 
-### Dynatrace API token
+Files have to be created in the same workspace (unless configuring global MCP server connection)
+
+### Dynatrace Managed API token
 
 For information about creating API tokens in Managed deployments, refer to the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
 Your API token must include the following scopes for full functionality:
-
-#### Required Scopes:
 
 - Access problem and event feed, metrics, and topology (`DataExport`)
 - Read entities (`entities.read`)
@@ -63,16 +94,17 @@ Your API token must include the following scopes for full functionality:
 
 #### Configuration parameters
 
-| Parameter                                                                | Required           | Description                                                                                    | Example value                                     |
-| ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| apiEndpointUrl                                                           | Yes                | Base URL for Dynatrace Managed cluster API                                                     | https://<span>dmz123.dynatrace-managed.com</span> |
-| environmentId                                                            | Yes                | ID of the managed environment                                                                  | 01234567-89ab-cdef-abcd-ef0123456789              |
-| alias                                                                    | Yes                | Human-friendly name of the environment                                                         | MyEnvironment                                     |
-| apiToken                                                                 | Only in stdio mode | API token of the cluster with required scopes created using the instruction above              | dt0s01.ABCDEFGHIJK0123                            |
-| httpProxyUrl                                                             | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | http://<span>proxy.company.com:8080</span>        |
-| httpsProxyUrl                                                            | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | https:/<span>/proxy.company.com:8080</span>       |
-| dynatraceUrl                                                             | No                 | Deprecated, currently prints itself in tool responses. Defaults to the value of apiEndpointUrl | https://<span>dmz123.dynatrace-managed.com</span> |
-| There are **two ways** to configure your Dynatrace Managed environments. |
+| Parameter      | Required           | Description                                                                                    | Example value                                     |
+| -------------- | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| apiEndpointUrl | Yes                | Base URL for Dynatrace Managed cluster API                                                     | https://<span>dmz123.dynatrace-managed.com</span> |
+| environmentId  | Yes                | ID of the managed environment                                                                  | 01234567-89ab-cdef-abcd-ef0123456789              |
+| alias          | Yes                | Human-friendly name of the environment                                                         | MyEnvironment                                     |
+| apiToken       | Only in stdio mode | API token of the cluster with required scopes created using the instruction above              | dt0s01.ABCDEFGHIJK0123                            |
+| httpProxyUrl   | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | http://<span>proxy.company.com:8080</span>        |
+| httpsProxyUrl  | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | https:/<span>/proxy.company.com:8080</span>       |
+| dynatraceUrl   | No                 | Deprecated, currently prints itself in tool responses. Defaults to the value of apiEndpointUrl | https://<span>dmz123.dynatrace-managed.com</span> |
+
+There are **two ways** to configure your Dynatrace Managed environments.
 
 #### Method 1: Configuration File (Recommended for Local Development)
 
@@ -86,6 +118,8 @@ Example: `dt-config.yaml`
   alias: production
   # Token is injected from an environment variable at runtime
   apiToken: ${DT_PROD_TOKEN}
+  # You can also use the token directly
+  # apiToken: dt0s01.ABCDEFGHIJK0123
   httpProxyUrl: http://proxy.company.com:8080
 
 # Staging environment
@@ -121,7 +155,7 @@ DT_ENVIRONMENT_CONFIGS='[{"apiEndpointUrl":"https://api.example.com/","environme
 
 ### MCP Server connection configuration file
 
-To actually connect to the MCP server you have to configure you MCP connection in your AI Assistant
+To actually connect to the MCP server you have to configure your MCP connection in your AI Assistant
 
 We recommend always setting it up for your current workspace instead of using it globally.
 
@@ -272,33 +306,6 @@ As explained earlier, HTTP mode does not store API tokens in its configuration. 
   }
 }
 ```
-
-## Use cases
-
-There are two ways that Dynatrace Managed, and thus the MCP, may be used:
-
-1. Your Dynatrace Managed environment(s) is/are the primary Observability system, containing all live data; or
-2. There has been a migration from a Dynatrace Managed environment to a Dynatrace Saas environment; however, historical observability data has not been migrated and can still be accessed via a Dynatrace Managed environment.
-   The Dynatrace Managed MCP is used to access historical data, and a separate Dynatrace SaaS MCP is used to access live and more recent data.
-
-Specific use cases for the Dynatrace Managed MCP include:
-
-- **Real-time observability** - Fetch production-level data for early detection and proactive monitoring
-- **Contextual debugging** - Fix issues with full context from monitored exceptions, logs, and anomalies
-- **Security insights** - Get detailed vulnerability analysis and security problem tracking. This can include multicloud compliance assessment with evidence-based investigation.
-- **Natural language queries** - Queries are mapped to MCP tool usage, and thus API queries, with guidance for the next step
-- **Multiphase incident investigation** - Systematic impact assessment and troubleshooting
-- **Multienvironment support** - Query multiple Dynatrace Managed environments from the same MCP server
-
-## Capabilities
-
-- **Problems** - List and get [problem](https://www.dynatrace.com/hub/detail/problems/) details from your services (for example Kubernetes)
-- **Security** - List and get security problems / [vulnerability](https://www.dynatrace.com/hub/detail/vulnerabilities/) details
-- **Entities** - Get more information about a monitored entity, including relationship mappings
-- **SLO** - List and get Service Level Objective details, including evaluation and error budgets
-- **Event Tracking** - List and get system events
-- **Log Investigation** - Search and filter logs with advanced content and time-based queries
-- **Metrics Analysis** - Query and analyze performance metrics using V2 Metrics API
 
 ### Performance Considerations
 
