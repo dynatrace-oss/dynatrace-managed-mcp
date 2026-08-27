@@ -28,9 +28,10 @@ export function registerProblemsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
+        .max(50)
         .optional()
         .describe(
-          `Maximum number of problems to return. Use this when user specifies a count (e.g., "first 10 problems" → limit: 10). If not specified, returns up to API limit: ${ProblemsApiClient.API_PAGE_SIZE}`,
+          `Maximum number of problems to return. Use this when user specifies a count (e.g., "first 10 problems" → limit: 10). If not specified, returns up to API limit: ${ProblemsApiClient.API_PAGE_SIZE}. Cannot exceed 50`,
         ),
       sort: z
         .string()

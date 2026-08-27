@@ -15,7 +15,11 @@ export function registerLogsTools(ctx: ToolContext): void {
       ),
       from: z.string().describe('Start time (ISO format or relative like "now-1h")'),
       to: z.string().describe('End time (ISO format or relative like "now")'),
-      limit: z.number().optional().describe('Maximum number of logs to return (default: 100)'),
+      limit: z
+        .number()
+        .max(1000)
+        .optional()
+        .describe('Maximum number of logs to return (default: 100). Cannot exceed 1000'),
       sort: z.string().optional().describe('Sort order for logs. Use "-timestamp" for most recent first.'),
       environment_alias: z
         .string()

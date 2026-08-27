@@ -46,9 +46,10 @@ export function registerSloTools(ctx: ToolContext): void {
       demo: z.boolean().optional().describe('Get demo SLOs instead of real ones. Default: false'),
       limit: z
         .number()
+        .max(100)
         .optional()
         .describe(
-          `Maximum number of SLOs to return. Use this when user specifies a count (e.g., "first 15 SLOs" → limit: 15). If not specified, returns up to API limit: ${SloApiClient.API_PAGE_SIZE}`,
+          `Maximum number of SLOs to return. Use this when user specifies a count (e.g., "first 15 SLOs" → limit: 15). If not specified, returns up to API limit: ${SloApiClient.API_PAGE_SIZE}. Cannot exceed 100`,
         ),
       environment_alias: z
         .string()

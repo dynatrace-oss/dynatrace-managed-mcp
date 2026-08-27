@@ -89,9 +89,10 @@ export function registerEntitiesTools(ctx: ToolContext): void {
         .describe('End time for entity observation timeframe (ISO format or relative like "now")'),
       limit: z
         .number()
+        .max(50)
         .optional()
         .describe(
-          `Maximum number of entities to return. Use this when user specifies a count (e.g., "first 10 entities" → limit: 10). If not specified, returns up to API limit: ${EntitiesApiClient.API_PAGE_SIZE}`,
+          `Maximum number of entities to return. Use this when user specifies a count (e.g., "first 10 entities" → limit: 10). If not specified, returns up to API limit: ${EntitiesApiClient.API_PAGE_SIZE}. Cannot exceed 50`,
         ),
       sort: z
         .string()

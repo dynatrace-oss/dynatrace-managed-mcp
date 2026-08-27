@@ -30,11 +30,12 @@ export function registerMetricsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
+        .max(500)
         .optional()
         .describe(
           `Maximum number of metrics to return. Use this when user specifies a count
           (e.g., "first 16 metrics" → limit: 16, "500 metrics" → limit: 500).
-          If not specified, returns up to API limit: ${MetricsApiClient.API_PAGE_SIZE}`,
+          If not specified, returns up to API limit: ${MetricsApiClient.API_PAGE_SIZE}. Cannot exceed 500`,
         ),
       environment_alias: z
         .string()

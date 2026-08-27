@@ -29,9 +29,10 @@ export function registerEventsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
+        .max(100)
         .optional()
         .describe(
-          `Maximum number of events to return. Use this when user specifies a count (e.g., "first 20 events" → limit: 20). If not specified, returns up to API limit: ${EventsApiClient.API_PAGE_SIZE}`,
+          `Maximum number of events to return. Use this when user specifies a count (e.g., "first 20 events" → limit: 20). If not specified, returns up to API limit: ${EventsApiClient.API_PAGE_SIZE}. Cannot exceed 100`,
         ),
       environment_alias: z
         .string()
