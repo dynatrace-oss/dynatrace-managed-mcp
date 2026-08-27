@@ -11,7 +11,7 @@ export function registerProblemsTools(ctx: ToolContext): void {
       from: z.string().optional().describe('Start time (default: "now-24h")'),
       to: z.string().optional().describe('End time (default: "now")'),
       status: z
-        .enum(['OPEN', 'RESOLVED'])
+        .enum(['OPEN', 'CLOSED'])
         .optional()
         .describe('Problem status - use "OPEN" for active issues, "CLOSED" for resolved problems'),
       impactLevel: z
