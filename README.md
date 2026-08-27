@@ -78,7 +78,7 @@ Files have to be created in the same workspace (unless configuring global MCP se
 
 ### Dynatrace Managed API token
 
-For information about creating API tokens in Managed deployments, refer to the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api/basics/dynatrace-api-authentication).
+For information about creating API tokens in Managed deployments, refer to the [Dynatrace Managed documentation](https://docs.dynatrace.com/managed/shortlink/api-authentication#create-token).
 Your API token must include the following scopes for full functionality:
 
 - Access problem and event feed, metrics, and topology (`DataExport`)
@@ -112,19 +112,16 @@ Example: `dt-config.yaml`
 
 ```yaml
 # Production environment
-- dynatraceUrl: https://my-dashboard.company.com/
-  apiEndpointUrl: https://my-api.company.com/
+- apiEndpointUrl: https://my-api.company.com/
   environmentId: abc-123
   alias: production
   # Token is injected from an environment variable at runtime
   apiToken: ${DT_PROD_TOKEN}
   # You can also use the token directly
   # apiToken: dt0s01.ABCDEFGHIJK0123
-  httpProxyUrl: http://proxy.company.com:8080
 
 # Staging environment
-- dynatraceUrl: https://staging-dashboard.company.com/
-  apiEndpointUrl: https://staging-api.company.com/
+- apiEndpointUrl: https://staging-api.company.com/
   environmentId: xyz-789
   alias: staging
   apiToken: ${DT_STAGING_TOKEN}
@@ -135,12 +132,10 @@ Example: `dt-config.json`
 ```json
 [
   {
-    "dynatraceUrl": "https://my-dashboard.company.com/",
     "apiEndpointUrl": "https://my-api.company.com/",
     "environmentId": "abc-123",
     "alias": "production",
-    "apiToken": "${DT_PROD_TOKEN}",
-    "httpProxyUrl": "http://proxy.company.com:8080"
+    "apiToken": "${DT_PROD_TOKEN}"
   }
 ]
 ```
