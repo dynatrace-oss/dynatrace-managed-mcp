@@ -96,7 +96,6 @@ src/
 │   ├── rate-limit.ts                 # Rate limiting configuration
 │   ├── telemetry-openkit.ts          # OpenKit telemetry
 │   ├── date-formatter.ts             # Timestamp formatting
-│   ├── user-agent.ts                 # User-Agent header generation
 │   ├── version.ts                    # Package version utils
 │   └── __tests__/*.test.ts           # Util unit tests
 

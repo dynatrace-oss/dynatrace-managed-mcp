@@ -8,8 +8,11 @@ export function registerSecurityTools(ctx: ToolContext): void {
     'dynatrace_managed_list_security_problems',
     'List security problems and vulnerabilities from the Managed cluster. Results include package names, technology details, vulnerable components, and comprehensive risk assessment data.',
     {
-      riskLevel: z.string().optional().describe('Filter by risk level (LOW, MEDIUM, HIGH, CRITICAL)'),
-      status: z.string().optional().describe('Filter by status (OPEN, RESOLVED, MUTED)'),
+      riskLevel: z
+        .enum(['CRITICAL', 'HIGH', 'LOW', 'MEDIUM', 'NONE'])
+        .optional()
+        .describe('Filter by risk level (NONE, LOW, MEDIUM, HIGH, CRITICAL)'),
+      status: z.enum(['OPEN', 'RESOLVED']).optional().describe('Filter by status (OPEN, RESOLVED)'),
       entitySelector: z
         .string()
         .optional()
