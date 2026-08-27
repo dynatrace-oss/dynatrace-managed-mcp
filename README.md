@@ -68,13 +68,12 @@ This MCP server supports **two modes**:
 
 You can add this MCP server to your AI Assistant, such as VSCode, Claude, Cursor, Kiro, Windsurf, ChatGPT, or GitHub Copilot.
 
-To run this MCP server to have to configure 3 things:
+To run this MCP server, you to have to configure four things:
 
 - _**Dynatrace Managed API token**_
 - _**Configuration file**_: `dt-config.yaml` or `dt-config.json` file which is responsible for defining list of environments you intend to use
 - _**MCP Server connection configuration file:**_ local mcp configuration, which is dependent on tools you are using
-
-Files have to be created in the same workspace (unless configuring global MCP server connection)
+- Set `DT_CONFIG_FILE` to the path of your `dt-config.yaml` or `dt-config.json` file in the MCP server environment.
 
 ### Dynatrace Managed API token
 
@@ -178,7 +177,8 @@ Alternatively, this can also be stored in user settings, and you can define `env
       "command": "npx",
       "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
-        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123"
+        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123",
+        "DT_CONFIG_FILE": "dt-config.yaml"
       }
     }
   }
@@ -194,7 +194,8 @@ Alternatively, this can also be stored in user settings, and you can define `env
       "command": "npx",
       "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
-        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123"
+        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123",
+        "DT_CONFIG_FILE": "dt-config.yaml"
       }
     }
   }
@@ -210,7 +211,8 @@ Alternatively, this can also be stored in user settings, and you can define `env
       "command": "npx",
       "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
-        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123"
+        "DT_PROD_TOKEN": "dt0s01.ABCDEFGHIJK0123",
+        "DT_CONFIG_FILE": "dt-config.yaml"
       }
     }
   }
@@ -226,7 +228,6 @@ Using `gemini` CLI directly (recommended):
 ```bash
 gemini extensions install https://github.com/dynatrace-oss/dynatrace-managed-mcp
 export DT_ENVIRONMENT_CONFIGS="[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]"
-export DT_PROD_TOKEN="dt0s01.ABCDEFGHIJK0123"
 ```
 
 and verify that the server is running via
@@ -244,7 +245,8 @@ Or manually in your `~/.gemini/settings.json` or `.gemini/settings.json`:
       "command": "npx",
       "args": ["@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
-        "DT_ENVIRONMENT_CONFIGS": "[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]"
+        "DT_ENVIRONMENT_CONFIGS": "[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
+        "DT_CONFIG_FILE": "dt-config.yaml"
       },
       "timeout": 30000,
       "trust": false

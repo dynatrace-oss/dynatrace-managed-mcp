@@ -47,15 +47,16 @@ Don't type out header if there are 0 changes which fall under given category
 
 Since there may be many dependency updates in given release it has been decided to display them in a table with following format:
 
-| Type                                                   | Name                      | Old    | New    |
-| ------------------------------------------------------ | ------------------------- | ------ | ------ |
-| ci                                                     | docker/login-action       | 4.5.2  | 4.6.0  |
-| deps                                                   | fast-uri                  | 3.1.4  | 3.1.5  |
-| deps                                                   | ip-address                | 10.2.0 | 10.4.0 |
-| deps                                                   | @modelcontextprotocol/sdk | 1.29.0 | 1.30.0 |
-| docker                                                 | node                      | 26.3.1 | 26.5.1 |
-| engine                                                 | node                      | None   | 26.5.1 |
-| Where `type` column may be of one of following values: |
+| Type   | Name                      | Old    | New    |
+| ------ | ------------------------- | ------ | ------ |
+| ci     | docker/login-action       | 4.5.2  | 4.6.0  |
+| deps   | fast-uri                  | 3.1.4  | 3.1.5  |
+| deps   | ip-address                | 10.2.0 | 10.4.0 |
+| deps   | @modelcontextprotocol/sdk | 1.29.0 | 1.30.0 |
+| docker | node                      | 26.3.1 | 26.5.1 |
+| engine | node                      | None   | 26.5.1 |
+
+Where `type` column may be of one of following values:
 
 - ci - workflow files
 - deps - node libraries
