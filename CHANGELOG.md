@@ -18,6 +18,21 @@
 | ---- | -------- | ----- | ----- |
 | deps | fast-uri | 3.1.5 | 3.1.6 |
 
+### Documentation
+
+- Overhauled `README.md` file: removed false and redundant information, moved non-critical documentation to separate files in `docs` folder (with links in README.md), moved critical information about starting the MCP server to the start of the file whilst improving wording for more human readability
+  - Moved following sections to separate files:
+    - Architecture
+    - Environment variables
+    - Rule file
+  - Reduced cognitive load by moving following sections to expandable sections in `README.md` file:
+    - Use cases
+    - Capabilities
+- Created new documentation files in `docs` folder:
+  - Api token scopes: a table containing all tools, endpoints they call and required API token scopes to access them
+  - Changelog format: document which defines how should changelog (and subsequently release notes) be structured
+- Removed false and redundant information from DEVELOPMENT.md file
+
 ## 1.0.1
 
 ### Dependencies

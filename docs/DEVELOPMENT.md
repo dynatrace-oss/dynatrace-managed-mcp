@@ -1,7 +1,5 @@
 # Development
 
-This file is intended for contributors/developers of the dynatrace-managed-mcp package.
-
 ## Local Development
 
 For local development purposes, you can use your favourite IDE and AI coding assistant.
@@ -9,14 +7,9 @@ You can test with any AI Assistant(s) that support MCPs.
 
 ### Setup Commands
 
-This is standard TypeScript project. We assume that you have preinstalled tools like `npm`, `node`, etc.
-
-To get started, run:
-
 ```bash
 npm install
 npm run build
-npm run test
 ```
 
 ### Logs
@@ -259,36 +252,6 @@ Our approach has the following benefits:
 - The index.ts file is already huge. Delegate to 'capabilities'.
 - Formatting lives next to the API call, and next to the definition of the types it uses.
 
-#### "Next Steps" Recommendations
-
-Including 'Next Steps' in the tool responses can be very beneficial for the user. It helps the LLM to suggest to the user
-what to do next, and also helps the LLM to better interpret the user's next instruction.
-
-Expectation is that the LLM will include the user in the decision process of what to do next (we don't want or expect the
-LLM to chain together tool calls without feeding back to the user or seeking guidance from the user - unless the user's
-instructions demanded that).
-
-Some guiding principles:
-
-- Recommend that the user looks at the Dynatrace UI, giving as specific a URL as we can. For example, the Dynatrace UI for
-  showing a problem is going to be better than the LLM's textual representation.
-- Suggest ways to use that tool better, and tailor that based on the results (e.g. if list_problems returned no results
-  then suggest to change the filters; or if it found more results than could be returned then suggest to use more specific
-  filters).
-- Suggest which tool to use next, where we can. For example, after list_problems, then suggest get_problem_details for if the
-  user is interested in a specific problem.
-
-#### MCP Tool Names
-
-Testing with Kiro showed problems when both Dynatrace SaaS MCP and Dynatrace Managed MCP were configured
-and used at the same time, when they both had the same tool names.
-
-We therefore give the Dynatrace Managed MCP different names (by prefixing `dynatrace_managed_`).
-
-Note that we originally intended to use names like 'dynatrace_managed/get_environment_info', but newer
-versions of `@modelcontextprotocol/sdk` show a warning if the forward slash ('/') character is used in
-a tool name.
-
 #### MCP Resources
 
 MCP Resources would be a great thing to include and use, to return more detailed Dynatrace documentation about specific features.
@@ -338,20 +301,3 @@ Verbose debug logging includes:
 There is minimal use of `console.error()` (note this writes to stderr, so does not interfere with the stdio transport).
 We write a single startup message, to give the user some feedback that it has started. But that's it. Instead, rely
 on logging (especially because the stderr output is not seen by anyone when an LLM connects to the MCP via stdio).
-
-#### Testing with Different LLMs
-
-Different LLMs behave very differently, for how they use the MCP and how they present data back to the user.
-
-Some LLMs will be very conservative, only doing exactly what the user said and giving the user data very similar to what the MCP returned.
-Other LLMs will be more 'creative', guessing at different ways to use the MCP to answer the user's questions.
-
-Manual testing must ensure that the MCP can be used by multiple LLMs, and that the instructions/metadata about the MCP is not
-overly tailored to one LLM.
-
-However, the manual testng is not to 'test the LLM'. For example, if the MCP specifies instructions that it 'must' do something but the
-LLM ignores it, that is not something for the LLM developer to solve (just ensure that we really have said 'must', and we don't
-have any contradictory instructions).
-
-Saying that, some general tips, guidance and examples for a better user experience are captured in the README. These can and should be
-added to.
