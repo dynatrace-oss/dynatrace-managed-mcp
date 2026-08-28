@@ -5,14 +5,14 @@ import { ManagedEnvironmentConfig } from '../utils/environment';
 export const MINIMUM_VERSION = '1.328.0';
 
 const MANAGED_API_SCOPES = [
-  'DataExport', // Read metrics and topology
-  'ReadConfig', // Read configuration and cluster version
-  'ReadSyntheticData', // Read synthetic monitoring data
-  'ReadLogContent', // Read log content
-  'ReadEvents', // Read events
-  'ReadProblems', // Read problems and root cause analysis
-  'ReadSecurityProblems', // Read security problems
-  'ReadSLO', // Read Service Level Objectives
+  'entities.read', // Read entities
+  'DataExport', // Read configuration and cluster version
+  'events.read', // Read events
+  'logs.read', // Read log content
+  'metrics.read', // Read metrics
+  'problems.read', // Read problems and root cause analysisNo i su
+  'securityProblems.read', // Read security problems
+  'slo.read', // Read Service Level Objectives
 ];
 
 export interface ClusterVersion {
@@ -131,9 +131,9 @@ export class ManagedAuthClient {
         const status = error?.response?.status;
         if (status === 401 || status === 403) {
           logger.warn(
-            `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; using minimum version ${this.MINIMUM_VERSION}`,
+            `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; cluster version is unknown`,
           );
-          return { version: this.MINIMUM_VERSION };
+          return { version: 'UNKNOWN VERSION' };
         }
       }
       throw error;
