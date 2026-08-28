@@ -14,13 +14,13 @@
 ### Fixes
 
 - Fixed status filter not being applied in `list_problems` tool by @jasssonpet in #236
-- 401 or 403 response from `clusterversion` endpoint now results in `UNKNOWN VERSION` instead of returning minimum version
 - Fixed Managed API scopes that appear in logs
 - Fixed license type in `package.json`
 
 ### Changes
 
 - Changed defaults and set max values to number of returned records on selected list tools
+- 401 or 403 response from `clusterversion` endpoint now results in not connecting with the cluster instead of returning minimum version
 
 ### Dependencies
 

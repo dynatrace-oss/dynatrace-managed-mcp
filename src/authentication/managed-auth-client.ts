@@ -111,23 +111,10 @@ export class ManagedAuthClient {
   }
 
   async getClusterVersion(token: string): Promise<ClusterVersion> {
-    try {
-      const response = await this.httpClient.get('/api/v1/config/clusterversion', {
-        headers: this.authHeader(token),
-      });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const status = error?.response?.status;
-        if (status === 401 || status === 403) {
-          logger.warn(
-            `[Alias: ${this.alias}] No permission for /api/v1/config/clusterversion; cluster version is unknown`,
-          );
-          return { version: 'UNKNOWN VERSION' };
-        }
-      }
-      throw error;
-    }
+    const response = await this.httpClient.get('/api/v1/config/clusterversion', {
+      headers: this.authHeader(token),
+    });
+    return response.data;
   }
 
   validateMinimumVersion(clusterVersion: ClusterVersion): boolean {
