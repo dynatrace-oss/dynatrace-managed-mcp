@@ -4,7 +4,7 @@ export const MANAGED_API_SCOPES = [
   'events.read', // Read events
   'logs.read', // Read log content
   'metrics.read', // Read metrics
-  'problems.read', // Read problems and root cause analysisNo i su
+  'problems.read', // Read problems and root cause analysis
   'securityProblems.read', // Read security problems
   'slo.read', // Read Service Level Objectives
 ];
