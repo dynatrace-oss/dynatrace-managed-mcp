@@ -8,11 +8,19 @@
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
 - Pinned SHA of remaining GitHub actions in workflow files
 - Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected and it ensures that its value is always correct
-- removed unused `user-agent.ts` file
+- Removed unused `user-agent.ts` file
+- Removed unused and redundant packages
 
 ### Fixes
 
 - Fixed status filter not being applied in `list_problems` tool by @jasssonpet in #236
+- 401 or 403 response from `clusterversion` endpoint now results in `UNKNOWN VERSION` instead of returning minimum version
+- Fixed Managed API scopes that appear in logs
+- Fixed license type in `package.json`
+
+### Changes
+
+- Changed defaults and set max values to number of returned records on selected list tools
 
 ### Dependencies
 
