@@ -9,10 +9,18 @@
 - Pinned SHA of remaining GitHub actions in workflow files
 - Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected, and it ensures that its value is always correct
 - Removed unused `user-agent.ts` file
+- Removed unused and redundant packages
 
 ### Fixes
 
 - Fixed status filter not being applied in `list_problems` tool by @jasssonpet in #236
+- Fixed Managed API scopes that appear in logs
+- Fixed license type in `package.json`
+
+### Changes
+
+- Changed defaults and set max values to number of returned records on selected list tools
+- Changed default logging option to `file+stderr`. This enables output in console by default in the stdio mode. Set `LOG_OUTPUT` environment variable to `file` to retain previous functionality
 
 ### Dependencies
 

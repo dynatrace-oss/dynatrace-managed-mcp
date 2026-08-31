@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolContext } from './context';
 import { GetEventDetailsArgs, ListEventsArgs } from './types';
 import { EventsApiClient } from '../capabilities/events-api';
+import { MAX_EVENTS_LIMIT } from './limits';
 
 export function registerEventsTools(ctx: ToolContext): void {
   ctx.tool<ListEventsArgs>(
@@ -29,9 +30,10 @@ export function registerEventsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
+        .max(MAX_EVENTS_LIMIT)
         .optional()
         .describe(
-          `Maximum number of events to return. Use this when user specifies a count (e.g., "first 20 events" → limit: 20). If not specified, returns up to API limit: ${EventsApiClient.API_PAGE_SIZE}`,
+          `Maximum number of events to return. Use this when user specifies a count (e.g., "first 20 events" → limit: 20). If not specified, returns up to API limit: ${EventsApiClient.API_PAGE_SIZE}. Cannot exceed ${MAX_EVENTS_LIMIT}`,
         ),
       environment_alias: z
         .string()

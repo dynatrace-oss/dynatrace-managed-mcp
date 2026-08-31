@@ -78,6 +78,28 @@ describe('LogsApiClient', () => {
       );
       expect(result).toEqual(mockResponse);
     });
+
+    it.each([
+      ['at the API page size', LogsApiClient.API_PAGE_SIZE],
+      ['above the API page size', LogsApiClient.API_PAGE_SIZE * 5],
+    ])('should clamp a limit %s to the API page size', async (_name, requested) => {
+      const mockResponse = new Map<string, ListLogsResponse>([['testAlias', {}]]);
+      mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
+
+      await client.queryLogs({ query: 'content:test', from: 'now-1h', to: 'now', limit: requested }, 'testAlias');
+
+      expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
+        '/api/v2/logs/search',
+        {
+          query: 'content:test',
+          from: 'now-1h',
+          to: 'now',
+          limit: LogsApiClient.API_PAGE_SIZE,
+          sort: '-timestamp',
+        },
+        'testAlias',
+      );
+    });
   });
 
   describe('formatList', () => {

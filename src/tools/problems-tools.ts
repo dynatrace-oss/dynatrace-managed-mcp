@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolContext } from './context';
 import { GetProblemDetailsArgs, ListProblemsArgs } from './types';
 import { ProblemsApiClient } from '../capabilities/problems-api';
+import { MAX_PROBLEMS_LIMIT } from './limits';
 
 export function registerProblemsTools(ctx: ToolContext): void {
   ctx.tool<ListProblemsArgs>(
@@ -28,9 +29,10 @@ export function registerProblemsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
+        .max(MAX_PROBLEMS_LIMIT)
         .optional()
         .describe(
-          `Maximum number of problems to return. Use this when user specifies a count (e.g., "first 10 problems" → limit: 10). If not specified, returns up to API limit: ${ProblemsApiClient.API_PAGE_SIZE}`,
+          `Maximum number of problems to return. Use this when user specifies a count (e.g., "first 10 problems" → limit: 10). If not specified, returns up to API limit: ${ProblemsApiClient.API_PAGE_SIZE}. Cannot exceed ${MAX_PROBLEMS_LIMIT}`,
         ),
       sort: z
         .string()
