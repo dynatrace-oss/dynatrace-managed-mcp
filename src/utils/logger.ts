@@ -1,6 +1,8 @@
 import winston from 'winston';
 import axios from 'axios';
 
+const DEFAULT_LOGGING_OPTION = 'file+stderr';
+
 export const sanitizeErrors = winston.format((info) => {
   // In case AxiosError is passed as sole message object
   if (axios.isAxiosError(info)) {
@@ -18,7 +20,7 @@ export const sanitizeErrors = winston.format((info) => {
 });
 
 function createFormat(): winston.Logform.Format {
-  const logOutput = (process.env.LOG_OUTPUT || 'file+stderr').toLowerCase();
+  const logOutput = (process.env.LOG_OUTPUT || DEFAULT_LOGGING_OPTION).toLowerCase();
   const useConsole = [
     'console',
     'stdout',
@@ -52,7 +54,7 @@ function createFormat(): winston.Logform.Format {
 }
 
 function createTransports(): winston.transport[] {
-  const logOutput = (process.env.LOG_OUTPUT || 'file').toLowerCase();
+  const logOutput = (process.env.LOG_OUTPUT || DEFAULT_LOGGING_OPTION).toLowerCase();
   const logFile = process.env.LOG_FILE || 'dynatrace-managed-mcp.log';
 
   switch (logOutput) {
