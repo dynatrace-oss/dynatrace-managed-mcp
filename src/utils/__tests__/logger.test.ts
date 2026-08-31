@@ -76,13 +76,14 @@ describe('Logger Configuration', () => {
     process.env = originalEnv;
   });
 
-  it('should use file transport by default', () => {
+  it('should use file and stderr transport by default', () => {
     delete process.env.LOG_OUTPUT;
 
     const testLogger = createLogger();
 
-    expect(testLogger.transports).toHaveLength(1);
+    expect(testLogger.transports).toHaveLength(2);
     expect(testLogger.transports[0]).toBeInstanceOf(winston.transports.File);
+    expect(testLogger.transports[1]).toBeInstanceOf(winston.transports.Console);
     expect((testLogger.transports[0] as winston.transports.FileTransportInstance).filename).toBe(
       'dynatrace-managed-mcp.log',
     );

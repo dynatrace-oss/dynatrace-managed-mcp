@@ -13,7 +13,6 @@
     "model-context-protocol",
     "server"
   ],
-  "main": "./dist/index.js",
   "type": "commonjs",
   "bin": {
     "mcp-server-dynatrace": "./dist/index.js"
@@ -52,26 +51,20 @@
     "prettier:fix": "prettier --write ."
   },
   "author": "Dynatrace",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "@dynatrace/openkit-js": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.21.2",
-    "ajv": "8.20.0",
     "axios": "^1.13.1",
     "commander": "^15.0.0",
     "globals": "^17.7.0",
     "js-yaml": "^5.0.0",
-    "open": "^11.0.0",
-    "undici": "^8.3.0",
-    "winston": "^3.19.0",
-    "zod-to-json-schema": "^3.25.1"
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/axios": "^0.14.4",
     "@types/http-proxy": "^1.17.17",
     "@types/jest": "^30.0.0",
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.0.0",
     "dotenv": "^17.2.3",
     "eslint": "^10.6.0",
@@ -80,7 +73,6 @@
     "jest": "^30.2.0",
     "prettier": "^3.7.4",
     "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.62.1"
   }

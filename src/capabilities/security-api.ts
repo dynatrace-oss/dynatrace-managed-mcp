@@ -58,7 +58,7 @@ export interface SecurityProblem {
 }
 
 export class SecurityApiClient {
-  static readonly API_PAGE_SIZE = 200;
+  static readonly API_PAGE_SIZE = 100;
   static readonly MAX_CVES_DISPLAY = 11;
 
   constructor(private readonly authManager: ManagedAuthClientManager) {}

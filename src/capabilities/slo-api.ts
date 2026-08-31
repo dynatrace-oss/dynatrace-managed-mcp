@@ -67,7 +67,7 @@ export interface EvaluationWindow {
 }
 
 export class SloApiClient {
-  static readonly API_PAGE_SIZE = 200;
+  static readonly API_PAGE_SIZE = 100;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
 
   constructor(private readonly authManager: ManagedAuthClientManager) {}

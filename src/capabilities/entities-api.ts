@@ -73,7 +73,7 @@ export interface EntityType {
 }
 
 export class EntitiesApiClient {
-  static readonly API_PAGE_SIZE = 100;
+  static readonly API_PAGE_SIZE = 10;
   static readonly MAX_TAGS_DISPLAY = 11;
   static readonly MAX_PROPERTIES_DISPLAY = 11;
   static readonly MAX_MANAGEMENT_ZONES_DISPLAY = 11;
