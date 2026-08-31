@@ -27,7 +27,9 @@ export interface LogEntry {
 }
 
 export class LogsApiClient {
-  private static readonly API_PAGE_SIZE = 1000;
+  static readonly API_PAGE_SIZE = 1000;
+  /** Page size used when the caller does not supply a limit. */
+  static readonly DEFAULT_PAGE_SIZE = 100;
 
   constructor(private readonly authManager: ManagedAuthClientManager) {}
 
@@ -36,7 +38,7 @@ export class LogsApiClient {
       query: params.query || '',
       from: params.from,
       to: params.to,
-      limit: Math.min(params.limit || 100, LogsApiClient.API_PAGE_SIZE),
+      limit: Math.min(params.limit || LogsApiClient.DEFAULT_PAGE_SIZE, LogsApiClient.API_PAGE_SIZE),
       sort: params.sort || '-timestamp',
     };
 

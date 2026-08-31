@@ -1,18 +1,7 @@
 import { ToolContext } from './context';
 import { logger } from '../utils/logger';
 import { ManagedAuthClient } from '../authentication/managed-auth-client';
-
-// Required API scopes for Managed deployment
-const MANAGED_API_SCOPES = [
-  'DataExport', // Read metrics and topology
-  'ReadConfig', // Read configuration and cluster version
-  'ReadSyntheticData', // Read synthetic monitoring data
-  'ReadLogContent', // Read log content
-  'ReadEvents', // Read events
-  'ReadProblems', // Read problems and root cause analysis
-  'ReadSecurityProblems', // Read security problems
-  'ReadSLO', // Read Service Level Objectives
-];
+import { MANAGED_API_SCOPES } from '../authentication/managed-api-scopes';
 
 export function registerEnvironmentTools(ctx: ToolContext): void {
   ctx.tool(

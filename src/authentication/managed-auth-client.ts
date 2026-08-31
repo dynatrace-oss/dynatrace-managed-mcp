@@ -1,19 +1,9 @@
 import axios, { AxiosInstance, AxiosProxyConfig } from 'axios';
 import { logErrorObject, logger } from '../utils/logger';
 import { ManagedEnvironmentConfig } from '../utils/environment';
+import { MANAGED_API_SCOPES } from './managed-api-scopes';
 
 export const MINIMUM_VERSION = '1.328.0';
-
-const MANAGED_API_SCOPES = [
-  'DataExport', // Read metrics and topology
-  'ReadConfig', // Read configuration and cluster version
-  'ReadSyntheticData', // Read synthetic monitoring data
-  'ReadLogContent', // Read log content
-  'ReadEvents', // Read events
-  'ReadProblems', // Read problems and root cause analysis
-  'ReadSecurityProblems', // Read security problems
-  'ReadSLO', // Read Service Level Objectives
-];
 
 export interface ClusterVersion {
   version: string;
