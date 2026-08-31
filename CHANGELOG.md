@@ -7,8 +7,8 @@
 - Added Host and Origin headers validation. To configure it use `DT_MCP_ALLOWED_HOSTS`, by default it will allow localhost hosts (`localhost`, `127.0.0.1` and `[::1]`)
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
 - Pinned SHA of remaining GitHub actions in workflow files
-- Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected and it ensures that its value is always correct
-- removed unused `user-agent.ts` file
+- Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected, and it ensures that its value is always correct
+- Removed unused `user-agent.ts` file
 
 ### Fixes
 
