@@ -441,5 +441,21 @@ describe('EntitiesApiClient', () => {
       );
       expect(result).toEqual(mockResponse);
     });
+
+    it('should fall back to API_PAGE_SIZE when no page size is given', async () => {
+      const mockResponse = new Map<string, ListEntitiesResponse>([['testAlias', {}]]);
+      mockAuthManager.makeRequests.mockResolvedValue(mockResponse);
+
+      await client.queryEntities({ entitySelector: 'type(SERVICE)' }, 'testAlias');
+
+      expect(mockAuthManager.makeRequests).toHaveBeenCalledWith(
+        '/api/v2/entities',
+        {
+          entitySelector: 'type(SERVICE)',
+          pageSize: EntitiesApiClient.API_PAGE_SIZE,
+        },
+        'testAlias',
+      );
+    });
   });
 });
