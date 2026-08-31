@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolContext } from './context';
 import { GetSloDetailsArgs, ListSlosArgs } from './types';
 import { SloApiClient } from '../capabilities/slo-api';
+import { MAX_SLOS_LIMIT } from './limits';
 
 export function registerSloTools(ctx: ToolContext): void {
   ctx.tool<ListSlosArgs>(
@@ -46,10 +47,10 @@ export function registerSloTools(ctx: ToolContext): void {
       demo: z.boolean().optional().describe('Get demo SLOs instead of real ones. Default: false'),
       limit: z
         .number()
-        .max(100)
+        .max(MAX_SLOS_LIMIT)
         .optional()
         .describe(
-          `Maximum number of SLOs to return. Use this when user specifies a count (e.g., "first 15 SLOs" → limit: 15). If not specified, returns up to API limit: ${SloApiClient.API_PAGE_SIZE}. Cannot exceed 100`,
+          `Maximum number of SLOs to return. Use this when user specifies a count (e.g., "first 15 SLOs" → limit: 15). If not specified, returns up to API limit: ${SloApiClient.API_PAGE_SIZE}. Cannot exceed ${MAX_SLOS_LIMIT}`,
         ),
       environment_alias: z
         .string()

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolContext } from './context';
 import { GetMetricDetailsArgs, ListAvailableMetricsArgs, QueryMetricsDataArgs } from './types';
 import { MetricsApiClient } from '../capabilities/metrics-api';
+import { MAX_METRICS_LIMIT } from './limits';
 
 export function registerMetricsTools(ctx: ToolContext): void {
   ctx.tool<ListAvailableMetricsArgs>(
@@ -30,12 +31,12 @@ export function registerMetricsTools(ctx: ToolContext): void {
         ),
       limit: z
         .number()
-        .max(500)
+        .max(MAX_METRICS_LIMIT)
         .optional()
         .describe(
           `Maximum number of metrics to return. Use this when user specifies a count
           (e.g., "first 16 metrics" → limit: 16, "500 metrics" → limit: 500).
-          If not specified, returns up to API limit: ${MetricsApiClient.API_PAGE_SIZE}. Cannot exceed 500`,
+          If not specified, returns up to API limit: ${MetricsApiClient.API_PAGE_SIZE}. Cannot exceed ${MAX_METRICS_LIMIT}`,
         ),
       environment_alias: z
         .string()

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ToolContext } from './context';
 import { GetSecurityProblemDetailsArgs, ListSecurityProblemsArgs } from './types';
 import { SecurityApiClient } from '../capabilities/security-api';
+import { MAX_SECURITY_PROBLEMS_LIMIT } from './limits';
 
 export function registerSecurityTools(ctx: ToolContext): void {
   ctx.tool<ListSecurityProblemsArgs>(
@@ -23,10 +24,10 @@ export function registerSecurityTools(ctx: ToolContext): void {
       to: z.string().optional().describe('End time (default: "now")'),
       limit: z
         .number()
-        .max(100)
+        .max(MAX_SECURITY_PROBLEMS_LIMIT)
         .optional()
         .describe(
-          `Maximum number of security problems to return. Use this when user specifies a count (e.g., "first 25 vulnerabilities" → limit: 25). If not specified, returns up to API limit: ${SecurityApiClient.API_PAGE_SIZE}. Cannot exceed 100`,
+          `Maximum number of security problems to return. Use this when user specifies a count (e.g., "first 25 vulnerabilities" → limit: 25). If not specified, returns up to API limit: ${SecurityApiClient.API_PAGE_SIZE}. Cannot exceed ${MAX_SECURITY_PROBLEMS_LIMIT}`,
         ),
       sort: z
         .string()

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ToolContext } from './context';
 import { QueryLogsArgs } from './types';
+import { LogsApiClient } from '../capabilities/logs-api';
+import { MAX_LOGS_LIMIT } from './limits';
 
 export function registerLogsTools(ctx: ToolContext): void {
   ctx.tool<QueryLogsArgs>(
@@ -17,9 +19,11 @@ export function registerLogsTools(ctx: ToolContext): void {
       to: z.string().describe('End time (ISO format or relative like "now")'),
       limit: z
         .number()
-        .max(1000)
+        .max(MAX_LOGS_LIMIT)
         .optional()
-        .describe('Maximum number of logs to return (default: 100). Cannot exceed 1000'),
+        .describe(
+          `Maximum number of logs to return (default: ${LogsApiClient.DEFAULT_PAGE_SIZE}). Cannot exceed ${MAX_LOGS_LIMIT}`,
+        ),
       sort: z.string().optional().describe('Sort order for logs. Use "-timestamp" for most recent first.'),
       environment_alias: z
         .string()
