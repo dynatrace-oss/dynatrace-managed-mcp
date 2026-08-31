@@ -7,7 +7,7 @@
 - Added Host and Origin headers validation. To configure it use `DT_MCP_ALLOWED_HOSTS`, by default it will allow localhost hosts (`localhost`, `127.0.0.1` and `[::1]`)
 - Malformed aliases will no longer be printed in logs. Instead, alias index will be printed to point which alias is wrong
 - Pinned SHA of remaining GitHub actions in workflow files
-- Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected and it ensures that its value is always correct
+- Applied enum type in zod verification for selected parameters in problems and security problems tools. This ensures that filters cannot be injected, and it ensures that its value is always correct
 - Removed unused `user-agent.ts` file
 - Removed unused and redundant packages
 
@@ -42,6 +42,7 @@
   - Api token scopes: a table containing all tools, endpoints they call and required API token scopes to access them
   - Changelog format: document which defines how should changelog (and subsequently release notes) be structured
 - Removed false and redundant information from DEVELOPMENT.md file
+- Release notes will now be automatically extracted from changelog for given version
 
 ## 1.0.1
 

@@ -49,23 +49,22 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Generate changelog for GitHub Release
-        id: changelog
+      - name: Extract changelog for GitHub Release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          # Take everything between the '## <version>' heading and the next '## ' heading
+          awk -v heading="## $VERSION" '
+            $0 == heading { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > changelog_section.md
 
-          # Generate changelog between tags
-          if [ -n "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD)
-          else
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)")
+          # Fail before publishing if CHANGELOG.md has no section for this version
+          if [ ! -s changelog_section.md ]; then
+            echo "::error file=CHANGELOG.md::No '## $VERSION' section found - rename the 'Unreleased' heading to '$VERSION' before tagging."
+            exit 1
           fi
-
-          # Save changelog to output (handle multiline)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Publish to npm
         env:
@@ -83,19 +82,21 @@ jobs:
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Create release body
-          cat > release_body.md << 'EOF'
-          ## Changes in ${{ steps.version.outputs.tag }}
-
-          ${{ steps.changelog.outputs.changelog }}
-
-          ## Usage
-
-          ```bash
-          npx -y @dynatrace-oss/dynatrace-managed-mcp-server@${{ steps.version.outputs.version }}
-          ```
-          EOF
+          # Create release body from the CHANGELOG.md section extracted above
+          {
+            echo "## Changes in $TAG"
+            echo
+            cat changelog_section.md
+            echo
+            echo "## Usage"
+            echo
+            echo '```bash'
+            echo "npx -y @dynatrace-oss/dynatrace-managed-mcp-server@$VERSION"
+            echo '```'
+          } > release_body.md
 
           # Create the release
           if [[ "${{ steps.version.outputs.version }}" == *"-"* ]]; then

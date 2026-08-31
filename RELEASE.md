@@ -5,9 +5,7 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 ## How it works
 
 1. When you push a tag starting with `v` (e.g., `v1.0.0`, `v2.1.3`), the release workflow automatically triggers
-2. The workflow builds the project, runs tests, and creates a GitHub release with auto-generated release notes
-
-**Note**: This workflow does (not yet) publish the release to npmjs.com.
+2. The workflow builds the project, runs tests, and creates a GitHub release with release notes extracted from [CHANGELOG.md](CHANGELOG.md) file
 
 ## Creating a Release
 
@@ -31,7 +29,7 @@ After pushing the tag, the workflow will automatically:
 
 1. Run tests
 2. Build the project
-3. Generate release notes from commit history
+3. Generate release notes from [CHANGELOG.md](CHANGELOG.md) file
 4. Create a GitHub release
 
 ### Creating Pre-releases
@@ -50,5 +48,4 @@ Pre-releases will be automatically marked as such in the GitHub release.
 
 The workflow automatically generates technical release notes by collecting all commit messages between the current and previous tag. The release notes include:
 
-- A list of changes with commit hashes
-- Proper pre-release marking for beta/alpha versions
+- A list of changes extracted from [CHANGELOG.md](CHANGELOG.md) file

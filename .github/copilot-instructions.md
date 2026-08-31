@@ -186,7 +186,6 @@ In `--http` mode, `src/index.ts` creates a **new `McpServer` instance per reques
 ### Changelog Maintenance
 
 - Add entries to `CHANGELOG.md` under `## Unreleased Changes` for new features
-- Follow `.github/instructions/changelog.instructions.md` for formatting
 - Use past tense, user-centric language, semantic versioning
 
 ## Development Guidelines
