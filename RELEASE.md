@@ -50,5 +50,4 @@ Pre-releases will be automatically marked as such in the GitHub release.
 
 The workflow automatically generates technical release notes by collecting all commit messages between the current and previous tag. The release notes include:
 
-- A list of changes with commit hashes
-- Proper pre-release marking for beta/alpha versions
+- A list of changes extraced from [CHANGELOG.md](CHANGELOG.md) file

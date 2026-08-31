@@ -34,6 +34,7 @@
   - Api token scopes: a table containing all tools, endpoints they call and required API token scopes to access them
   - Changelog format: document which defines how should changelog (and subsequently release notes) be structured
 - Removed false and redundant information from DEVELOPMENT.md file
+- Release notes will now be automatically extracted from changelog for given version
 
 ## 1.0.1
 
