@@ -20,7 +20,6 @@
 ### Changes
 
 - Changed defaults and set max values to number of returned records on selected list tools
-- 401 or 403 response from `clusterversion` endpoint now results in not connecting with the cluster instead of returning minimum version
 - Changed default logging option to `file+stderr`. This enables output in console by default in the stdio mode. Set `LOG_OUTPUT` environment variable to `file` to retain previous functionality
 
 ### Dependencies
