@@ -18,7 +18,7 @@ export const sanitizeErrors = winston.format((info) => {
 });
 
 function createFormat(): winston.Logform.Format {
-  const logOutput = (process.env.LOG_OUTPUT || 'file').toLowerCase();
+  const logOutput = (process.env.LOG_OUTPUT || 'file+stderr').toLowerCase();
   const useConsole = [
     'console',
     'stdout',
