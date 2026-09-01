@@ -5,21 +5,17 @@ on:
     tags:
       - 'v*' # Triggers on version tags like v1.0.0, v2.1.3, etc.
 
-permissions:
-  contents: write # Required for creating releases
-  id-token: write # Required for npm provenance, cosign signing and MCP registry OIDC login
-  packages: write # Required for publishing image to ghcr
+permissions: {}
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }} # e.g. owner/repo (must be lowercase for Docker)
 
 jobs:
-  # Each job runs on a fresh runner with an empty workspace, so every job that
-  # touches the repository has to check out on its own and nothing is shared
-  # between jobs except declared outputs.
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,6 +39,8 @@ jobs:
 
   extract-info:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -91,6 +89,9 @@ jobs:
   publish-npm:
     runs-on: ubuntu-latest
     needs: [test, extract-info]
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -124,6 +125,8 @@ jobs:
   github-release:
     runs-on: ubuntu-latest
     needs: [extract-info, publish-npm]
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -163,6 +166,10 @@ jobs:
   publish-docker:
     runs-on: ubuntu-latest
     needs: [test, extract-info]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -210,6 +217,9 @@ jobs:
   publish-mcp-registry:
     runs-on: ubuntu-latest
     needs: publish-npm # the registry validates that the npm package version exists
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout code # mcp-publisher reads server.json from the working directory
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
