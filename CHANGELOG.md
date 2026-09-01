@@ -1,5 +1,11 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## 1.1.1
+
+### Changes
+
+- Separated monolith job in the `release.yml` file into multiple job. This will prevent issues should any step fail in the future
+
 ## 1.1.0
 
 ### Security
