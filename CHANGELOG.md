@@ -1,5 +1,19 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased Changes
+
+### Features
+
+- Added Agent Plugins v1.0.0 packaging so the server can be installed from the Cursor plugin directory and other plugin hosts: `plugin.json` (plugin manifest), `mcp.json` (MCP server definition) and a `dynatrace-managed` skill under `skills/`
+
+### Changes
+
+- Added `npm run version:check`, which asserts that `package.json`, `server.json` and `plugin.json` declare the same version and that `mcp.json` points at the published npm package. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
+
+### Documentation
+
+- Documented the version-bearing manifests and the `version:check` gate in [RELEASE.md](RELEASE.md)
+
 ## 1.1.1
 
 ### Changes

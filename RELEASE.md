@@ -7,6 +7,29 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 1. When you push a tag starting with `v` (e.g., `v1.0.0`, `v2.1.3`), the release workflow automatically triggers
 2. The workflow builds the project, runs tests, and creates a GitHub release with release notes extracted from [CHANGELOG.md](CHANGELOG.md) file
 
+## Version-bearing manifests
+
+The npm package version is declared in four places, and they must all agree before tagging:
+
+| File           | Field(s)                        |
+| -------------- | ------------------------------- |
+| `package.json` | `version`                       |
+| `server.json`  | `version`, `packages[].version` |
+| `plugin.json`  | `version`                       |
+
+`mcp.json` carries no version of its own - the Agent Plugins schema has no such field, and the `npx`
+invocation is deliberately left unpinned so directory installs pick up the latest published release.
+What it does carry is the npm package identifier, which must match `package.json` » `name` and
+`server.json` » `packages[].identifier`.
+
+`npm run version:check` asserts all of the above. It runs on every pull request, again at the start of
+the release workflow, and once more against the pushed tag - so a tag that disagrees with the
+manifests fails before anything is published to npm, GHCR or the MCP Registry.
+
+```bash
+npm run version:check
+```
+
 ## Creating a Release
 
 ### Manual tagging
