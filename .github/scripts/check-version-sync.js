@@ -31,11 +31,12 @@ function lockRootPackage(lock) {
   return (lock.packages || {})[''] || {};
 }
 
-function collectVersions(pkg, lock, serverManifest, pluginManifest) {
+function collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest) {
   const versions = [
     { source: 'package.json » version', value: pkg.version },
     { source: 'server.json » version', value: serverManifest.version },
     { source: 'plugin.json » version', value: pluginManifest.version },
+    { source: '.cursor-plugin/plugin.json » version', value: cursorManifest.version },
     { source: 'package-lock.json » version', value: lock.version },
     { source: 'package-lock.json » packages[""].version', value: lockRootPackage(lock).version },
   ];
@@ -45,6 +46,13 @@ function collectVersions(pkg, lock, serverManifest, pluginManifest) {
   });
 
   return versions;
+}
+
+function collectPluginNames(pluginManifest, cursorManifest) {
+  return [
+    { source: 'plugin.json » name', value: pluginManifest.name },
+    { source: '.cursor-plugin/plugin.json » name', value: cursorManifest.name },
+  ];
 }
 
 function collectIdentifiers(pkg, lock, serverManifest, mcpManifest) {
@@ -96,6 +104,40 @@ function checkAgentPluginsSchemas(pluginManifest, mcpManifest) {
     .map(([file, url]) => `${file} » $schema must be "${url}" but is ${JSON.stringify(actual[file])}`);
 }
 
+function checkCursorManifestPaths(cursorManifest) {
+  const declaredPaths = { skills: cursorManifest.skills, mcpServers: cursorManifest.mcpServers };
+
+  return Object.entries(declaredPaths)
+    .filter(([, declared]) => declared && !fs.existsSync(path.join(REPO_ROOT, declared)))
+    .map(([field, declared]) => `.cursor-plugin/plugin.json » ${field} points at "${declared}", which does not exist`);
+}
+
+function checkCursorVariablesAreWired(cursorManifest, mcpManifest) {
+  const declared = Object.keys((cursorManifest.variables || {}).properties || {});
+  const referenced = new Set();
+
+  Object.values(mcpManifest.mcpServers || {}).forEach((server) => {
+    Object.values(server.env || {}).forEach((value) => {
+      const match = /^\$\{(.+)\}$/.exec(value);
+      if (match) {
+        referenced.add(match[1]);
+      }
+    });
+  });
+
+  const required = ((cursorManifest.variables || {}).required || []).filter((name) => !referenced.has(name));
+  const orphaned = [...referenced].filter((name) => !declared.includes(name));
+
+  return [
+    ...required.map(
+      (name) => `.cursor-plugin/plugin.json requires variable "${name}" but no mcp.json server env references it`,
+    ),
+    ...orphaned.map(
+      (name) => `mcp.json references \${${name}} but .cursor-plugin/plugin.json declares no such variable`,
+    ),
+  ];
+}
+
 function parseExpectedVersion(argv) {
   const flagIndex = argv.indexOf('--expect-version');
   if (flagIndex === -1) {
@@ -117,16 +159,20 @@ function main() {
   const lock = readJson('package-lock.json');
   const serverManifest = readJson('server.json');
   const pluginManifest = readJson('plugin.json');
+  const cursorManifest = readJson('.cursor-plugin/plugin.json');
   const mcpManifest = readJson('mcp.json');
 
   const errors = [
-    ...findDisagreements('Package version', collectVersions(pkg, lock, serverManifest, pluginManifest)),
+    ...findDisagreements('Package version', collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest)),
     ...findDisagreements('Package identifier', collectIdentifiers(pkg, lock, serverManifest, mcpManifest)),
+    ...findDisagreements('Plugin name', collectPluginNames(pluginManifest, cursorManifest)),
     ...findDisagreements('MCP registry name', [
       { source: 'package.json » mcpName', value: pkg.mcpName },
       { source: 'server.json » name', value: serverManifest.name },
     ]),
     ...checkAgentPluginsSchemas(pluginManifest, mcpManifest),
+    ...checkCursorManifestPaths(cursorManifest),
+    ...checkCursorVariablesAreWired(cursorManifest, mcpManifest),
   ];
 
   if (expectedVersion !== undefined && pkg.version !== expectedVersion) {

@@ -1,0 +1,37 @@
+{
+  "name": "dynatrace-managed-mcp",
+  "displayName": "Dynatrace Managed",
+  "version": "1.1.1",
+  "minClientVersions": {
+    "cursor": "3.13.0"
+  },
+  "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from self-hosted Dynatrace Managed clusters, across one or many environments.",
+  "author": {
+    "name": "Dynatrace",
+    "url": "https://www.dynatrace.com"
+  },
+  "homepage": "https://github.com/dynatrace-oss/dynatrace-managed-mcp#readme",
+  "repository": "https://github.com/dynatrace-oss/dynatrace-managed-mcp",
+  "license": "Apache-2.0",
+  "keywords": ["dynatrace", "dynatrace-managed", "mcp", "observability", "monitoring", "apm", "logs", "metrics", "slo"],
+  "category": "integrations",
+  "tags": ["dynatrace", "observability", "monitoring", "apm", "mcp"],
+  "variables": {
+    "type": "object",
+    "properties": {
+      "DT_ENVIRONMENT_CONFIGS": {
+        "type": "string",
+        "title": "Dynatrace Managed environments",
+        "description": "JSON array of the clusters to connect to, each with alias, apiEndpointUrl, environmentId and apiToken. Example: [{\"alias\":\"production\",\"apiEndpointUrl\":\"https://dynatrace.example.com/e/<env-id>/api\",\"environmentId\":\"<env-id>\",\"apiToken\":\"dt0c01....\"}]. See docs/api_token_scopes.md for the read-only scopes the token needs. For multi-cluster setups you can instead set DT_CONFIG_FILE to a JSON or YAML file."
+      },
+      "LOG_LEVEL": {
+        "type": "string",
+        "title": "Log level",
+        "description": "Optional. One of debug, info, warning or error. Defaults to info."
+      }
+    },
+    "required": ["DT_ENVIRONMENT_CONFIGS"]
+  },
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

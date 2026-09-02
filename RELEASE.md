@@ -9,23 +9,31 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 
 ## Version-bearing manifests
 
-The npm package version is declared in four files, and they must all agree before tagging:
+The npm package version is declared in five files, and they must all agree before tagging:
 
-| File                | Field(s)                          |
-| ------------------- | --------------------------------- |
-| `package.json`      | `version`                         |
-| `package-lock.json` | `version`, `packages[""].version` |
-| `server.json`       | `version`, `packages[].version`   |
-| `plugin.json`       | `version`                         |
+| File                         | Field(s)                          |
+| ---------------------------- | --------------------------------- |
+| `package.json`               | `version`                         |
+| `package-lock.json`          | `version`, `packages[""].version` |
+| `server.json`                | `version`, `packages[].version`   |
+| `plugin.json`                | `version`                         |
+| `.cursor-plugin/plugin.json` | `version`                         |
 
 `package-lock.json` is refreshed with `npm install --package-lock-only` after bumping
 `package.json`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
 the lock file is only kept honest by this check.
 
-`mcp.json` carries no version of its own - the Agent Plugins schema has no such field, and the `npx`
-invocation is deliberately left unpinned so directory installs pick up the latest published release.
-What it does carry is the npm package identifier, which must match `package.json`,
-`package-lock.json` and `server.json` » `packages[].identifier`.
+`mcp.json` carries no version of its own - the Agent Plugins schema has no such field. Its `npx`
+invocation pins only the major (`@<2`), so plugin installs pick up patches and minors automatically
+but never an unvetted breaking major; widen that range deliberately when releasing a new major. The
+package identifier it does carry must match `package.json`, `package-lock.json` and `server.json` »
+`packages[].identifier`.
+
+`npm run version:check` additionally asserts that the two plugin manifests agree on `name`, that the
+`skills` and `mcpServers` paths in `.cursor-plugin/plugin.json` resolve to real files, and that every
+variable the Cursor manifest marks `required` is actually referenced as `${...}` by an `mcp.json`
+server - a required variable nothing reads is never prompted for, and a placeholder with no matching
+variable reaches the server unexpanded.
 
 `npm run version:check` asserts all of the above. It runs on every pull request, again at the start of
 the release workflow, and once more against the pushed tag - so a tag that disagrees with the

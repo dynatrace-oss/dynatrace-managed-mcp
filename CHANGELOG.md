@@ -4,11 +4,11 @@
 
 ### Features
 
-- Added Agent Plugins v1.0.0 packaging so the server can be installed from the Cursor plugin directory and other plugin hosts: `plugin.json` (plugin manifest), `mcp.json` (MCP server definition) and a `dynatrace-managed` skill under `skills/`
+- Added plugin packaging so the server can be installed from the Cursor plugin directory and other plugin hosts: `.cursor-plugin/plugin.json` (Cursor manifest, including a `variables` block that prompts for `DT_ENVIRONMENT_CONFIGS` on install), `plugin.json` (portable Agent Plugins v1.0.0 manifest), `mcp.json` (MCP server definition, pinned to the current major) and a `dynatrace-managed` skill under `skills/`
 
 ### Changes
 
-- Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json` and `plugin.json` declare the same version and package name, and that `mcp.json` points at the published npm package. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
+- Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json`, `plugin.json` and `.cursor-plugin/plugin.json` declare the same version and package name, that `mcp.json` points at the published npm package, and that the Cursor manifest's declared paths and required variables are wired up. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
 
 ### Documentation
 

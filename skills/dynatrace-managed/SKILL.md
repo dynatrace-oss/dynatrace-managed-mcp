@@ -19,7 +19,9 @@ The server exits at startup unless exactly one configuration source is present. 
 with `Configuration not found`, or `dynatrace_managed_get_environments_info` reports configuration
 errors, the user needs to supply credentials - no amount of retrying will fix it.
 
-Two mutually exclusive options, in priority order:
+When installed as a plugin, the client prompts for `DT_ENVIRONMENT_CONFIGS` up front and injects it
+into the server, so this is usually already handled. Outside that flow there are two mutually
+exclusive options, in priority order:
 
 1. **`DT_CONFIG_FILE`** - path to a JSON or YAML file describing the environments. Preferred for more
    than one cluster. Write `apiToken: ${DT_PROD_TOKEN}` and the loader interpolates that variable at
