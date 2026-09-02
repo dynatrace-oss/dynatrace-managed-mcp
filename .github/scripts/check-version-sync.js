@@ -27,11 +27,17 @@ function npmPackageFromNpxArgs(server) {
   return versionSeparator > 0 ? packageSpec.slice(0, versionSeparator) : packageSpec;
 }
 
-function collectVersions(pkg, serverManifest, pluginManifest) {
+function lockRootPackage(lock) {
+  return (lock.packages || {})[''] || {};
+}
+
+function collectVersions(pkg, lock, serverManifest, pluginManifest) {
   const versions = [
     { source: 'package.json » version', value: pkg.version },
     { source: 'server.json » version', value: serverManifest.version },
     { source: 'plugin.json » version', value: pluginManifest.version },
+    { source: 'package-lock.json » version', value: lock.version },
+    { source: 'package-lock.json » packages[""].version', value: lockRootPackage(lock).version },
   ];
 
   (serverManifest.packages || []).forEach((entry, index) => {
@@ -41,8 +47,12 @@ function collectVersions(pkg, serverManifest, pluginManifest) {
   return versions;
 }
 
-function collectIdentifiers(pkg, serverManifest, mcpManifest) {
-  const identifiers = [{ source: 'package.json » name', value: pkg.name }];
+function collectIdentifiers(pkg, lock, serverManifest, mcpManifest) {
+  const identifiers = [
+    { source: 'package.json » name', value: pkg.name },
+    { source: 'package-lock.json » name', value: lock.name },
+    { source: 'package-lock.json » packages[""].name', value: lockRootPackage(lock).name },
+  ];
 
   (serverManifest.packages || []).forEach((entry, index) => {
     if (entry.registryType === 'npm') {
@@ -104,13 +114,14 @@ function parseExpectedVersion(argv) {
 function main() {
   const expectedVersion = parseExpectedVersion(process.argv.slice(2));
   const pkg = readJson('package.json');
+  const lock = readJson('package-lock.json');
   const serverManifest = readJson('server.json');
   const pluginManifest = readJson('plugin.json');
   const mcpManifest = readJson('mcp.json');
 
   const errors = [
-    ...findDisagreements('Package version', collectVersions(pkg, serverManifest, pluginManifest)),
-    ...findDisagreements('Package identifier', collectIdentifiers(pkg, serverManifest, mcpManifest)),
+    ...findDisagreements('Package version', collectVersions(pkg, lock, serverManifest, pluginManifest)),
+    ...findDisagreements('Package identifier', collectIdentifiers(pkg, lock, serverManifest, mcpManifest)),
     ...findDisagreements('MCP registry name', [
       { source: 'package.json » mcpName', value: pkg.mcpName },
       { source: 'server.json » name', value: serverManifest.name },
@@ -129,6 +140,7 @@ function main() {
     console.error('❌ Manifests are inconsistent:\n');
     errors.forEach((error) => console.error(`  - ${error}\n`));
     console.error('Update every manifest listed in RELEASE.md before tagging.');
+    console.error('A stale package-lock.json is fixed with `npm install --package-lock-only`.');
     process.exit(1);
   }
 

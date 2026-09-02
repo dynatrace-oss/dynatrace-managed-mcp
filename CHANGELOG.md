@@ -8,7 +8,7 @@
 
 ### Changes
 
-- Added `npm run version:check`, which asserts that `package.json`, `server.json` and `plugin.json` declare the same version and that `mcp.json` points at the published npm package. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
+- Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json` and `plugin.json` declare the same version and package name, and that `mcp.json` points at the published npm package. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
 
 ### Documentation
 
