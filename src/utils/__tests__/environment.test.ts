@@ -195,6 +195,40 @@ describe('getManagedEnvironmentConfig', () => {
     expect(aliases).not.toContain('missing-api-url-env-5'); // missing apiEndpointUrl
   });
 
+  it('keeps the first environment for an alias and rejects later duplicates', () => {
+    const base = { apiUrl: 'u', dashboardUrl: 'd', apiToken: 't' };
+    const validated = validateEnvironments([
+      { ...base, alias: 'prod', environmentId: 'env-1' },
+      { ...base, alias: 'prod', environmentId: 'env-2' },
+      { ...base, alias: 'staging', environmentId: 'env-3' },
+    ]);
+
+    expect(validated.errors.length).toBeGreaterThan(0);
+    expect(validated.errors).toEqual(['Duplicate alias found: "prod". Aliases must be unique across environments.']);
+  });
+
+  it('reports one error per extra occurrence of a repeated alias', () => {
+    const base = { apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e', apiToken: 't' };
+    const validated = validateEnvironments([
+      { ...base, alias: 'prod' },
+      { ...base, alias: 'prod' },
+      { ...base, alias: 'prod' },
+    ]);
+
+    expect(validated.errors).toHaveLength(2);
+  });
+
+  it('does not raise a duplicate error for environments with a missing alias', () => {
+    const base = { apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e', apiToken: 't' };
+    const validated = validateEnvironments([
+      { ...base, alias: '' },
+      { ...base, alias: '' },
+    ]);
+
+    expect(validated.valid_configs).toEqual([]);
+    expect(validated.errors.some((error) => error.includes('Duplicate alias'))).toBe(false);
+  });
+
   it('buildConfigTokenMap maps alias -> token and skips empty tokens', () => {
     const map = buildConfigTokenMap([
       { alias: 'a', apiToken: 't1', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },

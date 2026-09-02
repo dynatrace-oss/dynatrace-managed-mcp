@@ -1,5 +1,13 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased changes
+
+### Breaking changes
+
+- Duplicate aliases are now disallowed:
+  - in http mode a call will be rejected when there are duplicate aliases in the `X-Dynatrace-Tokens` header
+  - in both modes server will not start with duplicated aliases (since it will produce validation error)
+
 ## 1.1.1
 
 ### Changes

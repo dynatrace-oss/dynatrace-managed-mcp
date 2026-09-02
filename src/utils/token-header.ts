@@ -5,6 +5,11 @@ import { logger } from './logger';
  * Parse the `X-Dynatrace-Tokens` header into an `alias -> token` map.
  * Format: `alias=token;alias=token`. Parsing is lenient — malformed pairs are skipped
  * (a redacted warning is logged) and a missing token surfaces later as a per-alias error.
+ *
+ * Duplicate aliases are the one hard failure: silently keeping a single token would bind
+ * the request to whichever entry happened to come last, which the caller cannot observe.
+ *
+ * @throws {Error} when the same alias appears more than once.
  */
 export function parseTokenHeader(headerValue: string | string[] | undefined): Map<string, string> {
   const tokens = new Map<string, string>();
@@ -29,7 +34,10 @@ export function parseTokenHeader(headerValue: string | string[] | undefined): Ma
       logger.warn(`Skipping malformed X-Dynatrace-Tokens entry for alias #${index}`);
       continue;
     }
-    tokens.set(alias, token); // duplicate alias -> last value wins
+    if (tokens.has(alias)) {
+      throw new Error(`Duplicate alias "${alias}" in X-Dynatrace-Tokens header. Each alias may appear only once.`);
+    }
+    tokens.set(alias, token);
   }
   return tokens;
 }
