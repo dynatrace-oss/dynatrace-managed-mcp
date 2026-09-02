@@ -1,0 +1,16 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": [
+    "AdamLitwinDT",
+    "anton-bondarenko-dynatrace",
+    "arielchojnacki",
+    "ArkadiuszSzamockiDT",
+    "azdynatrace",
+    "gabriela-koncewicz",
+    "jakub-krycki",
+    "KacperLisDynatrace",
+    "KrzysztofRaciniewski",
+    "sebastianCichocki",
+    "wiktor-krasinski"
+  ]
+}
