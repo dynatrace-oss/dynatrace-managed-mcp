@@ -37,9 +37,22 @@ describe('parseTokenHeader', () => {
     expect(map.get('prod')).toBe('dt0c01.A=B=C');
   });
 
-  it('uses the last value when an alias is repeated', () => {
-    const map = parseTokenHeader('prod=first;prod=second');
-    expect(map.get('prod')).toBe('second');
+  it('throws when an alias is repeated', () => {
+    expect(() => parseTokenHeader('prod=first;prod=second')).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('throws when a repeated alias only matches after trimming', () => {
+    expect(() => parseTokenHeader('prod=first;  prod  =second')).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('throws when the duplicate spans entries of an array-valued header', () => {
+    expect(() => parseTokenHeader(['prod=first', 'prod=second'])).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('does not treat aliases differing in case as duplicates', () => {
+    const map = parseTokenHeader('prod=dt0c01.AAA;PROD=dt0c01.BBB');
+    expect(map.get('prod')).toBe('dt0c01.AAA');
+    expect(map.get('PROD')).toBe('dt0c01.BBB');
   });
 
   it('joins an array-valued header before parsing', () => {

@@ -140,7 +140,12 @@ export function validateEnvironments(
         'Invalid alias found: "' + configuration.alias + '". Aliases are mandatory and cannot contain semicolons.',
       );
     }
-    if (validAlias && hasAllValues) {
+
+    const duplicateAlias = validConfigurations.some((valid) => valid.alias === configuration.alias);
+    if (duplicateAlias) {
+      errors.push('Duplicate alias found: "' + configuration.alias + '". Aliases must be unique across environments.');
+    }
+    if (validAlias && hasAllValues && !duplicateAlias) {
       validConfigurations.push(configuration);
     }
   });
