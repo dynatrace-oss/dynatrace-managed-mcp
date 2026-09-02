@@ -1,6 +1,12 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
-## Unreleased
+## 1.1.1
+
+### Changes
+
+- Separated monolith job in the `release.yml` file into multiple job. This will prevent issues should any step fail in the future
+
+## 1.1.0
 
 ### Security
 
@@ -24,9 +30,24 @@
 
 ### Dependencies
 
-| Type | Name     | Old   | New   |
-| ---- | -------- | ----- | ----- |
-| deps | fast-uri | 3.1.5 | 3.1.6 |
+| Type     | Name                                                                                                       | Old     | New     |
+| -------- | ---------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| deps     | fast-uri                                                                                                   | 3.1.5   | 3.1.6   |
+| deps     | hono                                                                                                       | 4.12.30 | 4.13.4  |
+| ci       | github/codeql-action/analyze                                                                               | New     | 4.37.9  |
+| ci       | github/codeql-action/init                                                                                  | New     | 4.37.9  |
+| ci       | docker/setup-buildx-action                                                                                 | 4.2.0   | 4.3.0   |
+| ci       | google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml                                       | 2.3.8   | 2.5.1   |
+| ci       | actions/setup-node                                                                                         | 6       | 7.0.0   |
+| ci       | actions/actions/setup-python                                                                               | 6       | 7.0.0   |
+| deps-dev | brace-expansion; for details check https://github.com/dynatrace-oss/dynatrace-managed-mcp/pull/245/changes | varies  | varies  |
+| deps     | open                                                                                                       | 11.0.0  | Removed |
+| deps     | undici                                                                                                     | 8.9.0   | Removed |
+| deps     | zod-to-json-schema                                                                                         | ^3.25.1 | Removed |
+| deps-dev | ts-node                                                                                                    | 10.9.2  | Removed |
+| deps-dev | @types/axios                                                                                               | 0.14.4  | Removed |
+| deps-dev | @types/js-yaml                                                                                             | 4.0.9   | Removed |
+| deps-dev | @types/node                                                                                                | 26.2.0  | 26.4.0  |
 
 ### Documentation
 
