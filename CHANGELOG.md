@@ -1,5 +1,12 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased changes
+
+### Breaking changes
+
+- Telemetry is now disabled by default
+- Removed `DT_MCP_DISABLE_TELEMETRY` environment variable, added `DT_MCP_ENABLE_TELEMETRY` in its place
+
 ## 1.1.1
 
 ### Changes
