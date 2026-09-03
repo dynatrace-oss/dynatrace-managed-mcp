@@ -2,6 +2,14 @@
 
 ## Unreleased changes
 
+### Breaking changes
+
+- If using interpolation (`${VAR_NAME}`) in the `DT_CONFIG_FILE` variable, the application will not start if that interpolated variable does not exist. Previous functionality passed non-existent values as an empty string
+
+### Fixes
+
+- Fixed `DT_CONFIG_FILE` incorrectly interpolating environment variables
+
 ### Dependencies
 
 | Type | Name     | Old    | New    |
