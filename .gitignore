@@ -8,6 +8,7 @@ coverage/
 
 tsconfig.tsbuildinfo
 dt-config.yaml
+dt-config.json
 
 # Token cache directory - contains sensitive OAuth tokens
 .dt-mcp/

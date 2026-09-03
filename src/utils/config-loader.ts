@@ -13,7 +13,6 @@ export interface DynatraceEnvironmentConfig {
   environmentId: string;
   alias: string;
   apiToken: string;
-  dynatraceUrl?: string;
   httpProxyUrl?: string;
   httpsProxyUrl?: string;
 }

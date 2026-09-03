@@ -401,7 +401,6 @@ describe('ConfigFileLoader', () => {
           environmentId: 'test-123',
           alias: 'production',
           apiToken: 'token',
-          dynatraceUrl: 'https://dashboard.example.com/',
           httpProxyUrl: 'http://proxy.example.com:8080',
         },
       ];
@@ -411,7 +410,6 @@ describe('ConfigFileLoader', () => {
       const result = loadFromFile(configPath);
 
       expect(result[0]).toMatchObject({
-        dynatraceUrl: 'https://dashboard.example.com/',
         httpProxyUrl: 'http://proxy.example.com:8080',
       });
     });

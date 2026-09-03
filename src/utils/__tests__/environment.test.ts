@@ -5,7 +5,6 @@ describe('getManagedEnvironmentConfig', () => {
   const fullEnv =
     '[' +
     '{' +
-    '    "dynatraceUrl": "https://my-dashboard-endpoint.com/",' +
     '    "apiEndpointUrl": "https://my-api-endpoint.com/",' +
     '    "environmentId": "my-env-id-1",' +
     '    "alias": "alias-env-id-1",' +
@@ -13,7 +12,6 @@ describe('getManagedEnvironmentConfig', () => {
     '    "httpsProxyUrl": ""' +
     '  },' +
     '  {' +
-    '    "dynatraceUrl": "https://my-dashboard-endpoint.com",' +
     '    "apiEndpointUrl": "https://my-api-endpoint.com",' +
     '    "environmentId": "my-env-id-2",' +
     '    "alias": "invalid-alias-env-id;-2",' +
@@ -22,7 +20,6 @@ describe('getManagedEnvironmentConfig', () => {
     '    "httpsProxyUrl": ""' +
     '  },' +
     '  {' +
-    '    "dynatraceUrl": "https://my-dashboard-endpoint.com",' +
     '    "apiEndpointUrl": "https://my-api-endpoint.com",' +
     '    "environmentId": "my-env-id-3",' +
     '    "alias": "missing-api-key-env-id-3",' +
@@ -36,7 +33,6 @@ describe('getManagedEnvironmentConfig', () => {
     '    "apiToken": "my-api-token"' +
     '  },' +
     '  {' +
-    '    "dynatraceUrl": "https://my-dashboard-endpoint.com",' +
     '    "environmentId": "my-env-id-5",' +
     '    "alias": "missing-api-url-env-5",' +
     '    "apiToken": "my-api-token",' +
@@ -61,7 +57,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-1',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-1',
-        dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-1',
         apiToken: 'my-api-token',
         alias: 'alias-env-id-1',
         httpProxy: '',
@@ -70,7 +65,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-2',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-2',
-        dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-2',
         apiToken: 'my-api-token',
         alias: 'invalid-alias-env-id;-2',
         httpProxy: '',
@@ -79,7 +73,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-3',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-3',
-        dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-3',
         apiToken: '',
         alias: 'missing-api-key-env-id-3',
         httpProxy: '',
@@ -88,7 +81,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-4',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
-        dashboardUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
         apiToken: 'my-api-token',
         alias: 'only-required-keys-env-4',
         httpProxy: '',
@@ -96,7 +88,6 @@ describe('getManagedEnvironmentConfig', () => {
       },
       {
         environmentId: 'my-env-id-5',
-        dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-5',
         apiUrl: '',
         apiToken: 'my-api-token',
         alias: 'missing-api-url-env-5',
@@ -119,7 +110,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-1',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-1',
-        dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-1',
         apiToken: 'my-api-token',
         alias: 'alias-env-id-1',
         httpProxy: '',
@@ -128,7 +118,6 @@ describe('getManagedEnvironmentConfig', () => {
       {
         environmentId: 'my-env-id-4',
         apiUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
-        dashboardUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
         apiToken: 'my-api-token',
         alias: 'only-required-keys-env-4',
         httpProxy: '',
@@ -157,26 +146,8 @@ describe('getManagedEnvironmentConfig', () => {
     expect(validConfigWithTrailingSlash).toEqual({
       environmentId: 'my-env-id-1',
       apiUrl: 'https://my-api-endpoint.com/e/my-env-id-1',
-      dashboardUrl: 'https://my-dashboard-endpoint.com/e/my-env-id-1',
       apiToken: 'my-api-token',
       alias: 'alias-env-id-1',
-      httpProxy: '',
-      httpsProxy: '',
-    });
-  });
-
-  it('should default dashboard url to api base url', () => {
-    process.env.DT_ENVIRONMENT_CONFIGS = fullEnv;
-    const config = getManagedEnvironmentConfigs();
-    const validatedConfigs = validateEnvironments(config);
-    const validConfigOnlyRequiredFields = validatedConfigs['valid_configs'][1];
-
-    expect(validConfigOnlyRequiredFields).toEqual({
-      environmentId: 'my-env-id-4',
-      apiUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
-      dashboardUrl: 'https://my-api-endpoint.com/e/my-env-id-4',
-      apiToken: 'my-api-token',
-      alias: 'only-required-keys-env-4',
       httpProxy: '',
       httpsProxy: '',
     });
@@ -197,8 +168,8 @@ describe('getManagedEnvironmentConfig', () => {
 
   it('buildConfigTokenMap maps alias -> token and skips empty tokens', () => {
     const map = buildConfigTokenMap([
-      { alias: 'a', apiToken: 't1', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
-      { alias: 'b', apiToken: '', apiUrl: 'u', dashboardUrl: 'd', environmentId: 'e' },
+      { alias: 'a', apiToken: 't1', apiUrl: 'u', environmentId: 'e' },
+      { alias: 'b', apiToken: '', apiUrl: 'u', environmentId: 'e' },
     ]);
     expect(map.get('a')).toBe('t1');
     expect(map.has('b')).toBe(false);

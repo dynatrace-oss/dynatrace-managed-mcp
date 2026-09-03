@@ -47,7 +47,6 @@ describe('ManagedAuthClient', () => {
     mockCreate.mockReturnValue({ get: jest.fn() });
     client = new ManagedAuthClient({
       apiBaseUrl: 'https://managed.test.com',
-      dashboardBaseUrl: 'https://managed-dashboard.test.com',
       alias: 'testAlias',
       minimum_version: '1.328.0',
     });
@@ -77,7 +76,6 @@ describe('ManagedAuthClient', () => {
       mockCreate.mockReturnValue({ get: mockGet });
       client = new ManagedAuthClient({
         apiBaseUrl: 'https://managed.test.com',
-        dashboardBaseUrl: 'https://managed-dashboard.test.com',
         alias: 'testAlias',
         minimum_version: '1.328.0',
       });
@@ -97,7 +95,6 @@ describe('ManagedAuthClient', () => {
       mockCreate.mockReturnValue({ get: mockGet });
       client = new ManagedAuthClient({
         apiBaseUrl: 'https://managed.test.com',
-        dashboardBaseUrl: 'https://managed-dashboard.test.com',
         alias: 'testAlias',
         minimum_version: '1.328.0',
       });
@@ -119,7 +116,6 @@ describe('ManagedAuthClient', () => {
       mockCreate.mockReturnValue({ get: mockGet });
       client = new ManagedAuthClient({
         apiBaseUrl: 'https://managed.test.com',
-        dashboardBaseUrl: 'https://managed-dashboard.test.com',
         alias: 'testAlias',
         minimum_version: '1.328.0',
       });
@@ -156,7 +152,6 @@ describe('ManagedAuthClient', () => {
       mockCreate.mockReturnValue({ get: mockGet });
       client = new ManagedAuthClient({
         apiBaseUrl: 'https://managed.test.com',
-        dashboardBaseUrl: 'https://managed-dashboard.test.com',
         alias: 'testAlias',
         minimum_version: '1.328.0',
       });
@@ -175,7 +170,7 @@ describe('ManagedAuthClientManager', () => {
   function fakeClient(alias: string): ManagedAuthClient {
     return {
       alias,
-      dashboardBaseUrl: `https://dash.${alias}.test`,
+      apiBaseUrl: 'https://api.prod.test',
       makeRequest: jest.fn().mockResolvedValue({ ok: alias }),
     } as unknown as ManagedAuthClient;
   }
@@ -225,10 +220,10 @@ describe('ManagedAuthClientManager', () => {
     expect([...res.keys()]).toEqual(['prod']);
   });
 
-  it('getBaseUrl returns the dashboard URL for an alias', () => {
+  it('getBaseUrl returns the API base URL for an alias', () => {
     const prod = fakeClient('prod');
     const mgr = new ManagedAuthClientManager([prod], [prod], ['ALL_ENVIRONMENTS', 'prod'], new Map());
-    expect(mgr.getBaseUrl('prod')).toBe('https://dash.prod.test');
+    expect(mgr.getBaseUrl('prod')).toBe('https://api.prod.test');
     expect(mgr.getBaseUrl('nope')).toBe('');
   });
 
@@ -266,7 +261,6 @@ describe('buildManagedAuthClients', () => {
       {
         alias: 'prod',
         apiUrl: 'https://prod-api/e/abc',
-        dashboardUrl: 'https://prod-dash/e/abc',
         environmentId: 'abc',
         apiToken: 'ignored-in-build',
         httpProxy: '',
@@ -276,7 +270,6 @@ describe('buildManagedAuthClients', () => {
     expect(clients).toHaveLength(1);
     expect(clients[0].alias).toBe('prod');
     expect(clients[0].apiBaseUrl).toBe('https://prod-api/e/abc');
-    expect(clients[0].dashboardBaseUrl).toBe('https://prod-dash/e/abc');
   });
 });
 
