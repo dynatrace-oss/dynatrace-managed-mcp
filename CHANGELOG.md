@@ -1,5 +1,14 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
+## Unreleased changes
+
+### Dependencies
+
+| Type | Name     | Old    | New    |
+| ---- | -------- | ------ | ------ |
+| deps | fast-uri | 3.1.6  | 3.1.7  |
+| deps | hono     | 4.13.4 | 4.13.5 |
+
 ## 1.1.1
 
 ### Changes
