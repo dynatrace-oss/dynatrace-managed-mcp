@@ -30,7 +30,6 @@ function mockClient(alias: string, options: MockClientOptions = {}): ManagedAuth
   return {
     alias,
     apiBaseUrl: `http://api/${alias}`,
-    dashboardBaseUrl: `http://dashboard/${alias}`,
     isValid,
     clusterVersion: isValid ? version : '',
     validationError,
@@ -81,7 +80,6 @@ describe('get_environments_info (HTTP mode)', () => {
 
     expect(result).toContain('- Environment Alias: onPrem');
     expect(result).toContain('- API URL: http://api/onPrem');
-    expect(result).toContain('- Dashboard URL: http://dashboard/onPrem');
     expect(result).toContain('- Valid Environment: Yes');
     expect(result).toContain('- Version: 1.345.0');
     expect(result).toContain('- Minimum Version Check: PASSED');

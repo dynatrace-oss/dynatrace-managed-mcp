@@ -5,7 +5,6 @@ import { loadFromFile } from './config-loader';
 export interface ManagedEnvironmentConfig {
   environmentId: string;
   apiUrl: string;
-  dashboardUrl: string;
   apiToken: string;
   alias: string;
   httpProxy?: string;
@@ -15,7 +14,6 @@ export interface ManagedEnvironmentConfig {
 export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): ManagedEnvironmentConfig {
   const environmentIdRaw = environmentInfo.environmentId ? environmentInfo.environmentId.toString() : '';
   const apiUrlRaw = environmentInfo.apiEndpointUrl ? environmentInfo.apiEndpointUrl.toString() : '';
-  const dashboardUrlRaw = environmentInfo.dynatraceUrl ? environmentInfo.dynatraceUrl.toString() : '';
   const apiToken = environmentInfo.apiToken ? environmentInfo.apiToken.toString() : '';
   const alias = environmentInfo.alias ? environmentInfo.alias.toString() : '';
   const httpProxy = environmentInfo.httpProxyUrl ? environmentInfo.httpProxyUrl.toString() : '';
@@ -26,13 +24,10 @@ export function parseManagedEnvironmentConfig(environmentInfo: JSONObject): Mana
   if (apiUrlRaw != '') {
     apiUrl = apiUrlRaw + (apiUrlRaw.endsWith('/') ? '' : '/') + 'e/' + environmentId;
   }
-  let dashboardUrl = dashboardUrlRaw || apiUrlRaw;
-  dashboardUrl = dashboardUrl + (dashboardUrl.endsWith('/') ? '' : '/') + 'e/' + environmentId;
 
   return {
     environmentId: environmentId,
     apiUrl: apiUrl,
-    dashboardUrl: dashboardUrl,
     apiToken: apiToken,
     alias: alias,
     httpProxy: httpProxy,

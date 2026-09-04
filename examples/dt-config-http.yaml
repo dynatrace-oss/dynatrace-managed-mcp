@@ -5,9 +5,7 @@
 - alias: prod
   apiEndpointUrl: https://prod-api.company.com/
   environmentId: abc-123
-  dynatraceUrl: https://prod-dashboard.company.com/
 
 - alias: staging
   apiEndpointUrl: https://staging-api.company.com/
   environmentId: xyz-789
-  dynatraceUrl: https://staging-dashboard.company.com/
