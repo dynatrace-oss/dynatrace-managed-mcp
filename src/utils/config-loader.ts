@@ -21,7 +21,7 @@ export interface DynatraceEnvironmentConfig {
 /**
  * Matches a ${VAR_NAME} placeholder.
  */
-const ENV_VAR_PATTERN = /\$\{([A-Za-z_][A-Za-z0-9_]*)}/g;
+const ENV_VAR_PATTERN = /\$\{([A-Za-z_]\w*)}/g;
 
 /**
  * Load configuration from a file (JSON or YAML)
