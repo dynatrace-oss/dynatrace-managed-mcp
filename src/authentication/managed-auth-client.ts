@@ -37,14 +37,12 @@ export class ManagedAuthClient {
   public isValid: boolean;
   public validationError: string;
   public clusterVersion: string;
-  private readonly proxy: AxiosProxyConfig | undefined;
   private readonly httpClient: AxiosInstance;
   public MINIMUM_VERSION: string;
 
   constructor(params: ManagedAuthClientParams) {
     this.apiBaseUrl = params.apiBaseUrl;
     this.alias = params.alias;
-    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy);
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
@@ -60,6 +58,7 @@ export class ManagedAuthClient {
       },
       timeout: 30000,
       maxRedirects: 0,
+      proxy: setAxiosProxy(params.httpProxy, params.httpsProxy),
     });
   }
 
@@ -162,7 +161,6 @@ export class ManagedAuthClient {
   ): Promise<T> {
     const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const response = await this.httpClient.get(url, {
-      proxy: this.proxy ?? undefined,
       params,
       headers: this.authHeader(token),
     });
