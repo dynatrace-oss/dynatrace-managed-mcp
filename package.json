@@ -47,6 +47,7 @@
     "coverage": "jest --coverage",
     "serve": "node --env-file='.env' ./dist/index.js --http --port 8080",
     "stdio": "node --env-file='.env' ./dist/index.js",
+    "version:check": "node .github/scripts/check-version-sync.js",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },

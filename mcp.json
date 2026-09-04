@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "dynatrace-managed": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<2"],
+      "env": {
+        "DT_ENVIRONMENT_CONFIGS": "${DT_ENVIRONMENT_CONFIGS}"
+      }
+    }
+  }
+}
