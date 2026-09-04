@@ -146,8 +146,6 @@ You can then use that locally, for example with the following in your `mcp.json`
         "-e",
         "DT_ENVIRONMENT_CONFIGS",
         "-e",
-        "DT_MCP_DISABLE_TELEMETRY",
-        "-e",
         "LOG_LEVEL",
         "mcp/dynatrace-managed-mcp-server:snapshot"
       ],
