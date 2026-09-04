@@ -72,7 +72,6 @@ describe('ProxyConfig', () => {
   it('should use HTTP_PROXY', async () => {
     const client = new ManagedAuthClient({
       apiBaseUrl: 'http://example.com',
-      dashboardBaseUrl: 'http://example-dashboard.com',
       alias: 'alias',
       httpsProxy: proxyUrl,
       minimum_version: '1.328.0',

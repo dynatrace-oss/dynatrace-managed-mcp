@@ -241,6 +241,58 @@ describe('ConfigFileLoader', () => {
 
       expect(() => loadFromFile(configPath)).toThrow(/Environment variable not found: NONEXISTENT_TOKEN/);
     });
+
+    it('should interpolate lowercase and mixed-case variable names', () => {
+      process.env.test_token = 'lower-token';
+      process.env.testUrl = 'https://mixed.example.com/';
+
+      const configPath = path.join(testDir, 'config.json');
+      const config = [
+        {
+          apiEndpointUrl: '${testUrl}',
+          environmentId: 'test-123',
+          alias: 'production',
+          apiToken: '${test_token}',
+        },
+      ];
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      try {
+        const result = loadFromFile(configPath);
+
+        expect(result[0].apiToken).toBe('lower-token');
+        expect(result[0].apiEndpointUrl).toBe('https://mixed.example.com/');
+      } finally {
+        delete process.env.test_token;
+        delete process.env.testUrl;
+      }
+    });
+
+    it('should interpolate two placeholders in the same value', () => {
+      process.env.TEST_URL = 'https://api.example.com';
+      process.env.TEST_API_VERSION = 'v2';
+
+      const configPath = path.join(testDir, 'config.json');
+      const config = [
+        {
+          apiEndpointUrl: '${TEST_URL}/${TEST_API_VERSION}/',
+          environmentId: 'test-123',
+          alias: 'production',
+          apiToken: 'token',
+        },
+      ];
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      try {
+        const result = loadFromFile(configPath);
+
+        expect(result[0].apiEndpointUrl).toBe('https://api.example.com/v2/');
+      } finally {
+        delete process.env.TEST_API_VERSION;
+      }
+    });
   });
 
   describe('Path resolution', () => {
@@ -309,6 +361,60 @@ describe('ConfigFileLoader', () => {
       } finally {
         fs.unlinkSync(configPath);
       }
+    });
+
+    it('should expand an environment variable in the path', () => {
+      process.env.TEST_CONFIG_DIR = testDir;
+
+      const config = [
+        {
+          apiEndpointUrl: 'https://api.example.com/',
+          environmentId: 'test-123',
+          alias: 'production',
+          apiToken: 'token',
+        },
+      ];
+
+      fs.writeFileSync(path.join(testDir, 'config.json'), JSON.stringify(config, null, 2));
+
+      try {
+        const result = loadFromFile('${TEST_CONFIG_DIR}/config.json');
+
+        expect(result).toHaveLength(1);
+      } finally {
+        delete process.env.TEST_CONFIG_DIR;
+      }
+    });
+
+    it('should expand two environment variables in the path independently', () => {
+      process.env.TEST_CONFIG_DIR = testDir;
+      process.env.TEST_CONFIG_NAME = 'config';
+
+      const config = [
+        {
+          apiEndpointUrl: 'https://api.example.com/',
+          environmentId: 'test-123',
+          alias: 'production',
+          apiToken: 'token',
+        },
+      ];
+
+      fs.writeFileSync(path.join(testDir, 'config.json'), JSON.stringify(config, null, 2));
+
+      try {
+        const result = loadFromFile('${TEST_CONFIG_DIR}/${TEST_CONFIG_NAME}.json');
+
+        expect(result).toHaveLength(1);
+      } finally {
+        delete process.env.TEST_CONFIG_DIR;
+        delete process.env.TEST_CONFIG_NAME;
+      }
+    });
+
+    it('should throw error when a path environment variable is not found', () => {
+      expect(() => loadFromFile('${NONEXISTENT_CONFIG_DIR}/config.json')).toThrow(
+        /Environment variable not found: NONEXISTENT_CONFIG_DIR/,
+      );
     });
 
     it('should throw error for non-existent file', () => {
@@ -401,7 +507,6 @@ describe('ConfigFileLoader', () => {
           environmentId: 'test-123',
           alias: 'production',
           apiToken: 'token',
-          dynatraceUrl: 'https://dashboard.example.com/',
           httpProxyUrl: 'http://proxy.example.com:8080',
         },
       ];
@@ -411,7 +516,6 @@ describe('ConfigFileLoader', () => {
       const result = loadFromFile(configPath);
 
       expect(result[0]).toMatchObject({
-        dynatraceUrl: 'https://dashboard.example.com/',
         httpProxyUrl: 'http://proxy.example.com:8080',
       });
     });

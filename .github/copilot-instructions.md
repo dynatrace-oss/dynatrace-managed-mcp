@@ -142,7 +142,7 @@ Two methods for providing environment configs (priority order):
 1. **`DT_CONFIG_FILE`** (recommended): Path to a YAML or JSON file. Supports `${VAR_NAME}` interpolation for secrets. See `dt-config.yaml` and `examples/` for format.
 2. **`DT_ENVIRONMENT_CONFIGS`**: Inline JSON array string (useful for Docker/Kubernetes).
 
-Required config fields (stdio/local mode): `apiEndpointUrl`, `environmentId`, `alias`, `apiToken`. In HTTP mode, `apiToken` is omitted and tokens are supplied per request via the `X-Dynatrace-Tokens` header. Optional: `dynatraceUrl`, `httpProxyUrl`, `httpsProxyUrl`.
+Required config fields (stdio/local mode): `apiEndpointUrl`, `environmentId`, `alias`, `apiToken`. In HTTP mode, `apiToken` is omitted and tokens are supplied per request via the `X-Dynatrace-Tokens` header. Optional: `httpProxyUrl`, `httpsProxyUrl`.
 
 ### Logging Configuration
 

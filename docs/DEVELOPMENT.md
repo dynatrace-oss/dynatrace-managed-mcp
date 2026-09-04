@@ -94,7 +94,7 @@ Configure your preferred AI Assistant with an mcp.json file like that below:
       "command": "npx",
       "args": ["--watch", "/path/to/repos/dynatrace-oss/dynatrace-manage-mcp/dist/index.js"],
       "env": {
-        "DT_ENVIRONMENT_CONFIGS": "[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
+        "DT_ENVIRONMENT_CONFIGS": "[{\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
         "DT_MCP_DISABLE_TELEMETRY": "true",
         "LOG_LEVEL": "debug"
       }
@@ -146,13 +146,11 @@ You can then use that locally, for example with the following in your `mcp.json`
         "-e",
         "DT_ENVIRONMENT_CONFIGS",
         "-e",
-        "DT_MCP_DISABLE_TELEMETRY",
-        "-e",
         "LOG_LEVEL",
         "mcp/dynatrace-managed-mcp-server:snapshot"
       ],
       "env": {
-        "DT_ENVIRONMENT_CONFIGS": "[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
+        "DT_ENVIRONMENT_CONFIGS": "[{\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
         "DT_MCP_DISABLE_TELEMETRY": "true",
         "LOG_LEVEL": "debug"
       },

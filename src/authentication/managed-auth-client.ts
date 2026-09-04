@@ -11,7 +11,6 @@ export interface ClusterVersion {
 
 export interface ManagedAuthClientParams {
   apiBaseUrl: string;
-  dashboardBaseUrl: string;
   alias: string;
   httpProxy?: string;
   httpsProxy?: string;
@@ -34,20 +33,16 @@ export class MissingTokenError extends Error {
 
 export class ManagedAuthClient {
   public apiBaseUrl: string;
-  public dashboardBaseUrl: string;
   public alias: string;
   public isValid: boolean;
   public validationError: string;
   public clusterVersion: string;
-  private readonly proxy: AxiosProxyConfig | undefined;
   private readonly httpClient: AxiosInstance;
   public MINIMUM_VERSION: string;
 
   constructor(params: ManagedAuthClientParams) {
     this.apiBaseUrl = params.apiBaseUrl;
-    this.dashboardBaseUrl = params.dashboardBaseUrl;
     this.alias = params.alias;
-    this.proxy = setAxiosProxy(params.httpProxy, params.httpsProxy);
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
     this.validationError = '';
@@ -63,6 +58,7 @@ export class ManagedAuthClient {
       },
       timeout: 30000,
       maxRedirects: 0,
+      proxy: setAxiosProxy(params.httpProxy, params.httpsProxy),
     });
   }
 
@@ -165,7 +161,6 @@ export class ManagedAuthClient {
   ): Promise<T> {
     const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const response = await this.httpClient.get(url, {
-      proxy: this.proxy ?? undefined,
       params,
       headers: this.authHeader(token),
     });
@@ -213,7 +208,6 @@ export function buildManagedAuthClients(configs: ManagedEnvironmentConfig[]): Ma
     (env) =>
       new ManagedAuthClient({
         apiBaseUrl: env.apiUrl,
-        dashboardBaseUrl: env.dashboardUrl,
         alias: env.alias,
         httpProxy: env.httpProxy,
         httpsProxy: env.httpsProxy,
@@ -296,7 +290,7 @@ export class ManagedAuthClientManager {
   getBaseUrl(alias: string): string {
     for (const client of this.clients) {
       if (client.alias === alias) {
-        return client.dashboardBaseUrl;
+        return client.apiBaseUrl;
       }
     }
     return '';

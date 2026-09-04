@@ -27,9 +27,9 @@ class DynatraceMcpTelemetry implements Telemetry {
   }
 
   constructor() {
-    this._isEnabled = process.env.DT_MCP_DISABLE_TELEMETRY !== 'true';
+    this._isEnabled = process.env.DT_MCP_ENABLE_TELEMETRY === 'true';
     if (!this._isEnabled) {
-      logger.info('Not initialising Dynatrace Telemetry because DT_MCP_DISABLE_TELEMETRY is "true"');
+      logger.info('Not initialising Dynatrace Telemetry because DT_MCP_ENABLE_TELEMETRY is not "true"');
     }
   }
 
@@ -41,7 +41,7 @@ class DynatraceMcpTelemetry implements Telemetry {
     const deviceId = process.env.DT_MCP_TELEMETRY_DEVICE_ID || this.generateDeviceId();
     try {
       logger.info(
-        `Connecting Dynatrace Telemetry via ${endpointUrl}. You can disable this by setting DT_MCP_DISABLE_TELEMETRY=true.`,
+        `Connecting Dynatrace Telemetry via ${endpointUrl}. You can disable this by setting DT_MCP_ENABLE_TELEMETRY=false.`,
       );
 
       this.openKit = new OpenKitBuilder(endpointUrl, applicationId, Number.parseInt(deviceId, 10))
@@ -75,7 +75,7 @@ class DynatraceMcpTelemetry implements Telemetry {
     } catch (error) {
       logErrorObject(error, 'Failed to initialize Dynatrace Telemetry');
       console.error(
-        'If the error persists, please consider disabling telemetry by setting DT_MCP_DISABLE_TELEMETRY=true.',
+        'If the error persists, please consider disabling telemetry by setting DT_MCP_ENABLE_TELEMETRY=false.',
       );
       this._isEnabled = false;
     }
