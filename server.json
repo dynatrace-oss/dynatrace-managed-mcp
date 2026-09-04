@@ -43,8 +43,8 @@
           "format": "string"
         },
         {
-          "name": "DT_MCP_DISABLE_TELEMETRY",
-          "description": "Disable telemetry",
+          "name": "DT_MCP_ENABLE_TELEMETRY",
+          "description": "Enable telemetry",
           "isRequired": false,
           "format": "boolean"
         }
