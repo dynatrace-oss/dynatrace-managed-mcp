@@ -9,6 +9,7 @@
 ### Fixes
 
 - Fixed `DT_CONFIG_FILE` incorrectly interpolating environment variables
+- Fix https(s) proxy not being applied to all endpoints
 
 ### Dependencies
 
