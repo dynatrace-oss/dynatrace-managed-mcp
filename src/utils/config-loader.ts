@@ -19,6 +19,11 @@ export interface DynatraceEnvironmentConfig {
 }
 
 /**
+ * Matches a ${VAR_NAME} placeholder.
+ */
+const ENV_VAR_PATTERN = /\$\{([A-Za-z_]\w*)}/g;
+
+/**
  * Load configuration from a file (JSON or YAML)
  * Returns JSONObject[] for compatibility with existing parsing logic
  */
@@ -90,7 +95,7 @@ export function loadFromFile(filePath: string, requireToken = true): JSONObject[
  */
 function interpolateEnvVars(content: string): string {
   // Replace ${VAR_NAME} with env var value
-  return content.replace(/\$\{([A-Z_][A-Z0-9_]*)}/g, (match, varName) => {
+  return content.replace(ENV_VAR_PATTERN, (match, varName) => {
     const value = process.env[varName];
 
     if (value === undefined) {
@@ -111,11 +116,14 @@ function interpolateEnvVars(content: string): string {
  */
 function resolvePath(filePath: string): string {
   // Expand environment variables in path (e.g., ${HOME}/config.json)
-  let resolved = filePath.replace(/\$\{(w+)}/g, (_, varName) => {
+  let resolved = filePath.replace(ENV_VAR_PATTERN, (match, varName) => {
     const value = process.env[varName];
-    if (!value) {
-      logger.warn(`Environment variable ${varName} not found in path, using empty string`);
-      return '';
+    if (value === undefined) {
+      throw new Error(
+        `Environment variable not found: ${varName}\n` +
+          `Referenced as: ${match}\n` +
+          `Make sure ${varName} is set in your environment.`,
+      );
     }
     return value;
   });
