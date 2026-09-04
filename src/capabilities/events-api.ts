@@ -161,7 +161,7 @@ export class EventsApiClient {
         : '') +
       '* Suggest to the user that they use the Dynatrace UI' +
       (baseUrl ? ` at ${baseUrl} ` : ' ') +
-      +'to view events by navigating to the relevant entity\n' +
+      'to view events by navigating to the relevant entity\n' +
       '* Use list_problems to see what problems Dynatrace knows of, if not already done so.\n';
 
     return result;

@@ -35,7 +35,6 @@ describe('Token passthrough (per-call Authorization)', () => {
   function newClient(): ManagedAuthClient {
     return new ManagedAuthClient({
       apiBaseUrl: baseUrl,
-      dashboardBaseUrl: baseUrl,
       alias: 'local',
       minimum_version: '1.328.0',
     });

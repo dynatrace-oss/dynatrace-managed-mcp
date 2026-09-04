@@ -20,7 +20,6 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
         for (const authClient of ctx.authClientManager.rawClients) {
           resp += `- Environment Alias: ${authClient.alias}\n`;
           resp += `- API URL: ${authClient.apiBaseUrl}\n`;
-          resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
           resp += stdioModeVersionResponse(authClient);
         }
         return resp;
@@ -40,7 +39,6 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
 
         resp += `- Environment Alias: ${authClient.alias}\n`;
         resp += `- API URL: ${authClient.apiBaseUrl}\n`;
-        resp += `- Dashboard URL: ${authClient.dashboardBaseUrl}\n`;
         resp += await httpModeVersionResponse(authClient, ctx);
       }
 

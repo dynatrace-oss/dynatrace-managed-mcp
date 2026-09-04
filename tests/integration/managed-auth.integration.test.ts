@@ -23,7 +23,6 @@ if (!process.env.DT_ENVIRONMENT_CONFIGS) {
 
     client = new ManagedAuthClient({
       apiBaseUrl: valid_client.apiUrl,
-      dashboardBaseUrl: valid_client.dashboardUrl,
       alias: valid_client.alias,
       minimum_version: '1.328.0',
     });

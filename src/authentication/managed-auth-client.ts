@@ -11,7 +11,6 @@ export interface ClusterVersion {
 
 export interface ManagedAuthClientParams {
   apiBaseUrl: string;
-  dashboardBaseUrl: string;
   alias: string;
   httpProxy?: string;
   httpsProxy?: string;
@@ -34,7 +33,6 @@ export class MissingTokenError extends Error {
 
 export class ManagedAuthClient {
   public apiBaseUrl: string;
-  public dashboardBaseUrl: string;
   public alias: string;
   public isValid: boolean;
   public validationError: string;
@@ -44,7 +42,6 @@ export class ManagedAuthClient {
 
   constructor(params: ManagedAuthClientParams) {
     this.apiBaseUrl = params.apiBaseUrl;
-    this.dashboardBaseUrl = params.dashboardBaseUrl;
     this.alias = params.alias;
     this.isValid = params.isValid ? params.isValid : false;
     this.MINIMUM_VERSION = params.minimum_version;
@@ -211,7 +208,6 @@ export function buildManagedAuthClients(configs: ManagedEnvironmentConfig[]): Ma
     (env) =>
       new ManagedAuthClient({
         apiBaseUrl: env.apiUrl,
-        dashboardBaseUrl: env.dashboardUrl,
         alias: env.alias,
         httpProxy: env.httpProxy,
         httpsProxy: env.httpsProxy,
@@ -294,7 +290,7 @@ export class ManagedAuthClientManager {
   getBaseUrl(alias: string): string {
     for (const client of this.clients) {
       if (client.alias === alias) {
-        return client.dashboardBaseUrl;
+        return client.apiBaseUrl;
       }
     }
     return '';

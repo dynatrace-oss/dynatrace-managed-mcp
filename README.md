@@ -93,15 +93,14 @@ Your API token must include the following scopes for full functionality:
 
 #### Configuration parameters
 
-| Parameter      | Required           | Description                                                                                    | Example value                                     |
-| -------------- | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| apiEndpointUrl | Yes                | Base URL for Dynatrace Managed cluster API                                                     | https://<span>dmz123.dynatrace-managed.com</span> |
-| environmentId  | Yes                | ID of the managed environment                                                                  | 01234567-89ab-cdef-abcd-ef0123456789              |
-| alias          | Yes                | Human-friendly name of the environment                                                         | MyEnvironment                                     |
-| apiToken       | Only in stdio mode | API token of the cluster with required scopes created using the instruction above              | dt0s01.ABCDEFGHIJK0123                            |
-| httpProxyUrl   | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | http://<span>proxy.company.com:8080</span>        |
-| httpsProxyUrl  | No                 | URL of proxy server for requests. Do not use with the other proxy parameter                    | https:/<span>/proxy.company.com:8080</span>       |
-| dynatraceUrl   | No                 | Deprecated, currently prints itself in tool responses. Defaults to the value of apiEndpointUrl | https://<span>dmz123.dynatrace-managed.com</span> |
+| Parameter      | Required           | Description                                                                       | Example value                                     |
+| -------------- | ------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------- |
+| apiEndpointUrl | Yes                | Base URL for Dynatrace Managed cluster API                                        | https://<span>dmz123.dynatrace-managed.com</span> |
+| environmentId  | Yes                | ID of the managed environment                                                     | 01234567-89ab-cdef-abcd-ef0123456789              |
+| alias          | Yes                | Human-friendly name of the environment                                            | MyEnvironment                                     |
+| apiToken       | Only in stdio mode | API token of the cluster with required scopes created using the instruction above | dt0s01.ABCDEFGHIJK0123                            |
+| httpProxyUrl   | No                 | URL of proxy server for requests. Do not use with the other proxy parameter       | http://<span>proxy.company.com:8080</span>        |
+| httpsProxyUrl  | No                 | URL of proxy server for requests. Do not use with the other proxy parameter       | https:/<span>/proxy.company.com:8080</span>       |
 
 There are **two ways** to configure your Dynatrace Managed environments.
 
@@ -227,7 +226,7 @@ Using `gemini` CLI directly (recommended):
 
 ```bash
 gemini extensions install https://github.com/dynatrace-oss/dynatrace-managed-mcp
-export DT_ENVIRONMENT_CONFIGS="[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]"
+export DT_ENVIRONMENT_CONFIGS="[{\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]"
 ```
 
 and verify that the server is running via
@@ -245,7 +244,7 @@ Or manually in your `~/.gemini/settings.json` or `.gemini/settings.json`:
       "command": "npx",
       "args": ["@dynatrace-oss/dynatrace-managed-mcp-server@latest"],
       "env": {
-        "DT_ENVIRONMENT_CONFIGS": "[{\"dynatraceUrl\":\"https://my-dashboard-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"dynatraceUrl\":\"https://my-dashboard2-endpoint.com/\",\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
+        "DT_ENVIRONMENT_CONFIGS": "[{\"apiEndpointUrl\":\"https://my-api-endpoint.com/\",\"environmentId\":\"my-env-id-1\",\"alias\":\"alias-env\",\"apiToken\":\"my-api-token\"},{\"apiEndpointUrl\":\"https://my-api2-endpoint.com/\",\"environmentId\":\"my-env-id-2\",\"alias\":\"alias-env-2\",\"apiToken\":\"my-api-token-2\"}]",
         "DT_CONFIG_FILE": "dt-config.yaml"
       },
       "timeout": 30000,

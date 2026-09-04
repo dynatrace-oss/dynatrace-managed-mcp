@@ -20,8 +20,13 @@
 
 - Added plugin packaging so the server can be installed from the Cursor plugin directory and other plugin hosts: `.cursor-plugin/plugin.json` (Cursor manifest, including a `variables` block that prompts for `DT_ENVIRONMENT_CONFIGS` on install), `plugin.json` (portable Agent Plugins v1.0.0 manifest), `mcp.json` (MCP server definition, pinned to the current major) and a `dynatrace-managed` skill under `skills/`
 
+### Fixes
+
+- Fixed `list_events` printing `NaN` in its "Next Steps" section
+
 ### Changes
 
+- Removed the `dynatraceUrl` configuration parameter. Dynatrace UI links in tool responses are now derived from `apiEndpointUrl`. Configurations that still declare `dynatraceUrl` keep working, the field is ignored
 - Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json`, `plugin.json` and `.cursor-plugin/plugin.json` declare the same version and package name, that `mcp.json` points at the published npm package, and that the Cursor manifest's declared paths and required variables are wired up. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
 
 ### Dependencies
@@ -33,6 +38,7 @@
 
 ### Documentation
 
+- Removed `dynatraceUrl` from the README configuration table, `.env.template` and the `examples/dt-config*` files
 - Documented the version-bearing manifests and the `version:check` gate in [RELEASE.md](RELEASE.md)
 
 ## 1.1.1
