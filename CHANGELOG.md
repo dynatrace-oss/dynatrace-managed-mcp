@@ -15,7 +15,6 @@
 
 - Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json`, `plugin.json` and `.cursor-plugin/plugin.json` declare the same version and package name, that `mcp.json` points at the published npm package, and that the Cursor manifest's declared paths and required variables are wired up. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
 
-
 ### Dependencies
 
 | Type | Name     | Old    | New    |
