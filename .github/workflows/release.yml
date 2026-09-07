@@ -34,12 +34,6 @@ jobs:
       - name: Check manifest version sync
         run: npm run version:check
 
-      - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
-
-      - name: Validate Claude Code plugin and marketplace manifests
-        run: npm run plugin:validate
-
       - name: Run tests
         run: npm run test:unit
 

@@ -74,8 +74,14 @@ CLI on your `PATH`:
 npm run plugin:validate
 ```
 
-That runs the same `--strict` validation as CI and as the community-marketplace review pipeline,
-over both the plugin and the marketplace manifest.
+That runs the same `--strict` validation as the community-marketplace review pipeline, over both the
+plugin and the marketplace manifest. Run it before submitting a plugin change or tagging a release.
+
+It is deliberately **not** wired into CI. The `@anthropic-ai/claude-code` package ships a 180 KB
+stub and downloads its native binary from a `postinstall` script, so installing it in a workflow
+means executing a lifecycle script from a floating version on every run - and `--ignore-scripts`
+leaves the CLI unable to start at all. `npm run version:check` covers the manifest failures that
+actually break an install, and it needs no extra dependency.
 
 `npm run version:check` asserts all of the above. It runs on every pull request, again at the start of
 the release workflow, and once more against the pushed tag - so a tag that disagrees with the

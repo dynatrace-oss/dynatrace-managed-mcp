@@ -72,16 +72,18 @@ claude --plugin-dir ./plugins/claude-code
 
 After editing anything here, run `/reload-plugins` rather than restarting.
 
-Validate both manifests the way CI and the community-marketplace review pipeline do:
+Validate both manifests the way the community-marketplace review pipeline does, before submitting a
+change here:
 
 ```shell
 npm run plugin:validate
 ```
 
-That script calls `claude plugin validate`, so it needs the Claude Code CLI on your `PATH`.
-`npm run version:check` covers the rest: that the manifest version matches every other
-version-bearing file, that the `skills` path resolves, and that each `userConfig` option is actually
-read by a server in `.mcp.json`.
+That script calls `claude plugin validate`, so it needs the Claude Code CLI on your `PATH`, which is
+why it runs locally rather than in CI - see [RELEASE.md](../../RELEASE.md) for the reasoning.
+`npm run version:check` runs in CI and covers the rest: that the manifest version matches every
+other version-bearing file, that the `skills` path resolves, and that each `userConfig` option is
+actually read by a server in `.mcp.json`.
 
 ## Releasing
 

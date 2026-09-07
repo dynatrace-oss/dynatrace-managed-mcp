@@ -32,7 +32,7 @@
 - Added `npm run version:check`, which asserts that `package.json`, `package-lock.json`, `server.json`, `plugin.json`, `.cursor-plugin/plugin.json` and `plugins/claude-code/.claude-plugin/plugin.json` declare the same version and package name, that `mcp.json` points at the published npm package, and that the Cursor manifest's declared paths and required variables are wired up. It runs on every pull request and gates the release workflow, including a check that the pushed tag matches the manifests
 - `npm run version:check` now derives the required `npx` major pin from `package.json` and fails when `mcp.json` or `plugins/claude-code/.mcp.json` disagrees, so releasing a new major with a stale `@<2` pin is blocked before anything is published
 - `npm run version:check` now also validates the Claude Code plugin's `skills` path and `userConfig` wiring, and every relative plugin `source` in `.claude-plugin/marketplace.json`. The marketplace source check closes a gap in `claude plugin validate`, which passes a source that points at a nonexistent directory
-- Added `npm run plugin:validate`, which runs `claude plugin validate --strict` over the plugin and marketplace manifests. It gates both the build and release workflows
+- Added `npm run plugin:validate`, which runs `claude plugin validate --strict` over the plugin and marketplace manifests. It is a local pre-submission check rather than a CI step, because the Claude Code CLI downloads its native binary from a `postinstall` script and is unusable when installed with `--ignore-scripts`
 
 ### Dependencies
 
