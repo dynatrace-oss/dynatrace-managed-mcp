@@ -1,0 +1,28 @@
+{
+  "name": "dynatrace",
+  "owner": {
+    "name": "Dynatrace",
+    "url": "https://www.dynatrace.com"
+  },
+  "description": "Dynatrace plugins for Claude Code.",
+  "plugins": [
+    {
+      "name": "dynatrace-managed-mcp",
+      "source": "./plugins/claude-code",
+      "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from self-hosted Dynatrace Managed clusters, across one or many environments.",
+      "category": "integrations",
+      "keywords": [
+        "dynatrace",
+        "dynatrace-managed",
+        "mcp",
+        "observability",
+        "monitoring",
+        "apm",
+        "logs",
+        "metrics",
+        "slo"
+      ],
+      "homepage": "https://github.com/dynatrace-oss/dynatrace-managed-mcp#readme"
+    }
+  ]
+}

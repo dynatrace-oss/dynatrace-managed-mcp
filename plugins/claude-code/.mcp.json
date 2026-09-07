@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "dynatrace-managed": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<2"],
+      "env": {
+        "DT_ENVIRONMENT_CONFIGS": "${user_config.dt_environment_configs}",
+        "DT_CONFIG_FILE": "${user_config.dt_config_file}",
+        "LOG_LEVEL": "${user_config.log_level}"
+      }
+    }
+  }
+}
