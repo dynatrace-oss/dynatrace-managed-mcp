@@ -1,4 +1,4 @@
-FROM node:26.5.1-alpine3.23 AS build
+FROM node:26.8.1-alpine3.23 AS build
 
 # Set working directory
 WORKDIR /app
@@ -13,7 +13,7 @@ RUN npm ci --ignore-scripts
 RUN npm run build
 
 # RUNTIME STAGE
-FROM node:26.5.1-alpine3.23
+FROM node:26.8.1-alpine3.23
 
 # Set working directory
 WORKDIR /app
