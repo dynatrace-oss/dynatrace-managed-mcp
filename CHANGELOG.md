@@ -31,11 +31,12 @@
 
 ### Dependencies
 
-| Type | Name                     | Old    | New    |
-| ---- | ------------------------ | ------ | ------ |
-| deps | fast-uri                 | 3.1.6  | 3.1.7  |
-| deps | hono                     | 4.13.4 | 4.13.5 |
-| ci   | docker/setup-qemu-action | 4.2.0  | 4.3.0  |
+| Type     | Name                     | Old    | New    |
+| -------- | ------------------------ | ------ | ------ |
+| deps     | fast-uri                 | 3.1.6  | 3.1.7  |
+| deps     | hono                     | 4.13.4 | 4.13.5 |
+| ci       | docker/setup-qemu-action | 4.2.0  | 4.3.0  |
+| dev-deps | @types/node              | 26.4.0 | 26.4.1 |
 
 ### Documentation
 
