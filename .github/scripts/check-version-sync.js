@@ -3,10 +3,9 @@ const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const AGENT_PLUGINS_SPEC_VERSION = '1.0.0';
-const CLAUDE_PLUGIN_ROOT = 'plugins/claude-code';
-const CLAUDE_PLUGIN_MANIFEST = `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`;
-const CLAUDE_MCP_MANIFEST = `${CLAUDE_PLUGIN_ROOT}/.mcp.json`;
+const CLAUDE_PLUGIN_MANIFEST = '.claude-plugin/plugin.json';
 const MARKETPLACE_MANIFEST = '.claude-plugin/marketplace.json';
+const CLAUDE_MCP_MANIFEST = '.mcp.json';
 
 function readJson(relativePath) {
   const absolutePath = path.join(REPO_ROOT, relativePath);
@@ -203,12 +202,21 @@ function checkClaudePluginPaths(claudeManifest) {
   const errors = [];
   const declaredSkills = claudeManifest.skills;
 
-  if (declaredSkills && !fs.existsSync(path.join(REPO_ROOT, CLAUDE_PLUGIN_ROOT, declaredSkills))) {
+  if (!declaredSkills) {
+    errors.push(`${CLAUDE_PLUGIN_MANIFEST} declares no skills path - the plugin would install without its skill`);
+  } else if (!fs.existsSync(path.join(REPO_ROOT, declaredSkills))) {
     errors.push(`${CLAUDE_PLUGIN_MANIFEST} » skills points at "${declaredSkills}", which does not exist`);
   }
 
   if (!fs.existsSync(path.join(REPO_ROOT, CLAUDE_MCP_MANIFEST))) {
     errors.push(`${CLAUDE_MCP_MANIFEST} is missing - the plugin would install without its MCP server`);
+  }
+
+  if (claudeManifest.mcpServers !== undefined) {
+    errors.push(
+      `${CLAUDE_PLUGIN_MANIFEST} declares mcpServers inline, which Claude Code does not register as a ` +
+        `component - move the servers to ${CLAUDE_MCP_MANIFEST}`,
+    );
   }
 
   return errors;
@@ -355,4 +363,12 @@ function main() {
   );
 }
 
-main();
+// A missing or malformed manifest throws out of readJson before any check runs. Report it the same
+// way as a failed check rather than dumping a stack trace into the CI log.
+try {
+  main();
+} catch (error) {
+  console.error(`❌ ${error.message}\n`);
+  console.error('Every manifest listed in RELEASE.md must exist and contain valid JSON.');
+  process.exit(1);
+}

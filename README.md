@@ -202,7 +202,7 @@ selectors. It is published through Anthropic's community plugin marketplace:
 
 Claude Code prompts for the cluster configuration during install - either the JSON array for a
 single cluster, or a path to a `dt-config.yaml` / `dt-config.json` file for several. See
-[plugins/claude-code/README.md](plugins/claude-code/README.md) for details.
+[docs/claude-code-plugin.md](docs/claude-code-plugin.md) for details.
 
 > [!NOTE]
 > Third-party marketplaces do not auto-update by default. Run

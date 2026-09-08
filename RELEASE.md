@@ -11,14 +11,14 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 
 The npm package version is declared in six files, and they must all agree before tagging:
 
-| File                                             | Field(s)                          |
-| ------------------------------------------------ | --------------------------------- |
-| `package.json`                                   | `version`                         |
-| `package-lock.json`                              | `version`, `packages[""].version` |
-| `server.json`                                    | `version`, `packages[].version`   |
-| `plugin.json`                                    | `version`                         |
-| `.cursor-plugin/plugin.json`                     | `version`                         |
-| `plugins/claude-code/.claude-plugin/plugin.json` | `version`                         |
+| File                         | Field(s)                          |
+| ---------------------------- | --------------------------------- |
+| `package.json`               | `version`                         |
+| `package-lock.json`          | `version`, `packages[""].version` |
+| `server.json`                | `version`, `packages[].version`   |
+| `plugin.json`                | `version`                         |
+| `.cursor-plugin/plugin.json` | `version`                         |
+| `.claude-plugin/plugin.json` | `version`                         |
 
 `package.json` » `version` is the reference every other file is compared against.
 
@@ -31,7 +31,7 @@ pins an installed plugin to that `version` string and hands users an update only
 
 ## The npx major pin
 
-Neither `mcp.json` nor `plugins/claude-code/.mcp.json` carries a version of its own - the Agent
+Neither `mcp.json` nor `.mcp.json` carries a version of its own - the Agent
 Plugins schema has no such field, and Claude Code takes the version from the plugin manifest. Both
 instead pin the major their `npx` invocation may install (`@<2` today), so plugin installs pick up
 patches and minors automatically but never an unvetted breaking major.
@@ -53,19 +53,50 @@ variable the Cursor manifest marks `required` is actually referenced as `${...}`
 server - a required variable nothing reads is never prompted for, and a placeholder with no matching
 variable reaches the server unexpanded.
 
-For the Claude Code plugin it asserts the equivalent, plus one thing `claude plugin validate` misses:
+For the Claude Code plugin it asserts the equivalent, plus two things `claude plugin validate` misses:
 
-- The `skills` path in `plugins/claude-code/.claude-plugin/plugin.json` resolves, and
-  `plugins/claude-code/.mcp.json` exists - otherwise the plugin installs without its skill or its
-  MCP server.
-- Each `userConfig` option is read by exactly one `${user_config.<name>}` reference in
-  `plugins/claude-code/.mcp.json`. The same two failure modes as above apply: an unread option is
-  prompted for and then dropped, and an undeclared reference reaches the server unexpanded.
+- The `skills` path in `.claude-plugin/plugin.json` resolves, and `.mcp.json` exists - otherwise the
+  plugin installs without its skill or its MCP server.
+- `.claude-plugin/plugin.json` does **not** declare `mcpServers` inline. An inline block passes
+  `claude plugin validate` but Claude Code does not register it as a component, so the plugin would
+  install with zero MCP servers. The servers belong in `.mcp.json`.
+- Each `userConfig` option is read by exactly one `${user_config.<name>}` reference in `.mcp.json`.
+  The same two failure modes as above apply: an unread option is prompted for and then dropped, and
+  an undeclared reference reaches the server unexpanded.
 - Every relative `source` in `.claude-plugin/marketplace.json` contains a
   `.claude-plugin/plugin.json`, each entry `name` matches the name in that manifest, and the Claude
   Code plugin is listed at all. `claude plugin validate` does **not** catch a marketplace source
   pointing at a nonexistent directory - it passes, and only the install fails - so this check is the
   one that guards it.
+
+A missing or malformed manifest is reported the same way, rather than as a stack trace.
+
+## Why the repository root is the plugin root
+
+`.claude-plugin/plugin.json` sits at the repository root and the marketplace entry's `source` is
+`"./"`, so the **repository itself is the Claude Code plugin**. That is what lets every catalog read
+one `skills/` directory:
+
+| File                              | Read by                       |
+| --------------------------------- | ----------------------------- |
+| `.claude-plugin/plugin.json`      | Claude Code                   |
+| `.claude-plugin/marketplace.json` | Claude Code (catalog)         |
+| `.mcp.json`                       | Claude Code (its MCP servers) |
+| `plugin.json` + `mcp.json`        | Agent Plugins hosts           |
+| `.cursor-plugin/plugin.json`      | Cursor                        |
+| `skills/`                         | **all of the above**          |
+
+A Claude Code plugin cannot reference files above its own root, so a plugin in a subdirectory would
+need its own copy of every skill and something to keep the copies in step. Putting the manifests at
+the root removes that problem entirely. This matches how other vendors ship the same combination -
+see [`sanity-io/agent-toolkit`](https://github.com/sanity-io/agent-toolkit) and
+[`exa-labs/exa-mcp-server`](https://github.com/exa-labs/exa-mcp-server).
+
+The cost is that Claude Code auto-runs `npm ci --ignore-scripts` in the plugin cache whenever the
+plugin root has a `package.json` and a lockfile, which it does here. That installs roughly 130 MB of
+build tooling the plugin never uses, taking about 18 s, once per plugin version per machine. There
+is no way to disable it, but a failure or 60 s timeout is non-blocking - it is wasted work, not a
+broken install. This was a deliberate trade for keeping the skill in one place.
 
 Manifest _schemas_ are checked separately with `claude plugin validate`, which needs the Claude Code
 CLI on your `PATH`:

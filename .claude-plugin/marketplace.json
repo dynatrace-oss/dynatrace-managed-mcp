@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "dynatrace-managed-mcp",
-      "source": "./plugins/claude-code",
+      "source": "./",
       "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from self-hosted Dynatrace Managed clusters, across one or many environments.",
       "category": "integrations",
       "keywords": [
