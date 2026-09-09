@@ -184,6 +184,46 @@ Alternatively, this can also be stored in user settings, and you can define `env
 }
 ```
 
+#### Claude Code
+
+Claude Code can install this server as a [plugin](https://code.claude.com/docs/en/plugins), which
+skips the manual MCP configuration below and adds a skill covering environment selection and entity
+selectors. It is published through Anthropic's community plugin marketplace:
+
+```shell
+/plugin marketplace add anthropics/claude-plugins-community
+/plugin install dynatrace-managed-mcp@claude-community
+```
+
+> [!IMPORTANT]
+> The community marketplace listing is pending review. Until it is approved, the install above
+> reports `Plugin "dynatrace-managed-mcp" not found in marketplace "claude-community"` - use the
+> instructions under _Installing straight from this repository_ below in the meantime.
+
+Claude Code prompts for the cluster configuration during install - either the JSON array for a
+single cluster, or a path to a `dt-config.yaml` / `dt-config.json` file for several. See
+[docs/claude-code-plugin.md](docs/claude-code-plugin.md) for details.
+
+> [!NOTE]
+> Third-party marketplaces do not auto-update by default. Run
+> `/plugin marketplace update claude-community` to pick up a new plugin version.
+
+<details>
+  <summary>Installing straight from this repository instead</summary>
+
+This repository is also a plugin marketplace in its own right, which is how you install the plugin
+before the community listing is approved, try an unreleased change, or pin to a specific branch:
+
+```shell
+/plugin marketplace add dynatrace-oss/dynatrace-managed-mcp
+/plugin install dynatrace-managed-mcp@dynatrace
+```
+
+</details>
+
+To configure the server by hand instead, use the Claude Desktop snippet below - it applies to Claude
+Code's `.mcp.json` as well.
+
 #### Claude Desktop
 
 ```json

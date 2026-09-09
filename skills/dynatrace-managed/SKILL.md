@@ -37,7 +37,7 @@ Minimal `DT_ENVIRONMENT_CONFIGS` value:
 [
   {
     "alias": "production",
-    "apiEndpointUrl": "https://dynatrace.example.com/e/abc12345-1234-1234-1234-123456789abc/api",
+    "apiEndpointUrl": "https://dynatrace.example.com",
     "environmentId": "abc12345-1234-1234-1234-123456789abc",
     "apiToken": "dt0c01...."
   }

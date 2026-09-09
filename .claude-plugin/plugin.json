@@ -1,0 +1,35 @@
+{
+  "name": "dynatrace-managed-mcp",
+  "displayName": "Dynatrace Managed",
+  "version": "1.1.1",
+  "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from self-hosted Dynatrace Managed clusters, across one or many environments.",
+  "author": {
+    "name": "Dynatrace",
+    "url": "https://www.dynatrace.com"
+  },
+  "homepage": "https://github.com/dynatrace-oss/dynatrace-managed-mcp#readme",
+  "repository": "https://github.com/dynatrace-oss/dynatrace-managed-mcp",
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "userConfig": {
+    "dt_environment_configs": {
+      "type": "string",
+      "title": "Dynatrace Managed environments",
+      "description": "JSON array of the clusters to connect to, each with alias, apiEndpointUrl, environmentId and apiToken. Example: [{\"alias\":\"production\",\"apiEndpointUrl\":\"https://dynatrace.example.com\",\"environmentId\":\"<env-id>\",\"apiToken\":\"dt0c01....\"}]. Leave empty if you set a configuration file below.",
+      "sensitive": true
+    },
+    "dt_config_file": {
+      "type": "file",
+      "title": "Environment configuration file",
+      "description": "Optional. Path to a JSON or YAML file describing the environments. Preferred for more than one cluster, and keeps tokens out of secure storage by interpolating ${DT_PROD_TOKEN}-style variables at runtime. Takes priority over the value above.",
+      "required": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log level",
+      "description": "One of debug, info, warning or error.",
+      "default": "info",
+      "required": false
+    }
+  }
+}

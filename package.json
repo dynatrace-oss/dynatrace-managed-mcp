@@ -48,6 +48,7 @@
     "serve": "node --env-file='.env' ./dist/index.js --http --port 8080",
     "stdio": "node --env-file='.env' ./dist/index.js",
     "version:check": "node .github/scripts/check-version-sync.js",
+    "plugin:validate": "claude plugin validate .claude-plugin/plugin.json --strict && claude plugin validate . --strict",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },
