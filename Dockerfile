@@ -23,10 +23,15 @@ COPY --from=build --chown=node:node /app/package.json /app/package-lock.json /ap
 RUN npm ci --only=production --ignore-scripts \
   && npm cache clean --force \
   && rm -rf /usr/local/lib/node_modules/npm \
-  && rm -f /usr/local/bin/npm /usr/local/bin/npx
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx \
+  && chown node:node /app
 
 # Copy the built application
 COPY --from=build --chown=node:node /app/dist /app/dist
+
+# Send every log line to stderr: stdout is reserved for the MCP stdio protocol,
+# and the default file transport cannot write inside the container.
+ENV LOG_OUTPUT=stderr-all
 
 # Run image as non-root user
 USER node
