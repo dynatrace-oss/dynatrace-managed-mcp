@@ -1,0 +1,136 @@
+{
+  "name": "dynatrace-managed-mcp",
+  "displayName": "Dynatrace Managed MCP Server",
+  "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from Dynatrace Managed (self-hosted) clusters.",
+  "version": "1.1.1",
+  "publisher": "dynatrace",
+  "license": "Apache-2.0",
+  "author": "Dynatrace",
+  "private": true,
+  "homepage": "https://github.com/dynatrace-oss/dynatrace-managed-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dynatrace-oss/dynatrace-managed-mcp.git",
+    "directory": "extensions/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues"
+  },
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "model context protocol",
+    "dynatrace",
+    "dynatrace managed",
+    "observability",
+    "monitoring",
+    "apm",
+    "logs",
+    "metrics",
+    "slo"
+  ],
+  "icon": "icon.png",
+  "iconSource": "../../assets/Dt_Logo.png",
+  "main": "./dist/extension.js",
+  "dynatraceManagedMcpServer": {
+    "npmPackage": "@dynatrace-oss/dynatrace-managed-mcp-server",
+    "npmVersionRange": "<2"
+  },
+  "activationEvents": [],
+  "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "dynatrace-managed",
+        "label": "Dynatrace Managed"
+      }
+    ],
+    "commands": [
+      {
+        "command": "dynatraceManagedMcp.configure",
+        "title": "Dynatrace Managed MCP: Configure Clusters",
+        "category": "Dynatrace Managed MCP"
+      },
+      {
+        "command": "dynatraceManagedMcp.clearConfiguration",
+        "title": "Dynatrace Managed MCP: Clear Stored Cluster Configuration",
+        "category": "Dynatrace Managed MCP"
+      }
+    ],
+    "configuration": {
+      "title": "Dynatrace Managed MCP",
+      "properties": {
+        "dynatraceManagedMcp.runtime": {
+          "type": "string",
+          "enum": [
+            "bundled",
+            "npx"
+          ],
+          "enumDescriptions": [
+            "Run the MCP server bundled inside this extension, using the Node.js runtime that ships with VS Code. No prerequisites, works offline.",
+            "Run the MCP server via `npx` from the public npm registry. Requires Node.js on PATH and registry access, but always picks up the latest patch release."
+          ],
+          "default": "bundled",
+          "markdownDescription": "How the Dynatrace Managed MCP server process is launched. Leave this on `bundled` unless you specifically need to track npm releases without updating the extension."
+        },
+        "dynatraceManagedMcp.logLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Logging verbosity of the MCP server process. Server logs appear in the MCP server output channel."
+        },
+        "dynatraceManagedMcp.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Send anonymous usage telemetry to Dynatrace. Disabled by default. See the [privacy notice](https://github.com/dynatrace-oss/dynatrace-managed-mcp#telemetry)."
+        },
+        "dynatraceManagedMcp.rateLimit.maxCalls": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "description": "Maximum number of tool calls allowed per rate limit window."
+        },
+        "dynatraceManagedMcp.rateLimit.windowMs": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 1,
+          "description": "Rate limit window size in milliseconds."
+        },
+        "dynatraceManagedMcp.httpProxy": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Proxy used for plain HTTP requests to your cluster, for example `http://proxy.example.com:8080`. When empty, the `http.proxy` setting of VS Code is used."
+        },
+        "dynatraceManagedMcp.httpsProxy": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Proxy used for HTTPS requests to your cluster, for example `http://proxy.example.com:8080`. When empty, the `http.proxy` setting of VS Code is used."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package --out dynatrace-managed-mcp.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "@types/vscode": "^1.101.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^6.0.3"
+  }
+}

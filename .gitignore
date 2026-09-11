@@ -1,5 +1,8 @@
 .env
 dist/*
+extensions/vscode/dist/
+# Copied from assets/ by extensions/vscode/esbuild.mjs
+extensions/vscode/icon.png
 node_modules/
 coverage/
 /.vscode/*
@@ -18,6 +21,9 @@ dt-config.json
 .mcpregistry_registry_token
 
 *.bak
+
+# Packaged VS Code extension
+*.vsix
 /.idea/*
 /*.log
 

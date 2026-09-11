@@ -9,16 +9,17 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 
 ## Version-bearing manifests
 
-The npm package version is declared in six files, and they must all agree before tagging:
+The npm package version is declared in seven files, and they must all agree before tagging:
 
-| File                         | Field(s)                          |
-| ---------------------------- | --------------------------------- |
-| `package.json`               | `version`                         |
-| `package-lock.json`          | `version`, `packages[""].version` |
-| `server.json`                | `version`, `packages[].version`   |
-| `plugin.json`                | `version`                         |
-| `.cursor-plugin/plugin.json` | `version`                         |
-| `.claude-plugin/plugin.json` | `version`                         |
+| File                             | Field(s)                          |
+| -------------------------------- | --------------------------------- |
+| `package.json`                   | `version`                         |
+| `package-lock.json`              | `version`, `packages[""].version` |
+| `server.json`                    | `version`, `packages[].version`   |
+| `plugin.json`                    | `version`                         |
+| `.cursor-plugin/plugin.json`     | `version`                         |
+| `.claude-plugin/plugin.json`     | `version`                         |
+| `extensions/vscode/package.json` | `version`                         |
 
 `package.json` » `version` is the reference every other file is compared against.
 
@@ -44,6 +45,27 @@ requires `@<5`.
 
 The package identifier both manifests carry must match `package.json`, `package-lock.json` and
 `server.json` » `packages[].identifier`.
+
+The VS Code extension carries the same pin in its own manifest, under
+`extensions/vscode/package.json` » `dynatraceManagedMcpServer`. Its `npx` runtime mode reads
+`npmPackage` and `npmVersionRange` from there at runtime, so both are checked against
+`package.json` the same way.
+
+## The VS Code extension version
+
+`extensions/vscode/package.json` moves with every release even when only the extension changed,
+because the Marketplace refuses a re-upload of a version it already has. The Marketplace also only
+accepts strict `x.y.z`, so the `publish-vscode` job **skips prerelease tags** - a `v1.2.0-beta.1`
+ships to npm, GHCR and the MCP Registry, but not to the Marketplace.
+
+Beyond the version, `npm run version:check` asserts that the extension manifest declares a
+`publisher` and an `engines.vscode` (vsce reports neither until it is already uploading), that
+`main` matches the path `esbuild.mjs` actually writes, that a
+`contributes.mcpServerDefinitionProviders` entry exists and its `id` is referenced by
+`src/extension.ts`, and that `README.md` and `LICENSE` are present for packaging. A manifest with no
+provider entry packages, installs and then contributes no MCP server at all - the same silent
+failure mode the Claude Code checks above guard against. See
+[docs/vscode-extension.md](docs/vscode-extension.md) for the rest.
 
 ## Other consistency checks
 
