@@ -55,7 +55,6 @@
 - Documented the version-bearing manifests, the `npx` major pin gate and the `version:check` checks in [RELEASE.md](RELEASE.md), along with what each plugin distribution channel requires per release
 - Documented Claude Code plugin installation in [README.md](README.md) and added [docs/claude-code-plugin.md](docs/claude-code-plugin.md) covering the plugin layout, local development and validation
 - Documented VS Code extension installation in [README.md](README.md) and added [docs/vscode-extension.md](docs/vscode-extension.md) covering why the extension is a separate package, how it launches the server, local development and the publishing prerequisites. The README now also points at the MCP gallery built into VS Code (`@mcp dynatrace` in the Extensions view), which the existing MCP Registry publish already populates
-- Corrected `DT_MCP_DISABLE_TELEMETRY` to `DT_MCP_ENABLE_TELEMETRY` in the two example MCP configurations in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md); the variable had been renamed but these examples still set the removed one
 
 ## 1.1.1
 
