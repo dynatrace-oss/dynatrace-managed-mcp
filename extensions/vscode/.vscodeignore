@@ -1,0 +1,13 @@
+# Source and build tooling - the .vsix ships only the bundled output in dist/.
+src/**
+node_modules/**
+esbuild.mjs
+tsconfig.json
+.vscode/**
+.vscode-test/**
+
+# Sourcemaps roughly triple the package size and are of no use to end users.
+dist/**/*.map
+
+# Produced by `npm run package` - never nest a .vsix inside a .vsix.
+*.vsix
