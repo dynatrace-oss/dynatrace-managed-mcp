@@ -248,16 +248,14 @@ jobs:
         working-directory: extensions/vscode
 
       - name: Package extension
-        env:
-          VERSION: ${{ needs.extract-info.outputs.version }}
-        run: npx vsce package --out "dynatrace-managed-mcp-$VERSION.vsix"
+        run: npm run package
         working-directory: extensions/vscode
 
       - name: Publish to the VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VERSION: ${{ needs.extract-info.outputs.version }}
-        run: npx vsce publish --packagePath "dynatrace-managed-mcp-$VERSION.vsix"
+        run: npm run publish:marketplace -- --packagePath "dynatrace-managed-mcp-$VERSION.vsix"
         working-directory: extensions/vscode
 
       - name: Attach the extension to the GitHub release

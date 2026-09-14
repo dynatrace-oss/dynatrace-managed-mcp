@@ -69,9 +69,10 @@ function npxServerDefinition(context: vscode.ExtensionContext): vscode.McpStdioS
 
 export function activate(context: vscode.ExtensionContext): void {
   const didChangeDefinitions = new vscode.EventEmitter<void>();
-  context.subscriptions.push(didChangeDefinitions);
 
   context.subscriptions.push(
+    didChangeDefinitions,
+
     vscode.lm.registerMcpServerDefinitionProvider(PROVIDER_ID, {
       onDidChangeMcpServerDefinitions: didChangeDefinitions.event,
 
@@ -93,9 +94,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return server;
       },
     }),
-  );
 
-  context.subscriptions.push(
     vscode.commands.registerCommand('dynatraceManagedMcp.configure', async () => {
       if (await configureEnvironments(context)) {
         didChangeDefinitions.fire();

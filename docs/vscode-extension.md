@@ -113,7 +113,7 @@ npm ci --ignore-scripts
 npm run build                                # bundles dist/extension.js and dist/mcp/server.js
 npm run watch                                # same, rebuilding on change
 npm run typecheck
-npm run package                              # produces dynatrace-managed-mcp.vsix
+npm run package                              # produces dynatrace-managed-mcp-<version>.vsix
 ```
 
 The root install is required: `esbuild` resolves `axios`, `winston` and the MCP SDK from the
