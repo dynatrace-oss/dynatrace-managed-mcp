@@ -5,6 +5,9 @@
 # core maintainers
 @christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
 
+# DynaDev repository-owned review policy
+/.github/dynadev.yml @christian-kreuzberger-dtx @MrManny @raphael-wigoutschnigg-dt
+
 # allow updates for markdown files and server.json
 .md @krismuhi @dt-benedict
 server.json @krismuhi @dt-benedict
