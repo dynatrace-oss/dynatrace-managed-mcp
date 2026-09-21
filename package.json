@@ -68,14 +68,14 @@
     "@types/http-proxy": "^1.17.17",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.0.0",
-    "dotenv": "^17.2.3",
+    "dotenv": "^18.0.0",
     "eslint": "^10.6.0",
     "http-proxy": "^1.18.1",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "prettier": "^3.7.4",
     "ts-jest": "^29.4.6",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.62.1"
   }
 }
