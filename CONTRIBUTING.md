@@ -20,3 +20,7 @@ All submissions, including submissions by project members, require review. We
 use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
+
+## Automated pull request review
+
+Pull requests are automatically reviewed by DynaDev according to the repository-owned policy in [`.github/dynadev.yml`](.github/dynadev.yml). The automated review complements, but does not replace, maintainer review.
