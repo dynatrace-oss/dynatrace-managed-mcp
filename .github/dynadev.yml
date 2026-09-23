@@ -5,6 +5,10 @@ approved_profile: default
 skip_drafts: true
 skip_bots: true
 
+# Keep findings and change requests, but do not grant GitHub approval state.
+github_review:
+  approval_mode: comment_only
+
 conversation_aware:
   capture: true
   verify: true
