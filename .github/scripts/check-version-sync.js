@@ -6,6 +6,8 @@ const AGENT_PLUGINS_SPEC_VERSION = '1.0.0';
 const CLAUDE_PLUGIN_MANIFEST = '.claude-plugin/plugin.json';
 const MARKETPLACE_MANIFEST = '.claude-plugin/marketplace.json';
 const CLAUDE_MCP_MANIFEST = '.mcp.json';
+const VSCODE_EXTENSION_DIR = 'extensions/vscode';
+const VSCODE_EXTENSION_MANIFEST = `${VSCODE_EXTENSION_DIR}/package.json`;
 
 function readJson(relativePath) {
   const absolutePath = path.join(REPO_ROOT, relativePath);
@@ -45,13 +47,14 @@ function lockRootPackage(lock) {
   return (lock.packages || {})[''] || {};
 }
 
-function collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest) {
+function collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest, vscodeManifest) {
   const versions = [
     { source: 'package.json » version', value: pkg.version },
     { source: 'server.json » version', value: serverManifest.version },
     { source: 'plugin.json » version', value: pluginManifest.version },
     { source: '.cursor-plugin/plugin.json » version', value: cursorManifest.version },
     { source: `${CLAUDE_PLUGIN_MANIFEST} » version`, value: claudeManifest.version },
+    { source: `${VSCODE_EXTENSION_MANIFEST} » version`, value: vscodeManifest.version },
     { source: 'package-lock.json » version', value: lock.version },
     { source: 'package-lock.json » packages[""].version', value: lockRootPackage(lock).version },
   ];
@@ -71,11 +74,15 @@ function collectPluginNames(pluginManifest, cursorManifest, claudeManifest) {
   ];
 }
 
-function collectIdentifiers(pkg, lock, serverManifest, mcpManifests) {
+function collectIdentifiers(pkg, lock, serverManifest, mcpManifests, vscodeManifest) {
   const identifiers = [
     { source: 'package.json » name', value: pkg.name },
     { source: 'package-lock.json » name', value: lock.name },
     { source: 'package-lock.json » packages[""].name', value: lockRootPackage(lock).name },
+    {
+      source: `${VSCODE_EXTENSION_MANIFEST} » dynatraceManagedMcpServer.npmPackage`,
+      value: (vscodeManifest.dynatraceManagedMcpServer || {}).npmPackage,
+    },
   ];
 
   (serverManifest.packages || []).forEach((entry, index) => {
@@ -289,6 +296,119 @@ function checkMarketplaceEntries(marketplace, claudeManifest) {
   return errors;
 }
 
+function checkVsCodeExtension(pkg, vscodeManifest) {
+  const errors = [];
+  const at = VSCODE_EXTENSION_MANIFEST;
+  const major = majorOf(pkg.version);
+
+  const spec = vscodeManifest.dynatraceManagedMcpServer;
+  if (spec === undefined) {
+    errors.push(
+      `${at} declares no dynatraceManagedMcpServer block - the "npx" runtime mode reads npmPackage ` +
+        `and npmVersionRange from it and would launch "undefined@undefined"`,
+    );
+  } else if (major !== undefined && spec.npmVersionRange !== `<${major + 1}`) {
+    errors.push(
+      `${at} » dynatraceManagedMcpServer.npmVersionRange is ${JSON.stringify(spec.npmVersionRange)} but ` +
+        `version ${pkg.version} requires "<${major + 1}". Widen the pin deliberately as part of the major release.`,
+    );
+  }
+
+  if (!vscodeManifest.publisher) {
+    errors.push(`${at} declares no publisher - vsce cannot publish the extension without one`);
+  }
+
+  if (!(vscodeManifest.engines || {}).vscode) {
+    errors.push(`${at} declares no engines.vscode - the Marketplace cannot tell which VS Code versions are supported`);
+  }
+
+  if (vscodeManifest.main !== './dist/extension.js') {
+    errors.push(
+      `${at} » main is ${JSON.stringify(vscodeManifest.main)} but esbuild.mjs writes the bundle to ` +
+        `"./dist/extension.js" - the extension would fail to activate`,
+    );
+  }
+
+  const providers = (vscodeManifest.contributes || {}).mcpServerDefinitionProviders || [];
+  if (providers.length === 0) {
+    errors.push(
+      `${at} contributes no mcpServerDefinitionProviders - the extension would install without ` +
+        `registering an MCP server`,
+    );
+  } else {
+    const source = path.join(REPO_ROOT, VSCODE_EXTENSION_DIR, 'src', 'extension.ts');
+    const extensionSource = fs.existsSync(source) ? fs.readFileSync(source, 'utf8') : '';
+    providers.forEach((provider, index) => {
+      if (!provider.id) {
+        errors.push(`${at} » contributes.mcpServerDefinitionProviders[${index}] declares no id`);
+        return;
+      }
+
+      if (extensionSource && !extensionSource.includes(`'${provider.id}'`)) {
+        errors.push(
+          `${at} » contributes.mcpServerDefinitionProviders[${index}].id is ${JSON.stringify(provider.id)} but ` +
+            `${VSCODE_EXTENSION_DIR}/src/extension.ts never references it - ` +
+            `registerMcpServerDefinitionProvider would be called with an uncontributed id`,
+        );
+      }
+    });
+  }
+
+  ['README.md', 'LICENSE'].forEach((file) => {
+    if (!fs.existsSync(path.join(REPO_ROOT, VSCODE_EXTENSION_DIR, file))) {
+      errors.push(`${VSCODE_EXTENSION_DIR}/${file} is missing - vsce packages it into the .vsix`);
+    }
+  });
+
+  if (vscodeManifest.icon || vscodeManifest.iconSource) {
+    errors.push(...checkMarketplaceIcon(vscodeManifest));
+  }
+
+  return errors;
+}
+
+function checkMarketplaceIcon(vscodeManifest) {
+  const at = `${VSCODE_EXTENSION_DIR}/package.json`;
+
+  if (!vscodeManifest.icon || !vscodeManifest.iconSource) {
+    return [
+      `${at} declares only one of icon and iconSource - esbuild.mjs copies iconSource to icon, so ` +
+        `both are required`,
+    ];
+  }
+
+  const relativeSource = path.posix.normalize(`${VSCODE_EXTENSION_DIR}/${vscodeManifest.iconSource}`);
+  const source = path.join(REPO_ROOT, VSCODE_EXTENSION_DIR, vscodeManifest.iconSource);
+
+  if (!fs.existsSync(source)) {
+    return [`${at} » iconSource points at ${JSON.stringify(relativeSource)}, which does not exist`];
+  }
+
+  const header = fs.readFileSync(source);
+  const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (header.length < 24 || !header.subarray(0, 8).equals(PNG_SIGNATURE)) {
+    return [`${relativeSource} is not a PNG file, but the Marketplace icon must be one`];
+  }
+
+  const width = header.readUInt32BE(16);
+  const height = header.readUInt32BE(20);
+  const errors = [];
+
+  if (width < 128 || height < 128) {
+    errors.push(
+      `${relativeSource} is ${width}x${height}, but the Marketplace requires the extension icon to be at ` +
+        `least 128x128. vsce packages a smaller icon without complaint and the upload is rejected instead, so ` +
+        `supply a larger source image rather than upscaling this one.`,
+    );
+  }
+
+  if (width !== height) {
+    errors.push(`${relativeSource} is ${width}x${height}; the extension icon is rendered square`);
+  }
+
+  return errors;
+}
+
 function parseExpectedVersion(argv) {
   const flagIndex = argv.indexOf('--expect-version');
   if (flagIndex === -1) {
@@ -315,6 +435,7 @@ function main() {
   const claudeManifest = readJson(CLAUDE_PLUGIN_MANIFEST);
   const claudeMcpManifest = readJson(CLAUDE_MCP_MANIFEST);
   const marketplace = readJson(MARKETPLACE_MANIFEST);
+  const vscodeManifest = readJson(VSCODE_EXTENSION_MANIFEST);
 
   const mcpManifests = [
     { file: 'mcp.json', manifest: mcpManifest },
@@ -324,9 +445,12 @@ function main() {
   const errors = [
     ...findDisagreements(
       'Package version',
-      collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest),
+      collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest, vscodeManifest),
     ),
-    ...findDisagreements('Package identifier', collectIdentifiers(pkg, lock, serverManifest, mcpManifests)),
+    ...findDisagreements(
+      'Package identifier',
+      collectIdentifiers(pkg, lock, serverManifest, mcpManifests, vscodeManifest),
+    ),
     ...findDisagreements('Plugin name', collectPluginNames(pluginManifest, cursorManifest, claudeManifest)),
     ...findDisagreements('MCP registry name', [
       { source: 'package.json » mcpName', value: pkg.mcpName },
@@ -339,6 +463,7 @@ function main() {
     ...checkClaudePluginPaths(claudeManifest),
     ...checkClaudeUserConfigIsWired(claudeManifest, claudeMcpManifest),
     ...checkMarketplaceEntries(marketplace, claudeManifest),
+    ...checkVsCodeExtension(pkg, vscodeManifest),
   ];
 
   if (expectedVersion !== undefined && pkg.version !== expectedVersion) {
