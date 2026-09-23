@@ -23,4 +23,4 @@ information on using pull requests.
 
 ## Automated pull request review
 
-Pull requests are automatically reviewed by DynaDev according to the repository-owned policy in [`.github/dynadev.yml`](.github/dynadev.yml). The automated review complements, but does not replace, maintainer review.
+Pull requests are automatically reviewed by DynaDev according to the repository-owned policy in [`.github/dynadev.yml`](.github/dynadev.yml). Clean DynaDev assessments are posted as comments and do not satisfy approval requirements. The automated review complements, but does not replace, maintainer review.
