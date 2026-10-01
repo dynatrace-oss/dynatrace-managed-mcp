@@ -14,7 +14,7 @@ import {
   validateManagedClients,
 } from './authentication/managed-auth-client';
 import { getManagedEnvironmentConfigs, validateEnvironments, buildConfigTokenMap } from './utils/environment';
-import { parseTokenHeader, deriveUserKey } from './utils/token-header';
+import { parseTokenHeader, deriveUserKey, createTokenHeaderErrorResponse } from './utils/token-header';
 import {
   buildAllowedHostnames,
   hasExplicitAllowlist,
@@ -90,6 +90,30 @@ const hasValidSuppliedTokens = (
     .catch(() => tokenValidationCache.delete(userKey));
 
   return result;
+};
+
+/**
+ * Buffer a request body, bailing out as soon as `DT_MCP_MAX_BODY_SIZE` (default 1MB) is exceeded
+ * so an oversized upload is never read into memory in full.
+ *
+ * @returns the raw body, or `null` when the size limit was exceeded.
+ */
+const readRequestBody = async (req: IncomingMessage): Promise<string | null> => {
+  const maxBodySize = (() => {
+    const parsed = Number(process.env.DT_MCP_MAX_BODY_SIZE);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1024 * 1024;
+  })();
+
+  const chunks: Buffer[] = [];
+  let totalSize = 0;
+  for await (const chunk of req) {
+    totalSize += chunk.length;
+    if (totalSize > maxBodySize) {
+      return null;
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString();
 };
 
 const main = async () => {
@@ -341,7 +365,16 @@ const main = async () => {
       }
 
       const tokenHeader = req.headers['x-dynatrace-tokens'];
-      const tokenMap = parseTokenHeader(tokenHeader);
+      let tokenMap: Map<string, string>;
+      try {
+        tokenMap = parseTokenHeader(tokenHeader);
+      } catch (error) {
+        const rejection = createTokenHeaderErrorResponse(error);
+        logger.warn(`Rejected request with invalid X-Dynatrace-Tokens header: ${rejection.body.error.message}`);
+        res.writeHead(rejection.status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(rejection.body));
+        return;
+      }
       const userKey = deriveUserKey(Array.isArray(tokenHeader) ? tokenHeader.join(';') : tokenHeader);
 
       // Validate every request: a stateless MCP connection spans several requests, and gating only
@@ -360,29 +393,14 @@ const main = async () => {
 
       let body: unknown;
       if (req.method === 'POST') {
-        const maxBodySize = (() => {
-          const parsed = Number(process.env.DT_MCP_MAX_BODY_SIZE);
-          return Number.isFinite(parsed) && parsed > 0 ? parsed : 1024 * 1024;
-        })(); // default 1MB
-        const chunks: Buffer[] = [];
-        let totalSize = 0;
-        let tooLarge = false;
-        for await (const chunk of req) {
-          totalSize += chunk.length;
-          if (totalSize > maxBodySize) {
-            tooLarge = true;
-            break;
-          }
-          chunks.push(chunk);
-        }
-        if (tooLarge) {
+        const rawBody = await readRequestBody(req);
+        if (rawBody === null) {
           res.writeHead(413, { 'Content-Type': 'application/json' });
           res.end(
             JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Request Entity Too Large' } }),
           );
           return;
         }
-        const rawBody = Buffer.concat(chunks).toString();
         try {
           body = JSON.parse(rawBody);
         } catch {

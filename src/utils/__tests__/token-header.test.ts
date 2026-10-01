@@ -1,4 +1,4 @@
-import { parseTokenHeader, deriveUserKey } from '../token-header';
+import { parseTokenHeader, deriveUserKey, createTokenHeaderErrorResponse } from '../token-header';
 
 // Silence + observe logger output
 jest.mock('../logger', () => ({
@@ -37,9 +37,22 @@ describe('parseTokenHeader', () => {
     expect(map.get('prod')).toBe('dt0c01.A=B=C');
   });
 
-  it('uses the last value when an alias is repeated', () => {
-    const map = parseTokenHeader('prod=first;prod=second');
-    expect(map.get('prod')).toBe('second');
+  it('throws when an alias is repeated', () => {
+    expect(() => parseTokenHeader('prod=first;prod=second')).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('throws when a repeated alias only matches after trimming', () => {
+    expect(() => parseTokenHeader('prod=first;  prod  =second')).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('throws when the duplicate spans entries of an array-valued header', () => {
+    expect(() => parseTokenHeader(['prod=first', 'prod=second'])).toThrow(/Duplicate alias "prod"/);
+  });
+
+  it('does not treat aliases differing in case as duplicates', () => {
+    const map = parseTokenHeader('prod=dt0c01.AAA;PROD=dt0c01.BBB');
+    expect(map.get('prod')).toBe('dt0c01.AAA');
+    expect(map.get('PROD')).toBe('dt0c01.BBB');
   });
 
   it('joins an array-valued header before parsing', () => {
@@ -65,5 +78,31 @@ describe('deriveUserKey', () => {
 
   it('differs for different token bundles', () => {
     expect(deriveUserKey('prod=AAA')).not.toBe(deriveUserKey('prod=BBB'));
+  });
+});
+
+describe('createTokenHeaderErrorResponse', () => {
+  it('returns a JSON-RPC invalid-request response with the parsing error message', () => {
+    const error = new Error('Duplicate alias "prod" in X-Dynatrace-Tokens header.');
+
+    expect(createTokenHeaderErrorResponse(error)).toEqual({
+      status: 400,
+      body: {
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32600, message: error.message },
+      },
+    });
+  });
+
+  it('uses a safe fallback message for non-Error values', () => {
+    expect(createTokenHeaderErrorResponse('unexpected value')).toEqual({
+      status: 400,
+      body: {
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: -32600, message: 'Invalid X-Dynatrace-Tokens header' },
+      },
+    });
   });
 });
