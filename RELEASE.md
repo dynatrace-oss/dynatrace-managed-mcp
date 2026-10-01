@@ -55,8 +55,9 @@ The VS Code extension carries the same pin in its own manifest, under
 
 `extensions/vscode/package.json` moves with every release even when only the extension changed,
 because the Marketplace refuses a re-upload of a version it already has. The Marketplace also only
-accepts strict `x.y.z`, so the `publish-vscode` job **skips prerelease tags** - a `v1.2.0-beta.1`
-ships to npm, GHCR and the MCP Registry, but not to the Marketplace.
+accepts strict `x.y.z`, so the `publish-vscode` job **skips the Marketplace publish for prerelease
+tags** - a `v1.2.0-beta.1` still gets its `.vsix` attached to the GitHub release, but is not
+published to the Marketplace.
 
 Beyond the version, `npm run version:check` asserts that the extension manifest declares a
 `publisher` and an `engines.vscode` (vsce reports neither until it is already uploading), that

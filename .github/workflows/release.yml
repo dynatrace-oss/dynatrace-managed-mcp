@@ -228,7 +228,6 @@ jobs:
   publish-vscode:
     runs-on: ubuntu-latest
     needs: [extract-info, github-release]
-    if: ${{ !contains(needs.extract-info.outputs.version, '-') }}
     permissions:
       contents: write
     steps:
@@ -251,19 +250,20 @@ jobs:
         run: npm run package
         working-directory: extensions/vscode
 
-      - name: Publish to the VS Code Marketplace
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          VERSION: ${{ needs.extract-info.outputs.version }}
-        run: npm run publish:marketplace -- --packagePath "dynatrace-managed-mcp-$VERSION.vsix"
-        working-directory: extensions/vscode
-
       - name: Attach the extension to the GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.extract-info.outputs.tag }}
           VERSION: ${{ needs.extract-info.outputs.version }}
         run: gh release upload "$TAG" "dynatrace-managed-mcp-$VERSION.vsix" --clobber
+        working-directory: extensions/vscode
+
+      - name: Publish to the VS Code Marketplace
+        if: ${{ !contains(needs.extract-info.outputs.version, '-') }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VERSION: ${{ needs.extract-info.outputs.version }}
+        run: npm run publish:marketplace -- --packagePath "dynatrace-managed-mcp-$VERSION.vsix"
         working-directory: extensions/vscode
 
   publish-mcp-registry:

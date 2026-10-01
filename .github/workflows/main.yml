@@ -68,6 +68,10 @@ jobs:
         run: npm run typecheck
         working-directory: extensions/vscode
 
+      - name: Test extension
+        run: npm test
+        working-directory: extensions/vscode
+
       - name: Package extension
         run: npm run package
         working-directory: extensions/vscode

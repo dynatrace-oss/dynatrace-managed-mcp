@@ -81,7 +81,7 @@ function collectIdentifiers(pkg, lock, serverManifest, mcpManifests, vscodeManif
     { source: 'package-lock.json » packages[""].name', value: lockRootPackage(lock).name },
     {
       source: `${VSCODE_EXTENSION_MANIFEST} » dynatraceManagedMcpServer.npmPackage`,
-      value: (vscodeManifest.dynatraceManagedMcpServer || {}).npmPackage,
+      value: vscodeManifest.dynatraceManagedMcpServer?.npmPackage,
     },
   ];
 
@@ -296,6 +296,12 @@ function checkMarketplaceEntries(marketplace, claudeManifest) {
   return errors;
 }
 
+// Whether `source` contains `value` as a string literal. All three JS delimiters are checked so the
+// result does not depend on the quote style Prettier happens to be configured for.
+function referencesStringLiteral(source, value) {
+  return ["'", '"', '`'].some((quote) => source.includes(`${quote}${value}${quote}`));
+}
+
 function checkVsCodeExtension(pkg, vscodeManifest) {
   const errors = [];
   const at = VSCODE_EXTENSION_MANIFEST;
@@ -318,7 +324,7 @@ function checkVsCodeExtension(pkg, vscodeManifest) {
     errors.push(`${at} declares no publisher - vsce cannot publish the extension without one`);
   }
 
-  if (!(vscodeManifest.engines || {}).vscode) {
+  if (!vscodeManifest.engines?.vscode) {
     errors.push(`${at} declares no engines.vscode - the Marketplace cannot tell which VS Code versions are supported`);
   }
 
@@ -329,7 +335,7 @@ function checkVsCodeExtension(pkg, vscodeManifest) {
     );
   }
 
-  const providers = (vscodeManifest.contributes || {}).mcpServerDefinitionProviders || [];
+  const providers = vscodeManifest.contributes?.mcpServerDefinitionProviders ?? [];
   if (providers.length === 0) {
     errors.push(
       `${at} contributes no mcpServerDefinitionProviders - the extension would install without ` +
@@ -344,7 +350,7 @@ function checkVsCodeExtension(pkg, vscodeManifest) {
         return;
       }
 
-      if (extensionSource && !extensionSource.includes(`'${provider.id}'`)) {
+      if (extensionSource && !referencesStringLiteral(extensionSource, provider.id)) {
         errors.push(
           `${at} » contributes.mcpServerDefinitionProviders[${index}].id is ${JSON.stringify(provider.id)} but ` +
             `${VSCODE_EXTENSION_DIR}/src/extension.ts never references it - ` +

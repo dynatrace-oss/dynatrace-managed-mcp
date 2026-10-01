@@ -7,6 +7,10 @@ const SERVER_MODULE = ['dist', 'mcp', 'server.js'];
 
 const SERVER_LABEL = 'Dynatrace Managed';
 
+const WINDOWS_PLATFORM = 'win32';
+const NPX = 'npx';
+const NPX_WINDOWS = 'npx.cmd';
+
 interface ServerPackageSpec {
   npmPackage: string;
   npmVersionRange: string;
@@ -60,7 +64,7 @@ function npxServerDefinition(context: vscode.ExtensionContext): vscode.McpStdioS
 
   return new vscode.McpStdioServerDefinition(
     SERVER_LABEL,
-    process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    process.platform === WINDOWS_PLATFORM ? NPX_WINDOWS : NPX,
     ['-y', `${spec.npmPackage}@${spec.npmVersionRange}`],
     buildEnvironment(),
     context.extension.packageJSON.version,
@@ -78,7 +82,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       provideMcpServerDefinitions: async () => {
         const runtime = settings().get<string>('runtime', 'bundled');
-        return [runtime === 'npx' ? npxServerDefinition(context) : bundledServerDefinition(context)];
+        return [runtime === NPX ? npxServerDefinition(context) : bundledServerDefinition(context)];
       },
 
       resolveMcpServerDefinition: async (server) => {

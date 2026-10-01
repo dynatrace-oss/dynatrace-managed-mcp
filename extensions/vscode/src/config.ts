@@ -87,7 +87,7 @@ async function promptForEnvironment(
   existing: readonly ManagedEnvironmentConfig[],
 ): Promise<ManagedEnvironmentConfig | undefined> {
   const apiEndpointUrl = await vscode.window.showInputBox({
-    title: 'Add a Dynatrace Managed cluster (1 of 4)',
+    title: 'Add a Dynatrace Managed cluster (step 1 of 4)',
     prompt: 'Cluster URL',
     placeHolder: 'https://managed.example.com',
     ignoreFocusOut: true,
@@ -98,9 +98,9 @@ async function promptForEnvironment(
   }
 
   const environmentId = await vscode.window.showInputBox({
-    title: 'Add a Dynatrace Managed cluster (2 of 4)',
+    title: 'Add a Dynatrace Managed cluster (step 2 of 4)',
     prompt: 'Environment ID',
-    placeHolder: 'abc12345',
+    placeHolder: '01234567-89ab-cdef-abcd-ef0123456789',
     ignoreFocusOut: true,
     validateInput: (value) => validateRequired(value, 'The environment ID'),
   });
@@ -109,7 +109,7 @@ async function promptForEnvironment(
   }
 
   const alias = await vscode.window.showInputBox({
-    title: 'Add a Dynatrace Managed cluster (3 of 4)',
+    title: 'Add a Dynatrace Managed cluster (step 3 of 4)',
     prompt: 'Alias - a short name you will use to refer to this environment',
     placeHolder: 'prod',
     ignoreFocusOut: true,
@@ -120,7 +120,7 @@ async function promptForEnvironment(
   }
 
   const apiToken = await vscode.window.showInputBox({
-    title: 'Add a Dynatrace Managed cluster (4 of 4)',
+    title: 'Add a Dynatrace Managed cluster (step 4 of 4)',
     prompt: 'API token - stored in the OS keychain, never in settings.json',
     placeHolder: 'dt0c01....',
     password: true,

@@ -133,8 +133,10 @@ Handled by the `publish-vscode` job in
 `github-release`, so a failed npm publish can never leave a Marketplace listing pointing at a
 version that does not exist, and so the `.vsix` can be attached to a release that already exists.
 
-Prereleases are skipped: the Marketplace only accepts strict `x.y.z` versions, so a tag like
-`v1.2.0-beta.1` ships to npm, GHCR and the MCP Registry only.
+The `.vsix` is attached to the GitHub release before the Marketplace publish, so every tag gets
+one even if publishing fails. The Marketplace only accepts strict `x.y.z` versions, so a prerelease
+tag like `v1.2.0-beta.1` gets the `.vsix` on its GitHub release but is not published to the
+Marketplace.
 
 One repository secret is required:
 
