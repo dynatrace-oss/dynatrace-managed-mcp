@@ -9,22 +9,25 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 
 ## Version-bearing manifests
 
-The npm package version is declared in six files, and they must all agree before tagging:
+The npm package version is declared in eight files, and they must all agree before tagging:
 
-| File                         | Field(s)                          |
-| ---------------------------- | --------------------------------- |
-| `package.json`               | `version`                         |
-| `package-lock.json`          | `version`, `packages[""].version` |
-| `server.json`                | `version`, `packages[].version`   |
-| `plugin.json`                | `version`                         |
-| `.cursor-plugin/plugin.json` | `version`                         |
-| `.claude-plugin/plugin.json` | `version`                         |
+| File                                  | Field(s)                          |
+| ------------------------------------- | --------------------------------- |
+| `package.json`                        | `version`                         |
+| `package-lock.json`                   | `version`, `packages[""].version` |
+| `server.json`                         | `version`, `packages[].version`   |
+| `plugin.json`                         | `version`                         |
+| `.cursor-plugin/plugin.json`          | `version`                         |
+| `.claude-plugin/plugin.json`          | `version`                         |
+| `extensions/vscode/package.json`      | `version`                         |
+| `extensions/vscode/package-lock.json` | `version`, `packages[""].version` |
 
 `package.json` » `version` is the reference every other file is compared against.
 
 `package-lock.json` is refreshed with `npm install --package-lock-only` after bumping
-`package.json`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
-the lock file is only kept honest by this check.
+`package.json`, and likewise `extensions/vscode/package-lock.json` by running the same command in
+`extensions/vscode`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
+the lock files are only kept honest by this check.
 
 The Claude Code manifest must move with every release even when only the skill changed: Claude Code
 pins an installed plugin to that `version` string and hands users an update only when it changes.
@@ -44,6 +47,28 @@ requires `@<5`.
 
 The package identifier both manifests carry must match `package.json`, `package-lock.json` and
 `server.json` » `packages[].identifier`.
+
+The VS Code extension carries the same pin in its own manifest, under
+`extensions/vscode/package.json` » `dynatraceManagedMcpServer`. Its `npx` runtime mode reads
+`npmPackage` and `npmVersionRange` from there at runtime, so both are checked against
+`package.json` the same way.
+
+## The VS Code extension version
+
+`extensions/vscode/package.json` moves with every release even when only the extension changed,
+because the Marketplace refuses a re-upload of a version it already has. The Marketplace also only
+accepts strict `x.y.z`, so the `publish-vscode` job **skips the Marketplace publish for prerelease
+tags** - a `v1.2.0-beta.1` still gets its `.vsix` attached to the GitHub release, but is not
+published to the Marketplace.
+
+Beyond the version, `npm run version:check` asserts that the extension manifest declares a
+`publisher` and an `engines.vscode` (vsce reports neither until it is already uploading), that
+`main` matches the path `esbuild.mjs` actually writes, that a
+`contributes.mcpServerDefinitionProviders` entry exists and its `id` is referenced by
+`src/extension.ts`, and that `README.md` and `LICENSE` are present for packaging. A manifest with no
+provider entry packages, installs and then contributes no MCP server at all - the same silent
+failure mode the Claude Code checks above guard against. See
+[docs/vscode-extension.md](docs/vscode-extension.md) for the rest.
 
 ## Other consistency checks
 
