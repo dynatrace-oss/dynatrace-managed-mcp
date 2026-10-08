@@ -8,6 +8,7 @@ const MARKETPLACE_MANIFEST = '.claude-plugin/marketplace.json';
 const CLAUDE_MCP_MANIFEST = '.mcp.json';
 const VSCODE_EXTENSION_DIR = 'extensions/vscode';
 const VSCODE_EXTENSION_MANIFEST = `${VSCODE_EXTENSION_DIR}/package.json`;
+const VSCODE_EXTENSION_LOCK = `${VSCODE_EXTENSION_DIR}/package-lock.json`;
 
 function readJson(relativePath) {
   const absolutePath = path.join(REPO_ROOT, relativePath);
@@ -47,7 +48,16 @@ function lockRootPackage(lock) {
   return (lock.packages || {})[''] || {};
 }
 
-function collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest, vscodeManifest) {
+function collectVersions(
+  pkg,
+  lock,
+  serverManifest,
+  pluginManifest,
+  cursorManifest,
+  claudeManifest,
+  vscodeManifest,
+  vscodeLock,
+) {
   const versions = [
     { source: 'package.json » version', value: pkg.version },
     { source: 'server.json » version', value: serverManifest.version },
@@ -57,6 +67,8 @@ function collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManife
     { source: `${VSCODE_EXTENSION_MANIFEST} » version`, value: vscodeManifest.version },
     { source: 'package-lock.json » version', value: lock.version },
     { source: 'package-lock.json » packages[""].version', value: lockRootPackage(lock).version },
+    { source: `${VSCODE_EXTENSION_LOCK} » version`, value: vscodeLock.version },
+    { source: `${VSCODE_EXTENSION_LOCK} » packages[""].version`, value: lockRootPackage(vscodeLock).version },
   ];
 
   (serverManifest.packages || []).forEach((entry, index) => {
@@ -442,6 +454,7 @@ function main() {
   const claudeMcpManifest = readJson(CLAUDE_MCP_MANIFEST);
   const marketplace = readJson(MARKETPLACE_MANIFEST);
   const vscodeManifest = readJson(VSCODE_EXTENSION_MANIFEST);
+  const vscodeLock = readJson(VSCODE_EXTENSION_LOCK);
 
   const mcpManifests = [
     { file: 'mcp.json', manifest: mcpManifest },
@@ -451,7 +464,16 @@ function main() {
   const errors = [
     ...findDisagreements(
       'Package version',
-      collectVersions(pkg, lock, serverManifest, pluginManifest, cursorManifest, claudeManifest, vscodeManifest),
+      collectVersions(
+        pkg,
+        lock,
+        serverManifest,
+        pluginManifest,
+        cursorManifest,
+        claudeManifest,
+        vscodeManifest,
+        vscodeLock,
+      ),
     ),
     ...findDisagreements(
       'Package identifier',

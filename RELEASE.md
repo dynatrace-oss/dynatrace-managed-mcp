@@ -9,23 +9,25 @@ This repository uses automated GitHub workflows to prepare releases whenever a n
 
 ## Version-bearing manifests
 
-The npm package version is declared in seven files, and they must all agree before tagging:
+The npm package version is declared in eight files, and they must all agree before tagging:
 
-| File                             | Field(s)                          |
-| -------------------------------- | --------------------------------- |
-| `package.json`                   | `version`                         |
-| `package-lock.json`              | `version`, `packages[""].version` |
-| `server.json`                    | `version`, `packages[].version`   |
-| `plugin.json`                    | `version`                         |
-| `.cursor-plugin/plugin.json`     | `version`                         |
-| `.claude-plugin/plugin.json`     | `version`                         |
-| `extensions/vscode/package.json` | `version`                         |
+| File                                  | Field(s)                          |
+| ------------------------------------- | --------------------------------- |
+| `package.json`                        | `version`                         |
+| `package-lock.json`                   | `version`, `packages[""].version` |
+| `server.json`                         | `version`, `packages[].version`   |
+| `plugin.json`                         | `version`                         |
+| `.cursor-plugin/plugin.json`          | `version`                         |
+| `.claude-plugin/plugin.json`          | `version`                         |
+| `extensions/vscode/package.json`      | `version`                         |
+| `extensions/vscode/package-lock.json` | `version`, `packages[""].version` |
 
 `package.json` » `version` is the reference every other file is compared against.
 
 `package-lock.json` is refreshed with `npm install --package-lock-only` after bumping
-`package.json`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
-the lock file is only kept honest by this check.
+`package.json`, and likewise `extensions/vscode/package-lock.json` by running the same command in
+`extensions/vscode`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
+the lock files are only kept honest by this check.
 
 The Claude Code manifest must move with every release even when only the skill changed: Claude Code
 pins an installed plugin to that `version` string and hands users an update only when it changes.

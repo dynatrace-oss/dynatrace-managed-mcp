@@ -17,7 +17,7 @@
     "url": "https://github.com/dynatrace-oss/dynatrace-managed-mcp/issues"
   },
   "engines": {
-    "vscode": "^1.101.0"
+    "vscode": "^1.123.0"
   },
   "categories": [
     "AI",
