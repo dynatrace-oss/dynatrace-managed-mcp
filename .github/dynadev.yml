@@ -19,8 +19,10 @@ pr_review_learnings:
   enabled: false
   frequency: weekly
 
+# Review PRs above the standard size limit (10k changed lines / 100 files),
+# e.g. ones that include large lockfiles. Oversized PRs still get a notice.
 large_pr_reviews:
-  enabled: false
+  enabled: true
 
 oversized_reviews:
   acknowledged_projection:
