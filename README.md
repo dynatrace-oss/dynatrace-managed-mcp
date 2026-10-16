@@ -154,6 +154,25 @@ We recommend always setting it up for your current workspace instead of using it
 
 #### VS Code
 
+VS Code can install this server as an
+[extension](https://marketplace.visualstudio.com/items?itemName=dynatrace.dynatrace-managed-mcp),
+which skips the manual MCP configuration below entirely:
+
+```shell
+code --install-extension dynatrace.dynatrace-managed-mcp
+```
+
+The extension bundles the server and runs it on the Node.js runtime inside VS Code, so it needs
+neither Node.js on your `PATH` nor access to the npm registry, and it keeps API tokens in the OS
+keychain instead of a `.env` file. Run **Dynatrace Managed MCP: Configure Clusters** from the Command
+Palette after installing. See [docs/vscode-extension.md](docs/vscode-extension.md) for the settings
+it contributes and how to install the `.vsix` directly on an air-gapped machine.
+
+The server is also listed in the MCP gallery built into VS Code - open the Extensions view and search
+for `@mcp dynatrace` - which configures the `npx` invocation below for you.
+
+To configure the connection by hand instead:
+
 ```json
 {
   "servers": {
@@ -441,6 +460,7 @@ The Dynatrace MCP Server includes sending Telemetry Data via Dynatrace OpenKit t
 - [Architecture](docs/architecture.md) - detailed diagrams representing architecture of Dynatrace environment while using MCP server in either stdio or http mode
 - [Environment variables](docs/environment_variables.md) - detailed information about available environment variables
 - [Rule file](docs/rule_file.md) - determine rules for your AI Assistant to ensure smooth usage of the Managed cluster
+- [VS Code extension](docs/vscode-extension.md) - the bundled VS Code extension: installation, settings, and how it launches the server
 
 ### Development
 
