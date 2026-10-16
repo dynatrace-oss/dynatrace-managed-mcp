@@ -27,7 +27,8 @@ The npm package version is declared in eight files, and they must all agree befo
 `package-lock.json` is refreshed with `npm install --package-lock-only` after bumping
 `package.json`, and likewise `extensions/vscode/package-lock.json` by running the same command in
 `extensions/vscode`. Note that `npm ci` succeeds against a stale root version and does not correct it, so
-the lock files are only kept honest by this check.
+the lock files are only kept honest by this check. The same applies to `engines`: each lock file's
+`packages[""].engines` must match the `engines` of the manifest next to it.
 
 The Claude Code manifest must move with every release even when only the skill changed: Claude Code
 pins an installed plugin to that `version` string and hands users an update only when it changes.

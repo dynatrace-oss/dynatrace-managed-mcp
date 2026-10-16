@@ -115,6 +115,20 @@ function collectIdentifiers(pkg, lock, serverManifest, mcpManifests, vscodeManif
   return identifiers;
 }
 
+function checkLockEngines(manifestFile, manifest, lockFile, lock) {
+  const declared = JSON.stringify(manifest.engines ?? {});
+  const locked = JSON.stringify(lockRootPackage(lock).engines ?? {});
+
+  if (declared === locked) {
+    return [];
+  }
+
+  return [
+    `${lockFile} » packages[""].engines is ${locked} but ${manifestFile} » engines is ${declared} - ` +
+      `run \`npm install --package-lock-only\` next to ${manifestFile} to refresh it`,
+  ];
+}
+
 function findDisagreements(label, entries) {
   const [reference, ...rest] = entries;
   const mismatches = rest.filter((entry) => entry.value !== reference.value);
@@ -492,6 +506,8 @@ function main() {
     ...checkClaudeUserConfigIsWired(claudeManifest, claudeMcpManifest),
     ...checkMarketplaceEntries(marketplace, claudeManifest),
     ...checkVsCodeExtension(pkg, vscodeManifest),
+    ...checkLockEngines('package.json', pkg, 'package-lock.json', lock),
+    ...checkLockEngines(VSCODE_EXTENSION_MANIFEST, vscodeManifest, VSCODE_EXTENSION_LOCK, vscodeLock),
   ];
 
   if (expectedVersion !== undefined && pkg.version !== expectedVersion) {
