@@ -46,7 +46,7 @@
 | deps     | hono                                                                 | 4.13.4 | 4.13.5  |
 | ci       | docker/setup-qemu-action                                             | 4.2.0  | 4.4.0   |
 | deps-dev | @types/node                                                          | 26.4.0 | 26.6.2  |
-| deps     | axios                                                                | 1.19.0 | 1.20.0  |
+| deps     | axios                                                                | 1.19.0 | 1.21.0  |
 | deps-dev | browserslist                                                         | 4.27.0 | 4.28.8  |
 | deps     | js-yaml                                                              | 3.14.2 | 3.15.2  |
 | ci       | google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml | 2.5.1  | 2.6.0   |
@@ -56,6 +56,7 @@
 | deps-dev | @babel/core                                                          | 7.28.5 | 7.29.7  |
 | deps     | ip-address                                                           | 10.4.0 | 10.7.2  |
 | deps     | node                                                                 | 26.5.1 | 26.12.1 |
+| deps     | @modelcontextprotocol/sdk                                            | 1.30.0 | 1.32.2  |
 
 ### Documentation
 
