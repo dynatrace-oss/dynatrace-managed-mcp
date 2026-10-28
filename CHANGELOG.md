@@ -1,6 +1,6 @@
 # @dynatrace-oss/dynatrace-managed-mcp
 
-## Unreleased changes
+## 2.0.0
 
 ### Breaking changes
 
@@ -40,13 +40,28 @@
 
 ### Dependencies
 
-| Type     | Name                     | Old    | New    |
-| -------- | ------------------------ | ------ | ------ |
-| deps     | fast-uri                 | 3.1.6  | 3.1.7  |
-| deps     | hono                     | 4.13.4 | 4.13.5 |
-| ci       | docker/setup-qemu-action | 4.2.0  | 4.3.0  |
-| dev-deps | @types/node              | 26.4.0 | 26.4.1 |
-| deps     | axios                    | 1.19.0 | 1.20.0 |
+| Type     | Name                                                                 | Old     | New     |
+| -------- | -------------------------------------------------------------------- | ------- | ------- |
+| deps     | fast-uri                                                             | 3.1.6   | 3.1.7   |
+| deps     | hono                                                                 | 4.13.4  | 4.13.5  |
+| ci       | docker/setup-qemu-action                                             | 4.2.0   | 4.4.0   |
+| deps-dev | @types/node                                                          | 26.4.0  | 26.6.2  |
+| deps     | axios                                                                | 1.19.0  | 1.21.0  |
+| deps-dev | browserslist                                                         | 4.27.0  | 4.28.8  |
+| deps     | js-yaml                                                              | 3.14.2  | 3.15.2  |
+| ci       | google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml | 2.5.1   | 2.6.0   |
+| ci       | docker/setup-buildx-action                                           | 4.3.0   | 4.4.1   |
+| ci       | github/codeql-action/analyze                                         | 4.37.9  | 4.38.1  |
+| ci       | github/codeql-action/init                                            | 4.37.9  | 4.38.1  |
+| deps-dev | @babel/core                                                          | 7.28.5  | 7.29.7  |
+| deps     | ip-address                                                           | 10.4.0  | 10.7.2  |
+| engine   | node                                                                 | 26.5.1  | 26.12.1 |
+| docker   | node                                                                 | 26.5.1  | 26.12.1 |
+| deps     | @modelcontextprotocol/sdk                                            | 1.30.0  | 1.32.2  |
+| deps     | body-parser                                                          | 2.3.0   | 2.4.0   |
+| deps     | follow-redirects                                                     | 1.16.0  | 1.16.2  |
+| deps     | qs                                                                   | 6.16.0  | 6.17.0  |
+| deps     | zod                                                                  | 3.25.76 | 4.6.7   |
 
 ### Documentation
 

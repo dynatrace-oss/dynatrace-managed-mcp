@@ -4,7 +4,7 @@
     "dynatrace-managed": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<2"],
+      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<3"],
       "env": {
         "DT_ENVIRONMENT_CONFIGS": "${DT_ENVIRONMENT_CONFIGS}"
       }

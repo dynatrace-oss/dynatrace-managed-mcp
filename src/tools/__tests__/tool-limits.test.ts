@@ -47,7 +47,7 @@ function captureToolSchemas(): Map<string, ZodRawShape> {
 }
 
 /** Returns the `.max()` bound of a (possibly optional) number schema, or null when uncapped. */
-function maxValueOf(schema: ZodTypeAny): number | null {
+function maxValueOf(schema: z.core.$ZodType): number | null {
   const inner = schema instanceof ZodOptional ? (schema.unwrap() as ZodTypeAny) : schema;
   return inner instanceof ZodNumber ? inner.maxValue : null;
 }

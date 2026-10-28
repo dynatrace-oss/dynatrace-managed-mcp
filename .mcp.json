@@ -3,7 +3,7 @@
     "dynatrace-managed": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<2"],
+      "args": ["-y", "@dynatrace-oss/dynatrace-managed-mcp-server@<3"],
       "env": {
         "DT_ENVIRONMENT_CONFIGS": "${user_config.dt_environment_configs}",
         "DT_CONFIG_FILE": "${user_config.dt_config_file}",

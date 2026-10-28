@@ -1,7 +1,7 @@
 {
   "name": "dynatrace-managed-mcp",
   "displayName": "Dynatrace Managed",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "Query logs, metrics, events, entities, problems, security vulnerabilities and SLOs from self-hosted Dynatrace Managed clusters, across one or many environments.",
   "author": {
     "name": "Dynatrace",
