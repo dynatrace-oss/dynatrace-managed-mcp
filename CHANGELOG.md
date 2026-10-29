@@ -37,6 +37,7 @@
 - `npm run version:check` now derives the required `npx` major pin from `package.json` and fails when `mcp.json` or `.mcp.json` disagrees, so releasing a new major with a stale `@<2` pin is blocked before anything is published
 - `npm run version:check` now also validates the Claude Code plugin's `skills` path and `userConfig` wiring, and every relative plugin `source` in `.claude-plugin/marketplace.json`. The marketplace source check closes a gap in `claude plugin validate`, which passes a source that points at a nonexistent directory
 - Added `npm run plugin:validate`, which runs `claude plugin validate --strict` over the plugin and marketplace manifests. It is a local pre-submission check rather than a CI step, because the Claude Code CLI downloads its native binary from a `postinstall` script and is unusable when installed with `--ignore-scripts`
+- `dynatrace_managed_get_environments_info` now probes all supplied environments concurrently in HTTP mode, so response time no longer scales with the number of configured environments. Response content and ordering are unchanged
 
 ### Dependencies
 

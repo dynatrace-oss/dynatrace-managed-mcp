@@ -26,23 +26,27 @@ export function registerEnvironmentTools(ctx: ToolContext): void {
       }
 
       // HTTP: validate each supplied token live. The uniform error for unknown aliases and invalid
-      // tokens keeps callers from enumerating which environments are configured.
-      for (const alias of ctx.authClientManager.suppliedAliases()) {
-        const token = ctx.authClientManager.tokenFor(alias);
-        const authClient = ctx.authClientManager.rawClients.find((client) => client.alias === alias);
+      // tokens keeps callers from enumerating which environments are configured. With 20+ environments
+      // the per-alias network round-trips dominate, so probe them concurrently and join in supplied
+      // order to keep the output deterministic.
+      const fragments = await Promise.all(
+        ctx.authClientManager.suppliedAliases().map(async (alias) => {
+          const token = ctx.authClientManager.tokenFor(alias);
+          const authClient = ctx.authClientManager.rawClients.find((client) => client.alias === alias);
 
-        if (token === undefined || authClient === undefined || !(await authClient.validateAPIToken(token))) {
-          logger.error(`Invalid token supplied for ${alias} environment.`);
-          resp += `Invalid token supplied for ${alias} environment.\n`;
-          continue;
-        }
+          if (token === undefined || authClient === undefined || !(await authClient.validateAPIToken(token))) {
+            logger.error(`Invalid token supplied for ${alias} environment.`);
+            return `Invalid token supplied for ${alias} environment.\n`;
+          }
 
-        resp += `- Environment Alias: ${authClient.alias}\n`;
-        resp += `- API URL: ${authClient.apiBaseUrl}\n`;
-        resp += await httpModeVersionResponse(authClient, ctx);
-      }
+          let fragment = `- Environment Alias: ${authClient.alias}\n`;
+          fragment += `- API URL: ${authClient.apiBaseUrl}\n`;
+          fragment += await httpModeVersionResponse(authClient, ctx);
+          return fragment;
+        }),
+      );
 
-      return resp;
+      return resp + fragments.join('');
     },
   );
 }
